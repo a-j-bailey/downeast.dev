@@ -1,4 +1,5 @@
 import { DocumentTitle } from "../components/DocumentTitle";
+import { XLink } from "../components/XLink";
 
 export function Home() {
   return (
@@ -14,7 +15,10 @@ export function Home() {
       </figure>
       <h1 className="wordmark">downeast.dev</h1>
       <p className="name">Adam Bailey</p>
-      <p className="lede">Builds software, often from the coast of Maine.</p>
+      <p className="lede">fresh New England software</p>
+      <p className="home-links">
+        <XLink />
+      </p>
     </article>
   );
 }

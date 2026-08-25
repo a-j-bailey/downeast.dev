@@ -158,11 +158,11 @@ img {
 }
 
 .home {
-  padding-top: 1.25rem;
+  padding-top: 0.5rem;
 }
 
 .hero {
-  margin: 0 0 2.75rem;
+  margin: 0 0 1.85rem;
 }
 
 .hero img {
@@ -181,15 +181,31 @@ img {
 }
 
 .name {
-  margin: 0.7rem 0 0;
+  margin: 0.5rem 0 0;
   color: var(--tx);
   font-size: 1.125rem;
 }
 
 .lede {
-  margin: 0.35rem 0 0;
+  margin: 0.2rem 0 0;
   max-width: 28rem;
   color: var(--tx-2);
+}
+
+.home-links {
+  display: flex;
+  gap: 1.25rem;
+  margin: 0.9rem 0 0;
+}
+
+.home-links a {
+  color: var(--tx-2);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.home-links a:hover {
+  color: var(--cy);
 }
 
 .page-title {
@@ -297,7 +313,7 @@ img {
   }
 
   .home {
-    padding-top: 2rem;
+    padding-top: 1.15rem;
   }
 
   .site-main {

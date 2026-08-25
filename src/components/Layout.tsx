@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { XLink } from "./XLink";
 
 export function Layout() {
   const location = useLocation();
@@ -18,6 +19,7 @@ export function Layout() {
         <nav className="nav" aria-label="Site">
           <NavLink to="/projects">Projects</NavLink>
           <NavLink to="/thoughts">Thoughts</NavLink>
+          <XLink />
         </nav>
       </header>
       <main id="main" className="site-main">
