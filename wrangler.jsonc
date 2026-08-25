@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "downeast-dev",
+  "compatibility_date": "2026-08-25",
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    { "pattern": "downeast.dev", "custom_domain": true },
+    { "pattern": "www.downeast.dev", "custom_domain": true },
+    { "pattern": "ajbailey.dev", "custom_domain": true },
+    { "pattern": "www.ajbailey.dev", "custom_domain": true }
+  ]
+}
