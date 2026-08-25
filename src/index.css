@@ -1,0 +1,306 @@
+/*
+ * Flexoki color scheme by Steph Ango
+ * https://stephango.com/flexoki
+ * MIT License
+ *
+ * Light theme tokens only. The drawing sits on paper (--bg).
+ */
+
+:root {
+  --bg: #fffcf0;
+  --bg-2: #f2f0e5;
+  --ui: #e6e4d9;
+  --ui-2: #dad8ce;
+  --ui-3: #cecdc3;
+  --tx-3: #b7b5ac;
+  --tx-2: #6f6e69;
+  --tx: #100f0f;
+  --cy: #24837b;
+  --re: #af3029;
+  --or: #bc5215;
+  --ye: #ad8301;
+  --gr: #66800b;
+  --bl: #205ea6;
+  --pu: #5e409d;
+  --ma: #a02f6f;
+
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino,
+    serif;
+  --font-body: "Source Serif 4", "Iowan Old Style", "Palatino Linotype",
+    Palatino, serif;
+
+  --measure: 40rem;
+  --measure-wide: 46rem;
+  --page-pad: 1.25rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--tx);
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--tx);
+  color: var(--bg);
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1px solid var(--cy);
+  outline-offset: 3px;
+}
+
+a {
+  color: var(--cy);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--tx);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--page-pad);
+  top: 0.5rem;
+  z-index: 10;
+  padding: 0.35rem 0.6rem;
+  background: var(--bg-2);
+  color: var(--tx);
+  transform: translateY(-150%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.site-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: min(100%, var(--measure-wide));
+  margin: 0 auto;
+  padding: 1.5rem var(--page-pad) 0;
+}
+
+.site-header.is-home {
+  justify-content: flex-end;
+}
+
+.wordmark-link {
+  color: var(--tx);
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 72;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.wordmark-link:hover {
+  color: var(--tx-2);
+}
+
+.nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.nav a {
+  color: var(--tx-2);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.nav a:hover,
+.nav a[aria-current="page"] {
+  color: var(--cy);
+}
+
+.site-main {
+  width: min(100%, var(--measure-wide));
+  margin: 0 auto;
+  padding: 2.5rem var(--page-pad) 5rem;
+}
+
+.home {
+  padding-top: 1.25rem;
+}
+
+.hero {
+  margin: 0 0 2.75rem;
+}
+
+.hero img {
+  display: block;
+  width: 100%;
+}
+
+.wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.15rem, 8vw, 3.35rem);
+  font-weight: 500;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.name {
+  margin: 0.7rem 0 0;
+  color: var(--tx);
+  font-size: 1.125rem;
+}
+
+.lede {
+  margin: 0.35rem 0 0;
+  max-width: 28rem;
+  color: var(--tx-2);
+}
+
+.page-title {
+  margin: 0 0 2rem;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  font-variation-settings: "opsz" 72;
+  letter-spacing: -0.03em;
+}
+
+.empty {
+  margin: 0;
+  color: var(--tx-2);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list > li {
+  padding: 1.15rem 0;
+  border-top: 1px solid var(--ui);
+}
+
+.list > li:last-child {
+  border-bottom: 1px solid var(--ui);
+}
+
+.item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.85rem;
+}
+
+.item-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.item-title a {
+  color: var(--tx);
+  text-decoration: none;
+}
+
+.item-title a:hover {
+  color: var(--cy);
+}
+
+.item-meta {
+  color: var(--tx-3);
+  font-size: 0.875rem;
+}
+
+.item-flag {
+  color: var(--or);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.item-body {
+  margin: 0.35rem 0 0;
+  color: var(--tx-2);
+}
+
+.thought-body {
+  margin: 0.45rem 0 0;
+  max-width: var(--measure);
+}
+
+.not-found {
+  padding-top: 3rem;
+}
+
+.not-found p {
+  margin: 0.75rem 0 0;
+  color: var(--tx-2);
+}
+
+.not-found a {
+  color: var(--cy);
+}
+
+.wake {
+  display: block;
+  width: min(100%, 28rem);
+  margin: 2.5rem 0 0;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-pad: 2rem;
+  }
+
+  .site-header {
+    padding-top: 2rem;
+  }
+
+  .home {
+    padding-top: 2rem;
+  }
+
+  .site-main {
+    padding-bottom: 7rem;
+  }
+}
