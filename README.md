@@ -2,7 +2,7 @@
 
 Personal site for [Adam Bailey](https://github.com/a-j-bailey). Ink on paper. The drawing is the thing people remember.
 
-This is a static Vite + React SPA. No server. The built files in `dist/` can be hosted on GitHub Pages, Cloudflare Pages, or any static host.
+This is a static Vite + React SPA. It deploys as a Cloudflare Worker named `downeast-dev` that serves `dist/` as static assets with SPA fallback. There is no Worker script.
 
 ## Develop
 
@@ -47,18 +47,19 @@ Edit `src/content/thoughts.ts`. Each entry is:
 
 The page sorts by date, newest first. An empty array shows “Nothing here yet.” This is not a blog engine.
 
-## Domains
+## Hosting / Domains
 
-The identity is **downeast.dev**. Canonical URLs, the document title, and Open Graph tags all point there.
+The site deploys as a Cloudflare Worker named `downeast-dev`. Wrangler uploads `dist/` as static assets and serves unmatched routes with `index.html` (`not_found_handling: "single-page-application"`). There is no Worker script.
 
-**ajbailey.dev** should serve the same site. Point both domains at whichever static host you use:
+Canonical domain is **downeast.dev**. `www.downeast.dev`, **ajbailey.dev**, and `www.ajbailey.dev` are custom domains on the same Worker. Both zones must already live on the same Cloudflare account (nameservers on Cloudflare).
 
-1. Build and publish `dist/` (GitHub Pages, Cloudflare Pages, Netlify, etc.).
-2. Add `downeast.dev` as the primary custom domain.
-3. Add `ajbailey.dev` (and `www` if you want it) as an alias or additional custom domain on the same project, so both hostnames serve these files.
-4. At the DNS registrar, CNAME (or ALIAS/ANAME at the apex) both names to the host. GitHub Pages wants a CNAME or A records as in [their docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site). Cloudflare Pages uses a CNAME to `your-project.pages.dev`.
+```sh
+npm run deploy
+```
 
-`public/CNAME` is set to `downeast.dev` for GitHub Pages. The build also copies `index.html` to `dist/404.html` so client-side routes (`/projects`, `/thoughts`, unknown URLs) load the SPA. Cloudflare Pages gets `public/_redirects` (`/* → /index.html`).
+builds `dist/` and deploys. GitHub Actions (`.github/workflows/deploy.yml`) deploys on push to `main` once `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set as repository secrets.
+
+`public/CNAME` is still `downeast.dev`. The build still copies `index.html` to `dist/404.html` so client-side routes (`/projects`, `/thoughts`, unknown URLs) load the SPA on hosts that look for a 404 page.
 
 ## Color
 
