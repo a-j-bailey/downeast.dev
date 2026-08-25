@@ -1,0 +1,249 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" fill="none" aria-hidden="true">
+  <!--
+    Adam Bailey - ink drawing of a Downeast motorboat.
+    Signature artwork for downeast.dev. Stroke-only; paper shows through.
+  -->
+  <g stroke="#100F0F" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Hull outline -->
+    <path
+      stroke-width="3.1"
+      d="M 118 268
+         C 132 238, 168 222, 214 226
+         C 312 234, 428 258, 560 278
+         C 720 302, 910 324, 1124 342
+         C 1248 352, 1362 360, 1452 366
+         C 1466 368, 1474 376, 1472 390
+         L 1466 478
+         C 1464 492, 1452 498, 1436 496
+         C 1220 508, 980 516, 740 512
+         C 500 508, 310 492, 214 458
+         C 168 440, 132 408, 118 364
+         C 108 328, 108 292, 118 268 Z"
+    />
+
+    <!-- Rub rail / sheer echo -->
+    <path
+      stroke-width="1.35"
+      d="M 168 278
+         C 280 292, 470 318, 700 342
+         C 940 366, 1180 382, 1448 392"
+    />
+
+    <!-- Bow flare hint -->
+    <path
+      stroke-width="1.2"
+      d="M 148 292 C 176 270, 214 262, 258 266"
+    />
+
+    <!-- Bow pulpit railing -->
+    <path
+      stroke-width="1.55"
+      d="M 176 248 C 214 238, 268 236, 332 244 C 392 252, 448 264, 498 278"
+    />
+    <path stroke-width="1.25" d="M 198 272 L 194 246" />
+    <path stroke-width="1.25" d="M 248 276 L 246 240" />
+    <path stroke-width="1.25" d="M 308 284 L 306 246" />
+    <path stroke-width="1.25" d="M 372 294 L 370 256" />
+    <path stroke-width="1.25" d="M 440 306 L 438 268" />
+    <!-- pulpit nose -->
+    <path stroke-width="1.4" d="M 168 258 C 158 250, 148 248, 142 256 C 148 242, 168 236, 188 240" />
+
+    <!-- Cabin windshield (slanted) -->
+    <path
+      stroke-width="2.35"
+      d="M 498 286 L 572 168"
+    />
+    <path
+      stroke-width="2.2"
+      d="M 572 168 C 586 162, 604 160, 628 161 L 902 168 C 918 168, 928 176, 928 190 L 924 348"
+    />
+    <!-- cabin roof -->
+    <path
+      stroke-width="2.4"
+      d="M 572 168 C 640 158, 760 156, 902 168"
+    />
+    <!-- cabin front lower -->
+    <path
+      stroke-width="1.7"
+      d="M 498 286 C 508 300, 518 318, 522 338"
+    />
+    <!-- cabin aft bulkhead -->
+    <path
+      stroke-width="2.05"
+      d="M 924 190 L 924 348"
+    />
+
+    <!-- Windshield glass panes -->
+    <path
+      stroke-width="1.25"
+      d="M 518 278 L 582 176 L 686 180 L 678 286 Z"
+    />
+    <path
+      stroke-width="1.15"
+      d="M 698 182 L 818 186 L 814 286 L 692 282 Z"
+    />
+    <path
+      stroke-width="1.15"
+      d="M 834 186 L 910 190 L 908 288 L 830 284 Z"
+    />
+    <!-- windshield wiper suggestion -->
+    <path stroke-width="0.95" d="M 548 214 L 620 248" />
+
+    <!-- Side window on cabin trunk -->
+    <path
+      stroke-width="1.2"
+      d="M 536 300 C 540 292, 552 288, 572 288 L 668 292 C 682 292, 688 300, 686 310 L 682 328 C 680 336, 670 340, 656 340 L 560 336 C 544 336, 534 328, 536 314 Z"
+    />
+
+    <!-- Cabin door / aft opening into cockpit -->
+    <path
+      stroke-width="1.3"
+      d="M 848 292 L 908 296 L 906 348 L 846 346 Z"
+    />
+    <path stroke-width="1.05" d="M 878 308 L 878 338" />
+
+    <!-- Roof grab rail -->
+    <path
+      stroke-width="1.2"
+      d="M 602 156 C 680 148, 780 148, 868 158"
+    />
+    <path stroke-width="1.05" d="M 640 162 L 638 150" />
+    <path stroke-width="1.05" d="M 740 160 L 738 148" />
+    <path stroke-width="1.05" d="M 830 164 L 828 152" />
+
+    <!-- Radar (small rectangular unit on cabin roof) -->
+    <path
+      stroke-width="1.7"
+      d="M 668 142 L 738 140 L 740 162 L 670 164 Z"
+    />
+    <path stroke-width="1.15" d="M 678 146 L 728 144" />
+    <path stroke-width="1.1" d="M 704 140 L 704 128" />
+    <path stroke-width="1.1" d="M 690 128 L 718 128" />
+
+    <!-- Antenna - tall, thin, a little off-plumb -->
+    <path
+      stroke-width="1.35"
+      d="M 812 166 L 806 42"
+    />
+    <path stroke-width="1.15" d="M 806 42 L 806 28" />
+    <circle cx="806" cy="24" r="3.2" stroke-width="1.2" />
+    <!-- small insulator / mount -->
+    <path stroke-width="1.3" d="M 802 166 L 822 168" />
+
+    <!-- Cockpit coaming -->
+    <path
+      stroke-width="1.55"
+      d="M 928 348 C 1020 356, 1140 364, 1288 372 C 1340 376, 1396 378, 1448 376"
+    />
+
+    <!-- Transom -->
+    <path
+      stroke-width="2.1"
+      d="M 1452 366 C 1468 370, 1476 382, 1474 402 L 1466 478"
+    />
+    <path
+      stroke-width="1.25"
+      d="M 1438 400 L 1462 404"
+    />
+
+    <!-- Swim / stern platform hint -->
+    <path
+      stroke-width="1.3"
+      d="M 1466 478 C 1484 476, 1494 468, 1490 456"
+    />
+
+    <!--
+      Figure at the stern: seated, facing the bow (left), at a laptop.
+      Kept as spare line work so the boat stays the subject.
+    -->
+    <g stroke-width="1.55">
+      <!-- head -->
+      <ellipse cx="1366" cy="318" rx="15.5" ry="17" />
+      <!-- neck / shoulder -->
+      <path d="M 1362 334 C 1356 342, 1344 348, 1332 352" />
+      <!-- back / torso, seated -->
+      <path d="M 1374 334 C 1386 348, 1394 368, 1390 392 C 1386 412, 1368 424, 1344 428" />
+      <!-- near thigh -->
+      <path d="M 1344 428 C 1324 430, 1298 422, 1284 408" />
+      <!-- far thigh -->
+      <path d="M 1352 418 C 1330 422, 1306 414, 1292 400" />
+      <!-- calf to deck -->
+      <path d="M 1284 408 C 1278 422, 1282 436, 1294 444" />
+      <!-- near arm to laptop -->
+      <path d="M 1332 352 C 1318 360, 1302 372, 1290 386" />
+      <!-- far arm -->
+      <path d="M 1348 356 C 1332 368, 1316 380, 1304 390" />
+    </g>
+    <!-- laptop -->
+    <path
+      stroke-width="1.7"
+      d="M 1262 392 L 1298 358 L 1334 366"
+    />
+    <path
+      stroke-width="1.55"
+      d="M 1262 392 L 1318 398 L 1334 366"
+    />
+    <path stroke-width="1.05" d="M 1280 380 L 1310 372" />
+
+    <!-- Small helm / seat suggestion amidships-aft of cabin -->
+    <path
+      stroke-width="1.2"
+      d="M 968 330 C 978 318, 994 314, 1008 320 L 1012 348"
+    />
+    <path stroke-width="1.1" d="M 948 348 L 1024 352" />
+
+    <!-- Flag staff at the transom -->
+    <path
+      stroke-width="1.45"
+      d="M 1484 286 L 1482 402"
+    />
+    <path stroke-width="1.15" d="M 1476 400 L 1488 402" />
+    <!-- American flag, small, flying to starboard / aft -->
+    <path
+      stroke-width="1.35"
+      d="M 1484 286
+         C 1510 282, 1536 288, 1554 286
+         C 1566 300, 1558 314, 1544 318
+         C 1524 324, 1502 316, 1484 318
+         Z"
+    />
+    <!-- canton -->
+    <path
+      stroke-width="1.05"
+      d="M 1486 288 L 1516 286 L 1516 304 L 1486 306 Z"
+    />
+    <!-- stripes -->
+    <path stroke-width="0.95" d="M 1518 292 C 1532 290, 1544 292, 1550 290" />
+    <path stroke-width="0.95" d="M 1486 310 C 1510 308, 1534 314, 1546 312" />
+    <path stroke-width="0.95" d="M 1518 300 C 1534 298, 1546 302, 1552 300" />
+
+    <!-- Wake / ripples - jagged ink strokes under the hull -->
+    <g stroke-linecap="square">
+      <path
+        stroke-width="4.2"
+        d="M 196 528 L 248 518 L 310 532 L 372 516 L 448 530 L 522 514 L 598 528"
+      />
+      <path
+        stroke-width="3.4"
+        d="M 420 546 L 486 536 L 560 550 L 640 534 L 722 548 L 804 532 L 890 544"
+      />
+      <path
+        stroke-width="5.1"
+        d="M 640 508 L 710 498 L 792 512 L 874 496 L 962 510 L 1048 494 L 1140 506 L 1228 492"
+      />
+      <path
+        stroke-width="2.8"
+        d="M 980 558 L 1054 548 L 1136 560 L 1218 546 L 1304 558 L 1388 544"
+      />
+      <path
+        stroke-width="3.6"
+        d="M 1188 522 L 1260 512 L 1342 524 L 1418 510 L 1496 520"
+      />
+      <path
+        stroke-width="2.2"
+        d="M 252 556 L 318 548 L 384 558 L 452 546"
+      />
+    </g>
+  </g>
+</svg>
