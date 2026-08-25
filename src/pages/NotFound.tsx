@@ -11,10 +11,10 @@ export function NotFound() {
       </p>
       <img
         className="wake"
-        src="/wake.svg"
+        src="/wake.png"
         alt=""
-        width={1340}
-        height={80}
+        width={2093}
+        height={197}
       />
     </article>
   );

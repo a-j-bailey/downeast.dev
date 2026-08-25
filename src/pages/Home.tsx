@@ -8,8 +8,8 @@ export function Home() {
         <img
           src="/boat.png"
           alt="Ink drawing of a man working on a laptop at the stern of a Downeast motorboat."
-          width={1936}
-          height={979}
+          width={2274}
+          height={891}
         />
       </figure>
       <h1 className="wordmark">downeast.dev</h1>

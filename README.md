@@ -66,8 +66,9 @@ The palette is [Flexoki](https://stephango.com/flexoki) by Steph Ango (MIT). Tok
 
 ## Assets
 
-The boat drawing lives in `public/boat.svg` and is rasterized to `public/boat.png` / `public/boat.jpeg`. Favicons, the apple touch icon, the Open Graph image, and the 404 wake are derived from the same line work. To regenerate them (requires Python, Pillow, and CairoSVG):
+The source drawing is `public/boat.jpeg` (ink on paper). `scripts/punch-boat.py` knocks the paper out and writes `public/boat.png` in Flexoki black. Favicons, the apple touch icon, the Open Graph image, and the 404 wake are cropped or composited from that PNG.
 
 ```sh
+python3 scripts/punch-boat.py
 python3 scripts/generate-assets.py
 ```
