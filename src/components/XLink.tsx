@@ -1,4 +1,4 @@
-const X_PROFILE_URL = "https://x.com/downeastdev";
+import { X_PROFILE_URL } from "../content/site";
 
 export function XLink() {
   return (
