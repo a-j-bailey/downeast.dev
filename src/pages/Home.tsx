@@ -4,7 +4,7 @@ import { XLink } from "../components/XLink";
 export function Home() {
   return (
     <article className="home">
-      <DocumentTitle />
+      <DocumentTitle kind="home" />
       <figure className="hero">
         <img
           src="/boat.png"

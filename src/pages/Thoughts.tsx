@@ -1,7 +1,7 @@
 import { DocumentTitle } from "../components/DocumentTitle";
 import { thoughts } from "../content/thoughts";
 
-function formatDate(iso: string): string {
+function formatDate({ iso }: { iso: string }): string {
   const [year, month, day] = iso.split("-").map(Number);
   if (!year || !month || !day) {
     return iso;
@@ -19,10 +19,10 @@ export function Thoughts() {
 
   return (
     <article>
-      <DocumentTitle title="Thoughts" />
+      <DocumentTitle kind="page" page="Thoughts" />
       <h1 className="page-title">Thoughts</h1>
       {sorted.length === 0 ? (
-        <p className="empty">Nothing here yet.</p>
+        <p className="empty">Haven't posted.</p>
       ) : (
         <ul className="list">
           {sorted.map((thought) => (
@@ -30,7 +30,7 @@ export function Thoughts() {
               <div className="item-head">
                 <h2 className="item-title">{thought.title}</h2>
                 <time className="item-meta" dateTime={thought.date}>
-                  {formatDate(thought.date)}
+                  {formatDate({ iso: thought.date })}
                 </time>
               </div>
               <p className="thought-body item-body">{thought.body}</p>

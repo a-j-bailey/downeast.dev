@@ -137,6 +137,7 @@ img {
 
 .nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 1.25rem;
 }
 
@@ -154,15 +155,15 @@ img {
 .site-main {
   width: min(100%, var(--measure-wide));
   margin: 0 auto;
-  padding: 2.5rem var(--page-pad) 5rem;
+  padding: 1.35rem var(--page-pad) 5rem;
 }
 
 .home {
-  padding-top: 0.5rem;
+  padding-top: 0;
 }
 
 .hero {
-  margin: 0 0 1.85rem;
+  margin: 0 0 1.25rem;
 }
 
 .hero img {
@@ -263,15 +264,8 @@ img {
 }
 
 .item-meta {
-  color: var(--tx-3);
+  color: var(--tx-2);
   font-size: 0.875rem;
-}
-
-.item-flag {
-  color: var(--or);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
 }
 
 .item-body {
@@ -316,7 +310,12 @@ img {
     padding-top: 1.15rem;
   }
 
+  .hero {
+    margin-bottom: 1.85rem;
+  }
+
   .site-main {
+    padding-top: 2.5rem;
     padding-bottom: 7rem;
   }
 }
