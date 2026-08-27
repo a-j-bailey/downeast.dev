@@ -161,6 +161,13 @@ img {
   color: var(--cy);
 }
 
+.nav-mark {
+  display: block;
+  width: 1.125em;
+  height: 1.125em;
+  flex-shrink: 0;
+}
+
 .site-main {
   padding: 0.35rem 0 3rem;
 }
