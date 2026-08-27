@@ -20,18 +20,19 @@ writes a static site to `dist/`. `npm run preview` serves that output locally.
 
 ## Add a project
 
-Edit `src/content/projects.ts`. Each entry is:
+Edit `src/content/projects.ts`. Linked work:
 
 ```ts
 {
+  kind: "link",
   title: "Name of the work",
-  year: "2026",          // optional
+  year: 2026,
   summary: "One or two sentences.",
-  url: "https://…",      // optional
+  url: "https://…",
 }
 ```
 
-The file ships with one object marked `example: true` so the list isn’t empty on day one. Delete that object when you add real work. The page renders the array in order; an empty array shows “Nothing here yet.”
+Work with no public URL uses `kind: "listed"` and drops `url`. The page renders the array in order. An empty array hides Projects from the nav.
 
 ## Add a thought
 
@@ -45,7 +46,7 @@ Edit `src/content/thoughts.ts`. Each entry is:
 }
 ```
 
-The page sorts by date, newest first. An empty array shows “Nothing here yet.” This is not a blog engine.
+The page sorts by date, newest first. An empty array hides Thoughts from the nav. This is not a blog engine.
 
 ## Hosting / Domains
 

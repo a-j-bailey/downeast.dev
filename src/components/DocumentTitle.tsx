@@ -1,10 +1,11 @@
 import { useEffect } from "react";
+import { siteTitle, type SiteTitle } from "../content/site";
 
-const SITE = "downeast.dev";
+export function DocumentTitle(props: SiteTitle) {
+  const title = siteTitle(props);
 
-export function DocumentTitle({ title }: { title?: string }) {
   useEffect(() => {
-    document.title = title ? `${title} — ${SITE}` : `${SITE} — Adam Bailey`;
+    document.title = title;
   }, [title]);
 
   return null;

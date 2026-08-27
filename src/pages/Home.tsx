@@ -1,10 +1,9 @@
 import { DocumentTitle } from "../components/DocumentTitle";
-import { XLink } from "../components/XLink";
 
 export function Home() {
   return (
     <article className="home">
-      <DocumentTitle />
+      <DocumentTitle kind="home" />
       <figure className="hero">
         <img
           src="/boat.png"
@@ -16,9 +15,6 @@ export function Home() {
       <h1 className="wordmark">downeast.dev</h1>
       <p className="name">Adam Bailey</p>
       <p className="lede">fresh New England software</p>
-      <p className="home-links">
-        <XLink />
-      </p>
     </article>
   );
 }
