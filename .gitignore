@@ -5,3 +5,4 @@ dist
 .DS_Store
 tsconfig.tsbuildinfo
 node_modules/.tmp
+public/underway-wake-ink.png
