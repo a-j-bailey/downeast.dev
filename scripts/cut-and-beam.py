@@ -101,10 +101,10 @@ def beam_hatches() -> str:
 def seigaiha_patch() -> str:
     paths: list[str] = []
     radius = 34.0
-    for row in range(5):
-        for col in range(4):
+    for row in range(3):
+        for col in range(3):
             cx = 48.0 + col * radius + (radius * 0.5 if row % 2 else 0.0)
-            cy = 708.0 + row * radius * 0.52
+            cy = 888.0 + row * radius * 0.52
             paths.append(
                 f'    <path d="M {cx - radius:.1f},{cy:.1f} '
                 f'A {radius:.1f} {radius:.1f} 0 0 1 {cx + radius:.1f},{cy:.1f}" />'
@@ -130,17 +130,14 @@ def write_print_svg(path: Path) -> None:
   <g id="water" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <path stroke-width="1.1" d="M 0,392 H 188"/>
     <path stroke-width="0.8" d="M 24,418 H 156"/>
-    <path stroke-width="2.2" d="M -30,612 C 70,574 150,656 268,618 C 372,586 458,668 596,632 C 680,612 748,666 812,650"/>
-    <path stroke-width="1.6" d="M -20,704 C 86,668 164,748 292,710 C 400,678 486,758 620,724 C 700,704 760,748 812,738"/>
-    <path stroke-width="2.4" d="M -40,838 C 80,792 168,896 310,848 C 430,808 520,912 670,868 C 748,844 790,888 812,880"/>
-    <path stroke-width="1.3" d="M 12,548 C 92,528 148,572 230,552 C 310,534 368,578 448,560"/>
-    <path stroke-width="1.1" d="M 40,960 C 140,936 220,988 340,962 C 460,936 540,990 680,968"/>
+    <path stroke-width="2.2" d="M 420,612 C 510,574 590,656 680,618 C 760,586 800,640 812,650"/>
+    <path stroke-width="1.6" d="M 430,724 C 530,688 620,758 720,738 C 770,728 800,742 812,738"/>
+    <path stroke-width="2.4" d="M 400,848 C 520,808 640,912 760,880 C 790,868 808,876 812,880"/>
+    <path stroke-width="1.1" d="M 0,968 C 80,952 140,988 220,972"/>
   </g>
   <g id="foam" fill="#fff">
-    <path d="M 262,614 q 14,-26 32,-8 q 10,16 -12,18 q -10,-20 -20,-10 z"/>
-    <path d="M 588,628 q 12,-20 26,-6 q 8,12 -10,14 q -8,-16 -16,-8 z"/>
-    <path d="M 304,706 q 16,-28 34,-9 q 11,18 -13,20 q -11,-22 -21,-11 z"/>
-    <path d="M 304,844 q 18,-32 40,-10 q 12,20 -14,22 q -12,-24 -26,-12 z"/>
+    <path d="M 676,614 q 12,-20 26,-6 q 8,12 -10,14 q -8,-16 -16,-8 z"/>
+    <path d="M 708,734 q 14,-24 30,-8 q 10,16 -12,18 q -10,-20 -18,-10 z"/>
     <path d="M 664,864 q 13,-22 28,-7 q 9,14 -11,16 q -9,-18 -17,-9 z"/>
   </g>
   <g id="seigaiha" stroke="#fff" stroke-width="0.9" fill="none">
