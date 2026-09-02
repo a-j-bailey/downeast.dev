@@ -120,7 +120,7 @@ export function Home() {
       <DocumentTitle kind="home" />
       <PrintSky
         wash={wash}
-        veil={weather.kind !== "open"}
+        veil={weather.kind === "fogbound"}
         islands={weather.kind === "open" && ink === "ink"}
       />
       <Forecast weather={weather} />

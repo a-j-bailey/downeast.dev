@@ -1,7 +1,7 @@
 export type Wash = "clear" | "cloud" | "rain" | "snow" | "fog" | "night";
 
 export type WeatherWindow =
-  | { kind: "pending" }
+  | { kind: "pending"; wash: Wash }
   | { kind: "fogbound" }
   | {
       kind: "open";
@@ -9,6 +9,22 @@ export type WeatherWindow =
       lines: [string, ...string[]];
       place: string;
     };
+
+export function guessPendingWash(): Wash {
+  const hourText = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).format(new Date());
+  const hour = Number.parseInt(hourText, 10);
+  if (!Number.isFinite(hour)) {
+    return "fog";
+  }
+  if (hour >= 20 || hour < 6) {
+    return "night";
+  }
+  return "fog";
+}
 
 export type PrintInk = "ink" | "paper";
 
@@ -24,10 +40,10 @@ const DARK_WASH = {
 export function washOf(weather: WeatherWindow): Wash {
   switch (weather.kind) {
     case "pending":
-    case "fogbound":
-      return "fog";
     case "open":
       return weather.wash;
+    case "fogbound":
+      return "fog";
     default: {
       const _exhaustive: never = weather;
       return _exhaustive;
