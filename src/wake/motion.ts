@@ -35,7 +35,7 @@ export function wakeProgress(input: {
   range: number;
 }): number {
   const fromScroll = clamp(input.scrollY / 520, 0, 1);
-  const rest = 0.16;
+  const rest = 0.34;
   if (input.pointer === null) {
     return clamp(Math.max(fromScroll, rest), 0, 1);
   }

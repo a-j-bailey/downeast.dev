@@ -60,7 +60,7 @@ export function UnderwayHero() {
   const stageRef = useRef<HTMLDivElement>(null);
   const boatRef = useRef<HTMLImageElement>(null);
   const [layout, setLayout] = useState<WakeLayout | null>(null);
-  const [progress, setProgress] = useState(0.16);
+  const [progress, setProgress] = useState(0.34);
 
   useEffect(() => {
     document.documentElement.classList.add("is-underway");
