@@ -1,6 +1,6 @@
 # downeast.dev
 
-Personal site for [Adam Bailey](https://github.com/a-j-bailey). Ink on paper. The drawing is the thing people remember.
+Personal site for [Adam Bailey](https://github.com/a-j-bailey). The boat drawing is the thing people remember. This branch is a lighthouse cut: hard black, one beam, caption type.
 
 This is a static Vite + React SPA. It deploys as a Cloudflare Worker named `downeast-dev` that serves `dist/` as static assets with SPA fallback. There is no Worker script.
 
@@ -64,13 +64,15 @@ builds `dist/` and deploys. GitHub Actions (`.github/workflows/deploy.yml`) depl
 
 ## Color
 
-The palette is [Flexoki](https://stephango.com/flexoki) by Steph Ango (MIT). Tokens live in `src/index.css` as `--bg`, `--bg-2`, `--ui`, `--tx`, `--cy`, and the rest. Do not add greys from outside that set. The paper background is Flexoki `--bg` (`#FFFCF0`) so the ink drawing sits on the intended sheet.
+Hard black and white. `--bg` is `#000`, `--fg` is `#fff`. The homepage is a lighthouse cut: one white beam, empty water, caption-size type.
 
 ## Assets
 
-The source drawing is `public/boat.jpeg` (ink on paper). `scripts/punch-boat.py` knocks the paper out and writes `public/boat.png` in Flexoki black. Favicons, the apple touch icon, the Open Graph image, and the 404 wake are cropped or composited from that PNG.
+The source drawing is `public/boat.jpeg` (ink on paper). `scripts/punch-boat.py` knocks the paper out and writes `public/boat.png`. Cut and beam then treats that PNG, and does not replace it:
 
 ```sh
 python3 scripts/punch-boat.py
-python3 scripts/generate-assets.py
+python3 scripts/cut-and-beam.py
 ```
+
+`cut-and-beam.py` writes `public/boat-cut.png` (woodcut recolor of the same drawing), `public/cut-and-beam.svg` (beam, lantern slit, water), `public/print-grain.png`, and the favicons, Open Graph image, and 404 wake for this look.

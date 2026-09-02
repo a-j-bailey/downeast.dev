@@ -13,7 +13,7 @@ export function Layout() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <div className="shell">
+      <div className={isHome ? "stage" : "shell"}>
         <header className={isHome ? "site-header is-home" : "site-header"}>
           {isHome ? null : (
             <NavLink to="/" className="wordmark-link">
