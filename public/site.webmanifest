@@ -4,8 +4,8 @@
   "description": "Adam Bailey. fresh New England software",
   "start_url": "/",
   "display": "browser",
-  "background_color": "#FFFCF0",
-  "theme_color": "#FFFCF0",
+  "background_color": "#d5d1cc",
+  "theme_color": "#d5d1cc",
   "icons": [
     {
       "src": "/icon-192.png",

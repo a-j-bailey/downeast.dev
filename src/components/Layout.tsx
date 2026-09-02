@@ -31,6 +31,13 @@ export function Layout() {
             <XLink />
           </nav>
         </header>
+        <img
+          className="header-rope"
+          src="/textures/rope-line.jpg"
+          alt=""
+          width={1200}
+          height={96}
+        />
         <main id="main" className="site-main">
           <Outlet />
         </main>

@@ -64,13 +64,13 @@ builds `dist/` and deploys. GitHub Actions (`.github/workflows/deploy.yml`) depl
 
 ## Color
 
-The palette is [Flexoki](https://stephango.com/flexoki) by Steph Ango (MIT). Tokens live in `src/index.css` as `--bg`, `--bg-2`, `--ui`, `--tx`, `--cy`, and the rest. Do not add greys from outside that set. The paper background is Flexoki `--bg` (`#FFFCF0`) so the ink drawing sits on the intended sheet.
+Working set. Harbor navy, trap-buoy enamel, hemp, and rag paper. Tokens live in `src/index.css`. The boat drawing is stamped as `public/boat-print.png`. Paper, rope, dock plank, and enamel plates live under `public/textures/` and `public/tags/`. Build those from the source plates with `python3 scripts/working-set-assets.py`.
 
 ## Assets
 
-The source drawing is `public/boat.jpeg` (ink on paper). `scripts/punch-boat.py` knocks the paper out and writes `public/boat.png` in Flexoki black. Favicons, the apple touch icon, the Open Graph image, and the 404 wake are cropped or composited from that PNG.
+The source drawing is `public/boat.jpeg` (ink on paper). `scripts/punch-boat.py` knocks the paper out and writes `public/boat.png`. `scripts/working-set-assets.py` stamps that drawing into `public/boat-print.png` and writes the paper, rope, dock, enamel tags, favicons, and OG image.
 
 ```sh
 python3 scripts/punch-boat.py
-python3 scripts/generate-assets.py
+python3 scripts/working-set-assets.py
 ```

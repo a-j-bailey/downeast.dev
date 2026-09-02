@@ -13,8 +13,8 @@ export function NotFound() {
         className="wake"
         src="/wake.png"
         alt=""
-        width={2093}
-        height={197}
+        width={1781}
+        height={216}
       />
     </article>
   );

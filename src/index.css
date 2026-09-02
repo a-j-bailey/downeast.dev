@@ -1,37 +1,31 @@
 /*
- * Flexoki color scheme by Steph Ango
- * https://stephango.com/flexoki
- * MIT License
+ * Working set. One look.
  *
- * Light theme tokens only. The drawing sits on paper (--bg).
+ * How the visual layer is owned:
+ * Tokens live here. Markup in Home/Layout/ProjectTag only names structure.
+ * Paper, rope, plank, enamel plates, and the boat print are files in public/.
+ * This branch does not add a theme switcher.
  */
 
 :root {
-  --bg: #fffcf0;
-  --bg-2: #f2f0e5;
-  --ui: #e6e4d9;
-  --ui-2: #dad8ce;
-  --ui-3: #cecdc3;
-  --tx-3: #b7b5ac;
-  --tx-2: #6f6e69;
-  --tx: #100f0f;
-  /* cyan-700. cyan-600 (#24837b) is 4.43:1 on paper and misses AA. */
-  --cy: #1c6c66;
-  --re: #af3029;
-  --or: #bc5215;
-  --ye: #ad8301;
-  --gr: #66800b;
-  --bl: #205ea6;
-  --pu: #5e409d;
-  --ma: #a02f6f;
+  --paper: #d5d1cc;
+  --paper-2: #c9c3bb;
+  --ink: #1b2a4a;
+  --ink-2: #3e4a3a;
+  --hemp: #8a6a45;
+  --tar: #7a2e16;
+  --buoy-y: #eab003;
+  --chip: #1c1814;
+  --stamp-light: #fff8f0;
+  --stamp-dark: #1b2a4a;
 
-  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Palatino,
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue",
+    sans-serif;
+  --font-body: "Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino,
     serif;
-  --font-body: "Source Serif 4", "Iowan Old Style", "Palatino Linotype",
-    Palatino, serif;
 
-  --measure: 40rem;
-  --measure-wide: 46rem;
+  --measure: 42rem;
+  --measure-wide: 58rem;
   --page-pad: 1.25rem;
 }
 
@@ -44,13 +38,16 @@
 html {
   color-scheme: light;
   min-height: 100%;
-  background: var(--bg);
+  background-color: var(--paper);
+  background-image: url("/textures/paper-fiber.jpg");
+  background-size: 22rem;
+  background-repeat: repeat;
 }
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--tx);
+  background: transparent;
+  color: var(--ink);
   font-family: var(--font-body);
   font-optical-sizing: auto;
   font-size: 1.0625rem;
@@ -61,8 +58,8 @@ body {
 }
 
 ::selection {
-  background: var(--tx);
-  color: var(--bg);
+  background: var(--ink);
+  color: var(--paper);
 }
 
 :focus {
@@ -70,18 +67,18 @@ body {
 }
 
 :focus-visible {
-  outline: 1px solid var(--cy);
+  outline: 2px solid var(--buoy-y);
   outline-offset: 3px;
 }
 
 a {
-  color: var(--cy);
+  color: var(--tar);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
 }
 
 a:hover {
-  color: var(--tx);
+  color: var(--ink);
 }
 
 img {
@@ -95,8 +92,8 @@ img {
   top: 0.5rem;
   z-index: 10;
   padding: 0.35rem 0.6rem;
-  background: var(--bg-2);
-  color: var(--tx);
+  background: var(--paper-2);
+  color: var(--ink);
   transform: translateY(-150%);
 }
 
@@ -115,7 +112,7 @@ img {
   align-items: baseline;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 1.15rem 0 0;
+  padding: 1.15rem 0 0.65rem;
 }
 
 .site-header.is-home {
@@ -123,17 +120,16 @@ img {
 }
 
 .wordmark-link {
-  color: var(--tx);
+  color: var(--ink);
   font-family: var(--font-display);
-  font-size: 1.125rem;
-  font-weight: 500;
-  font-variation-settings: "opsz" 72;
-  letter-spacing: -0.02em;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-decoration: none;
 }
 
 .wordmark-link:hover {
-  color: var(--cy);
+  color: var(--tar);
 }
 
 .nav {
@@ -151,14 +147,18 @@ img {
   min-width: 24px;
   min-height: 24px;
   padding: 0.5rem;
-  color: var(--tx);
-  font-size: 1rem;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-decoration: none;
+  text-transform: uppercase;
 }
 
 .nav a:hover,
 .nav a[aria-current="page"] {
-  color: var(--cy);
+  color: var(--tar);
 }
 
 .nav-mark {
@@ -168,65 +168,209 @@ img {
   flex-shrink: 0;
 }
 
+.header-rope {
+  display: block;
+  width: 100%;
+  height: 0.85rem;
+  object-fit: cover;
+  object-position: center;
+}
+
 .site-main {
-  padding: 0.35rem 0 3rem;
+  padding: 0.35rem 0 3.5rem;
 }
 
 .home {
-  padding-top: 0.15rem;
+  padding-top: 0.35rem;
 }
 
 .hero {
-  margin: 0 0 1.6rem;
+  margin: 0.35rem 0 1.4rem;
+  padding: 1.1rem 0.85rem 0.7rem;
+  background-image: url("/marks/plate.svg");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
-.hero img {
+.hero-print {
   display: block;
   width: 100%;
   height: auto;
   object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 .wordmark {
   margin: 0;
+  color: var(--ink);
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 9vw, 3.75rem);
-  font-weight: 500;
-  font-variation-settings: "opsz" 144;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
+  font-size: clamp(2.6rem, 10vw, 4.1rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
 }
 
 .name {
-  margin: 1.2rem 0 0;
-  color: var(--tx);
-  font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3.6vw, 1.8rem);
-  font-weight: 500;
+  margin: 1.05rem 0 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: clamp(1.35rem, 3.4vw, 1.7rem);
+  font-weight: 600;
   font-variation-settings: "opsz" 72;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   line-height: 1.2;
 }
 
 .lede {
-  margin: 1.15rem 0 0;
+  margin: 0.85rem 0 0;
   max-width: 28rem;
-  color: var(--tx);
-  font-size: 1.0625rem;
+  color: var(--ink);
+  font-size: 1.125rem;
+}
+
+.dock {
+  margin-top: 2.4rem;
+}
+
+.dock-label {
+  margin: 0 0 0.65rem;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dock-rail {
+  display: block;
+  width: 100%;
+  height: 3.1rem;
+  object-fit: cover;
+  object-position: center;
+}
+
+.rope-line {
+  display: block;
+  width: 100%;
+  height: 0.9rem;
+  margin-top: -0.4rem;
+  object-fit: cover;
+  object-position: center;
+  position: relative;
+  z-index: 1;
+}
+
+.dock-tags {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.6rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dock-tags-page {
+  margin-top: 0.4rem;
+}
+
+.tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+
+.tag-hanger {
+  display: block;
+  width: 2.4rem;
+  height: 4.2rem;
+  margin-bottom: -0.85rem;
+  object-fit: contain;
+  object-position: bottom;
+  position: relative;
+  z-index: 2;
+}
+
+.tag-body {
+  position: relative;
+  width: min(100%, 20rem);
+}
+
+.tag-plate {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tag-copy {
+  position: absolute;
+  inset: 22% 16% 11%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tag-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 4vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.tag-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tag-title a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+.tag-year {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.tag-summary {
+  margin: 0.35rem 0 0;
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.tag-yellow .tag-copy {
+  color: var(--stamp-dark);
+}
+
+.tag-red .tag-copy,
+.tag-green .tag-copy {
+  color: var(--stamp-light);
+}
+
+.tag-red .tag-title a:hover,
+.tag-green .tag-title a:hover {
+  color: var(--buoy-y);
 }
 
 .page-title {
-  margin: 0 0 2rem;
+  margin: 0 0 1.6rem;
   font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: 500;
-  font-variation-settings: "opsz" 72;
-  letter-spacing: -0.03em;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .empty {
   margin: 0;
-  color: var(--tx);
+  color: var(--ink);
 }
 
 .list {
@@ -240,11 +384,13 @@ img {
 
 .list > li {
   padding: 1.15rem 0;
-  border-top: 1px solid var(--ui);
+  border-top: 4px solid transparent;
+  border-image: url("/textures/rope-line.jpg") 20 stretch;
 }
 
 .list > li:last-child {
-  border-bottom: 1px solid var(--ui);
+  border-bottom: 4px solid transparent;
+  border-image: url("/textures/rope-line.jpg") 20 stretch;
 }
 
 .item-head {
@@ -256,27 +402,33 @@ img {
 
 .item-title {
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .item-title a {
-  color: var(--tx);
+  color: var(--ink);
   text-decoration: none;
 }
 
 .item-title a:hover {
-  color: var(--cy);
+  color: var(--tar);
 }
 
 .item-meta {
-  color: var(--tx-2);
-  font-size: 0.875rem;
+  color: var(--ink-2);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .item-body {
   margin: 0.35rem 0 0;
-  color: var(--tx-2);
+  color: var(--ink);
 }
 
 .thought-body {
@@ -290,20 +442,21 @@ img {
 
 .not-found p {
   margin: 0.75rem 0 0;
-  color: var(--tx);
+  color: var(--ink);
 }
 
 .not-found a {
-  color: var(--cy);
+  color: var(--tar);
 }
 
 .wake {
   display: block;
   width: min(100%, 28rem);
   margin: 2.5rem 0 0;
+  mix-blend-mode: multiply;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 720px) {
   :root {
     --page-pad: 2rem;
   }
@@ -313,14 +466,24 @@ img {
   }
 
   .home {
-    padding-top: 0.35rem;
+    padding-top: 0.5rem;
   }
 
   .hero {
-    margin-bottom: 2rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .dock-tags {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .tag-body {
+    width: 100%;
   }
 
   .site-main {
-    padding-bottom: 4rem;
+    padding-bottom: 4.5rem;
   }
 }
