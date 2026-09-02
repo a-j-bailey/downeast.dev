@@ -121,17 +121,19 @@ export function Home() {
       <PrintSky
         wash={wash}
         veil={weather.kind !== "open"}
-        islands={weather.kind === "open"}
+        islands={weather.kind === "open" && ink === "ink"}
       />
       <Forecast weather={weather} />
       <figure className="print-boat">
-        <img
-          className="print-water"
-          src="/open-water/water.svg"
-          alt=""
-          width={800}
-          height={220}
-        />
+        {ink === "ink" ? (
+          <img
+            className="print-water"
+            src="/open-water/water.svg"
+            alt=""
+            width={800}
+            height={220}
+          />
+        ) : null}
         <img
           className="print-hull"
           src={boatSrc}
