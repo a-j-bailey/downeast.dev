@@ -162,9 +162,12 @@ function drawLand(ctx: CanvasRenderingContext2D, state: DrawState, assets: Asset
   const cam = state.camX;
   const par = LAYERS.land.parallax;
   const groundY = GROUND_Y;
+  const streetL = viewX(80, cam, par);
+  const streetR = viewX(640, cam, par);
+  ctx.fillStyle = "#6e5234";
+  ctx.fillRect(streetL, groundY, streetR - streetL, VIEW_H - groundY);
   const tile = assets.ground;
-  const start = viewX(80, cam, par);
-  for (let x = start; x < viewX(640, cam, par); x += tile.width) {
+  for (let x = streetL; x < streetR; x += tile.width) {
     blit(ctx, tile, x, groundY);
   }
   const wall = assets.seawall;

@@ -94,12 +94,12 @@ export const SIGNS: SignDef[] = [
 export const VEHICLES: Record<"picnic", VehicleDef> = {
   picnic: {
     id: "picnic",
-    dockX: 78,
+    dockX: 84,
     dockY: WATER_Y_BOAT(),
-    disembarkX: 168,
+    disembarkX: 148,
     minX: OCEAN_MIN,
-    maxX: 96,
-    boardW: 80,
+    maxX: 110,
+    boardW: 90,
   },
 };
 
@@ -180,7 +180,7 @@ export function interactablesFor(place: Place, mode: Mode, boatX: number): Inter
     id: "board",
     kind: "board",
     label: "Board",
-    x: boatX,
+    x: boatX + 20,
     w: VEHICLES.picnic.boardW,
     layer: LAYER.actors,
     vehicleId: "picnic",
@@ -193,15 +193,18 @@ export function interactablesFor(place: Place, mode: Mode, boatX: number): Inter
 export function nearestInteractable(
   list: InteractDef[],
   x: number,
-  reach = 22,
+  reach = 28,
 ): InteractDef | null {
   let best: InteractDef | null = null;
-  let bestDist = reach;
+  let bestDist = Infinity;
   for (const it of list) {
-    const mid = it.x + it.w / 2;
-    const dist = Math.abs(mid - x);
-    const inside = x >= it.x - reach && x <= it.x + it.w + reach;
-    if (inside && dist < bestDist) {
+    const left = it.x - reach;
+    const right = it.x + it.w + reach;
+    if (x < left || x > right) {
+      continue;
+    }
+    const dist = Math.abs(it.x + it.w / 2 - x);
+    if (dist < bestDist) {
       best = it;
       bestDist = dist;
     }

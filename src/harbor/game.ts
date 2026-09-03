@@ -46,7 +46,7 @@ type State = {
 const WALK_SPEED = 58;
 const BOAT_ACCEL = 90;
 const BOAT_MAX = 110;
-const REACH = 24;
+const REACH = 28;
 
 function playerY(place: Place): number {
   if (place === "coffee") {
@@ -139,14 +139,12 @@ function applyUse(state: State): void {
       state.walkTarget = null;
       return;
     case "dock":
-      if (Math.abs(state.boatX - VEHICLES.picnic.dockX) < 50) {
-        state.mode = "walk";
-        state.boarded = false;
-        state.playerX = VEHICLES.picnic.disembarkX;
-        state.boatX = VEHICLES.picnic.dockX;
-        state.boatVx = 0;
-        state.boatFacing = -1;
-      }
+      state.mode = "walk";
+      state.boarded = false;
+      state.playerX = VEHICLES.picnic.disembarkX;
+      state.boatX = VEHICLES.picnic.dockX;
+      state.boatVx = 0;
+      state.boatFacing = -1;
       return;
     default: {
       const _x: never = hit.kind;

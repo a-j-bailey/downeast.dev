@@ -7,6 +7,6 @@ export const PLAYER_W = 18;
 
 export const OCEAN_MIN = -720;
 export const HARBOR_MOUTH = 48;
-export const WALK_MIN = 92;
+export const WALK_MIN = 100;
 export const WALK_MAX = 628;
 export const WORLD_MAX = 680;
