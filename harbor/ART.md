@@ -35,7 +35,13 @@ Keep name and tagline readable on the sky: ink on day paper, paper on night ink,
 
 ## Locked looks
 
-**Cafe interior is locked.** Warm wood floor, navy counter, red brick back wall, tan brick + navy wainscot on the left, harbor window on the right, framed boat painting. Do not restyle it. File: `public/harbor/coffee-interior.png`. The original drawing `public/boat.png` is blitted into the frame at runtime.
+**Cafe interior is locked.** Adam signed off on this room. Same layout, palette, counter, window, framed boat painting. Do not restyle, regenerate, or swap in a different interior.
+
+- Canonical file: `harbor/locked/coffee-interior.png`
+- Game loads: `public/harbor/coffee-interior.png` (a copy; `scripts/harbor-sprites.py` recopies the locked file and will not redraw it)
+- Runtime only: blit `public/boat.png` into the existing frame rect in `INTERIORS.coffee.painting`
+
+Slice or crop only if the bitmap is larger than the 320×180 room. Do not paint over the counter, window, brick, or furniture.
 
 ## How to add a building
 

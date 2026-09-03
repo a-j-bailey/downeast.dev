@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "public" / "harbor"
+LOCKED_CAFE = ROOT / "harbor" / "locked" / "coffee-interior.png"
 
 # Matches src/harbor/palette.ts and harbor/ART.md
 PAPER = (255, 252, 240, 255)
@@ -659,127 +661,6 @@ def draw_player(frame: str) -> G:
     return g
 
 
-def draw_coffee_interior() -> G:
-    """Locked look: warm wood, navy counter, harbor window, painting frame."""
-    g = G(320, 180)
-    wood = TEAK_DK
-    g.fill(0, 0, 320, 180, wood)
-    # inner room
-    g.fill(4, 4, 312, 172, TAN)
-    # ceiling
-    g.fill(4, 4, 312, 16, TEAK_DK)
-    for x in range(4, 316, 16):
-        g.vline(x, 4, 16, INK)
-    # left tan brick + navy wainscot
-    bricks(g, 4, 20, 88, 58, TAN, TAN2)
-    g.fill(4, 78, 88, 40, NAVY)
-    for y in range(78, 118, 4):
-        g.hline(4, y, 88, NAVY2 if y % 8 == 0 else NAVY)
-    # back red brick
-    bricks(g, 92, 20, 224, 98, BRICK, BRICK2)
-    # floor planks
-    g.fill(4, 118, 312, 54, TEAK)
-    for y in range(118, 172, 5):
-        g.hline(4, y, 312, TEAK_DK if (y // 5) % 2 == 0 else TEAK)
-        for x in range(12, 310, 28):
-            g.vline(x, y, 5, TEAK_DK)
-    # door left
-    g.fill(14, 50, 26, 68, TEAK_DK)
-    g.outline(14, 50, 26, 68, INK)
-    g.fill(18, 54, 18, 22, (80, 120, 150, 255))
-    g.outline(18, 54, 18, 22, CREAM)
-    g.p(36, 86, SUN)
-    g.fill(14, 116, 26, 4, DOOR)  # mat
-    # lantern
-    g.fill(44, 54, 6, 10, SUN)
-    g.outline(44, 54, 6, 10, INK)
-    g.vline(46, 50, 4, INK)
-    # plant by door
-    g.fill(8, 96, 6, 22, OLIVE)
-    g.fill(9, 114, 4, 4, TEAK_DK)
-    g.p(10, 94, GRASS)
-    # painting frame (paper fill; boat.png blitted at runtime)
-    g.fill(54, 32, 50, 30, TEAK_DK)
-    g.outline(54, 32, 50, 30, INK)
-    g.fill(58, 36, 42, 22, PAPER)
-    g.outline(58, 36, 42, 22, TEAK)
-    # counter
-    g.fill(108, 90, 152, 28, NAVY)
-    g.fill(108, 90, 152, 4, TEAK)
-    g.outline(108, 90, 152, 28, INK)
-    # espresso / brewer
-    g.fill(116, 70, 14, 20, INK)
-    g.fill(118, 64, 10, 8, INK)
-    g.fill(134, 74, 22, 16, SHAKE)
-    g.outline(134, 74, 22, 16, INK)
-    g.fill(140, 68, 8, 8, SHAKE)
-    g.fill(160, 78, 8, 12, INK)
-    # mugs
-    for i in range(5):
-        g.fill(176 + i * 8, 82, 6, 8, WHITE)
-        g.p(181 + i * 8, 84, WHITE)
-    # pastry case
-    g.fill(220, 74, 28, 16, (180, 200, 210, 255))
-    g.outline(220, 74, 28, 16, INK)
-    g.fill(224, 80, 6, 4, DUSK)
-    g.fill(232, 82, 6, 4, CREAM)
-    g.fill(240, 80, 5, 4, DUSK)
-    # shelf + jars
-    g.fill(130, 48, 44, 3, TEAK)
-    g.fill(134, 40, 6, 8, (160, 180, 170, 255))
-    g.fill(144, 38, 6, 10, (160, 180, 170, 255))
-    g.fill(154, 42, 6, 6, WHITE)
-    g.fill(162, 42, 6, 6, WHITE)
-    # chalkboard
-    g.fill(176, 28, 52, 22, INK)
-    g.outline(176, 28, 52, 22, TEAK_DK)
-    g.hline(182, 34, 20, CREAM)
-    g.hline(182, 38, 14, SHAKE)
-    g.hline(182, 42, 18, CREAM)
-    g.fill(214, 34, 6, 6, CREAM)
-    # pendant
-    g.vline(170, 16, 14, INK)
-    g.fill(164, 30, 12, 8, INK)
-    g.fill(166, 32, 8, 4, YELLOW)
-    # rug
-    g.fill(120, 124, 96, 22, NAVY)
-    g.outline(120, 124, 96, 22, TAN)
-    # anchor
-    g.vline(167, 128, 12, TAN)
-    g.hline(162, 138, 12, TAN)
-    g.p(167, 126, TAN)
-    # tables
-    for tx in (70, 210):
-        g.fill(tx, 132, 22, 4, TEAK_DK)
-        g.vline(tx + 4, 136, 10, TEAK_DK)
-        g.vline(tx + 16, 136, 10, TEAK_DK)
-        g.fill(tx - 8, 138, 8, 8, NAVY)
-        g.fill(tx + 22, 138, 8, 8, NAVY)
-        g.fill(tx + 8, 128, 4, 6, WHITE)
-        g.p(tx + 9, 126, WHITE)
-        g.p(tx + 10, 124, GRASS)
-    # window
-    g.fill(262, 32, 46, 48, (120, 180, 210, 255))
-    g.outline(262, 32, 46, 48, TEAK_DK)
-    g.vline(285, 32, 48, TEAK_DK)
-    g.hline(262, 56, 46, TEAK_DK)
-    # harbor in window
-    g.fill(264, 54, 42, 24, WATER_HI)
-    g.fill(264, 34, 42, 20, (186, 214, 230, 255))
-    g.fill(270, 46, 10, 12, RED)
-    g.fill(288, 50, 14, 8, NAVY)
-    g.fill(290, 46, 8, 6, CREAM)
-    # sill plant
-    g.fill(274, 78, 8, 6, OLIVE)
-    g.fill(300, 76, 10, 8, OLIVE)
-    # plant on counter
-    g.fill(248, 80, 6, 10, GRASS)
-    # frame already drawn as outer wood
-    g.outline(0, 0, 320, 180, TEAK_DK)
-    g.outline(1, 1, 318, 178, INK)
-    return g
-
-
 def draw_barrel() -> G:
     g = G(12, 16)
     g.fill(2, 2, 8, 12, TEAK)
@@ -787,6 +668,14 @@ def draw_barrel() -> G:
     g.hline(2, 5, 8, TEAK_LT)
     g.hline(2, 11, 8, TEAK_LT)
     return g
+
+
+def install_locked_cafe() -> None:
+    if not LOCKED_CAFE.is_file():
+        raise SystemExit(f"locked cafe missing: {LOCKED_CAFE}")
+    dest = OUT / "coffee-interior.png"
+    shutil.copyfile(LOCKED_CAFE, dest)
+    print(f"  {dest.name} locked from harbor/locked/")
 
 
 def main() -> None:
@@ -808,7 +697,7 @@ def main() -> None:
     draw_shack(True, False).save("shack-a.png")
     draw_shack(False, True).save("shack-b.png")
     draw_coffee_shop().save("coffee-shop.png")
-    draw_coffee_interior().save("coffee-interior.png")
+    install_locked_cafe()
 
     draw_seawall().save("seawall.png")
     draw_seawall_stairs().save("seawall-stairs.png")

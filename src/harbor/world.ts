@@ -53,6 +53,7 @@ export const BUILDINGS: BuildingDef[] = [
   },
 ];
 
+/** Locked cafe room. Do not swap `asset` or restyle the PNG. */
 export const INTERIORS: Record<"coffee", InteriorDef> = {
   coffee: {
     id: "coffee",

@@ -39,7 +39,7 @@ Camera follows the player (or the boat). Integer pixels. Weather (rain, fog, dus
 ## Add an enterable building
 
 1. Facade PNG in `public/harbor/` (transparent, integer size).
-2. Interior PNG, **320×180**, door on the walk line. Cafe interior is **locked** — do not restyle `coffee-interior.png`.
+2. Interior PNG, **320×180**, door on the walk line. **Do not restyle the cafe.** `harbor/locked/coffee-interior.png` is the signed-off room (navy counter, harbor window, framed boat painting). Copy it; do not generate a replacement.
 3. `BuildingDef` in `world.ts` with `interiorId` set.
 4. Matching `InteriorDef`: `spawnX`, `door` rect, optional `painting` rect for `public/boat.png`.
 5. Walk to the door, `E` / tap. `game.ts` already fades, switches `place`, and Esc/door leaves.

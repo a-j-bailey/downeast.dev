@@ -43,7 +43,9 @@ Sprite sheet rows: idle facing right; 4-frame walk right; 4-frame walk left; use
 Transparent background, consistent 18x32 box per frame, no row labels.
 ```
 
-## Cafe interior (LOCKED — do not restyle)
+## Cafe interior (LOCKED — do not generate a replacement)
+
+Adam approved `harbor/locked/coffee-interior.png`. Do not run this prompt to make a new room. Kept only so later shacks can match the same coastal interior language.
 
 ```
 Side-view pixel-art coffee shop interior, diorama box with dark wood frame.
