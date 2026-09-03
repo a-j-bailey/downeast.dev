@@ -8,8 +8,8 @@ import { Thoughts } from "./pages/Thoughts";
 export function App() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/thoughts" element={<Thoughts />} />
         <Route path="*" element={<NotFound />} />

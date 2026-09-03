@@ -1,0 +1,786 @@
+import Phaser from "phaser";
+import { STREAM_IMAGES, artUrl } from "../assets";
+import { applyHarborCamera } from "../camera";
+import { EventBus } from "../EventBus";
+import {
+  openInteractUrl,
+  type InteractId,
+  type Possession,
+} from "../interact";
+import { SCROLL } from "../layers";
+import {
+  HORIZON_Y,
+  LAND_BOTTOM_Y,
+  LAND_TOP_Y,
+  PLACES,
+  SPAWN,
+  WATER_BOTTOM_Y,
+  WATER_SURFACE_Y,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+} from "../layout";
+import { TEX } from "../textures";
+import {
+  ambientColor,
+  loadWeatherMood,
+  skyColor,
+  type WeatherMood,
+} from "../weather";
+
+type Zone = {
+  id: InteractId;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  mode: Possession;
+};
+
+function enableLight(obj: Phaser.GameObjects.GameObject): void {
+  const lit = obj as Phaser.GameObjects.GameObject & {
+    setLighting: (enable: boolean) => unknown;
+  };
+  lit.setLighting(true);
+}
+
+type Keys = {
+  up: Phaser.Input.Keyboard.Key;
+  down: Phaser.Input.Keyboard.Key;
+  left: Phaser.Input.Keyboard.Key;
+  right: Phaser.Input.Keyboard.Key;
+  e: Phaser.Input.Keyboard.Key;
+};
+
+export class HarborScene extends Phaser.Scene {
+  private player!: Phaser.GameObjects.Sprite;
+  private boat?: Phaser.GameObjects.Image;
+  private wake?: Phaser.GameObjects.TileSprite;
+  private water?: Phaser.GameObjects.TileSprite;
+  private lighthouse?: Phaser.GameObjects.Image;
+  private farShore?: Phaser.GameObjects.TileSprite;
+  private fogVeil?: Phaser.GameObjects.Rectangle;
+  private rain?: Phaser.GameObjects.Particles.ParticleEmitter;
+  private beam?: Phaser.GameObjects.Light;
+  private clouds: Phaser.GameObjects.Image[] = [];
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private wasd!: Keys;
+  private possession: Possession = "walker";
+  private walkTarget: { x: number; y: number } | null = null;
+  private boatVx = 0;
+  private boatVy = 0;
+  private beamAngle = 0;
+  private mood: WeatherMood = "clearDay";
+  private placed = new Set<string>();
+  private activeZone: InteractId | null = null;
+  private usingUntil = 0;
+  private entering = false;
+  private shark?: Phaser.GameObjects.Image;
+  private sharkDir = 1;
+
+  constructor() {
+    super({ key: "Harbor" });
+  }
+
+  create(): void {
+    this.cameras.main.roundPixels = true;
+    this.lights.enable();
+    this.lights.setAmbientColor(0x8899aa);
+    this.makeAnims();
+    this.buildBase();
+    this.buildPlayer();
+    this.placeReadyProps();
+    this.streamRest();
+    this.bindInput();
+    applyHarborCamera(this, this.player);
+    this.scale.on("resize", () => {
+      const follow = this.possession === "boat" && this.boat ? this.boat : this.player;
+      applyHarborCamera(this, follow);
+      this.layoutRain();
+    });
+
+    void loadWeatherMood(window.location.search).then((mood) => {
+      if (!this.sys.isActive()) {
+        return;
+      }
+      this.applyMood(mood);
+    });
+
+    this.time.addEvent({
+      delay: 16000,
+      loop: true,
+      callback: () => this.spawnShark(),
+    });
+
+    EventBus.on("harbor-interact", this.onHudInteract);
+    EventBus.emit("current-scene-ready", this);
+    this.events.once("shutdown", () => {
+      EventBus.off("harbor-interact", this.onHudInteract);
+    });
+  }
+
+  update(_time: number, delta: number): void {
+    const dt = Math.min(0.05, delta / 1000);
+    this.scrollWater(dt);
+    this.driftClouds(dt);
+    this.steer(dt);
+    this.updateDepth();
+    this.updateWake();
+    this.updateShark(dt);
+    this.updateBeam(dt);
+    this.refreshPrompt();
+  }
+
+  private makeAnims(): void {
+    if (this.anims.exists("player-walk")) {
+      return;
+    }
+    this.anims.create({
+      key: "player-walk",
+      frames: [
+        { key: "player-walk-0" },
+        { key: "player-walk-1" },
+        { key: "player-walk-2" },
+        { key: "player-walk-3" },
+      ],
+      frameRate: 8,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "player-idle",
+      frames: [{ key: "player-idle" }],
+      frameRate: 1,
+    });
+    this.anims.create({
+      key: "player-use",
+      frames: [{ key: "player-use" }],
+      frameRate: 1,
+    });
+  }
+
+  private buildBase(): void {
+    const sky = this.add.rectangle(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, WORLD_WIDTH * 2, WORLD_HEIGHT * 3, 0x5b93c5);
+    sky.setScrollFactor(SCROLL.sky);
+    sky.setDepth(-100);
+    sky.setName("sky");
+
+    const deep = this.add.rectangle(
+      WORLD_WIDTH / 2,
+      (WATER_SURFACE_Y + WATER_BOTTOM_Y) / 2 + 8,
+      WORLD_WIDTH,
+      WATER_BOTTOM_Y - WATER_SURFACE_Y,
+      0x16344f,
+    );
+    deep.setScrollFactor(SCROLL.water);
+    deep.setDepth(18);
+    enableLight(deep);
+
+    this.water = this.add.tileSprite(
+      WORLD_WIDTH / 2,
+      WATER_SURFACE_Y + 16,
+      WORLD_WIDTH + 128,
+      32,
+      "water",
+    );
+    this.water.setScrollFactor(SCROLL.water);
+    this.water.setDepth(20);
+    this.water.setLighting(true);
+
+    const land = this.add.rectangle(
+      WORLD_WIDTH / 2,
+      (LAND_TOP_Y + WORLD_HEIGHT) / 2,
+      WORLD_WIDTH,
+      WORLD_HEIGHT - LAND_TOP_Y + 8,
+      0x5f7034,
+    );
+    land.setScrollFactor(SCROLL.land);
+    land.setDepth(30);
+    enableLight(land);
+
+    const dirt = this.add.rectangle(WORLD_WIDTH / 2, LAND_TOP_Y + 4, WORLD_WIDTH, 10, 0x6b542e);
+    dirt.setScrollFactor(SCROLL.land);
+    dirt.setDepth(31);
+    enableLight(dirt);
+
+    this.fogVeil = this.add.rectangle(0, 0, 800, 400, 0xb8bec4, 0.4);
+    this.fogVeil.setOrigin(0, 0);
+    this.fogVeil.setScrollFactor(0);
+    this.fogVeil.setDepth(460);
+    this.fogVeil.setVisible(false);
+
+    this.rain = this.add.particles(0, 0, TEX.rain, {
+      x: { min: 0, max: 640 },
+      y: -10,
+      lifespan: 1000,
+      speedY: { min: 170, max: 250 },
+      speedX: { min: -28, max: -8 },
+      quantity: 3,
+      frequency: 18,
+      emitting: false,
+    });
+    this.rain.setScrollFactor(0);
+    this.rain.setDepth(500);
+    this.layoutRain();
+
+    this.beam = this.lights.addConeLight(
+      PLACES.lighthouse.x - 28,
+      PLACES.lighthouse.y - 78,
+      280,
+      0xffcc88,
+      0,
+      0,
+      Phaser.Math.DegToRad(28),
+      Phaser.Math.DegToRad(64),
+    );
+  }
+
+  private buildPlayer(): void {
+    this.player = this.add.sprite(SPAWN.x, SPAWN.y, "player-idle");
+    this.player.setOrigin(0.5, 1);
+    this.player.setScrollFactor(SCROLL.actors);
+    this.player.setDepth(SPAWN.y);
+    this.player.setLighting(true);
+    this.player.play("player-idle");
+  }
+
+  private streamRest(): void {
+    for (const key of STREAM_IMAGES) {
+      if (!this.textures.exists(key)) {
+        this.load.image(key, artUrl(key));
+      }
+    }
+    this.load.on("filecomplete", () => this.placeReadyProps());
+    if (this.load.totalToLoad > 0) {
+      this.load.start();
+    } else {
+      this.placeReadyProps();
+    }
+  }
+
+  private placeReadyProps(): void {
+    this.farShore = this.tileIfNeeded(
+      "far-shore",
+      "far-shore",
+      WORLD_WIDTH / 2,
+      HORIZON_Y,
+      WORLD_WIDTH * 2,
+      10,
+      SCROLL.farShore,
+      8,
+    );
+
+    this.onceImage("lighthouse", "lighthouse", PLACES.lighthouse.x, PLACES.lighthouse.y, {
+      scrollFactor: SCROLL.farShore,
+      depth: 12,
+    });
+    this.lighthouse = this.children.getByName("lighthouse") as Phaser.GameObjects.Image | undefined;
+
+    this.onceImage("coffee-shop", "coffee-shop", PLACES.coffee.x, PLACES.coffee.y, {
+      depth: PLACES.coffee.y - 8,
+    });
+    this.onceImage("shack-a", "shack-a", PLACES.shackA.x, PLACES.shackA.y, {
+      depth: PLACES.shackA.y - 8,
+    });
+    this.onceImage("shack-b", "shack-b", PLACES.shackB.x, PLACES.shackB.y, {
+      depth: PLACES.shackB.y - 8,
+    });
+    this.onceImage("sign-github", "sign-github", PLACES.signGithub.x, PLACES.signGithub.y, {
+      depth: PLACES.signGithub.y,
+    });
+    this.onceImage("sign-x", "sign-x", PLACES.signX.x, PLACES.signX.y, {
+      depth: PLACES.signX.y,
+    });
+    this.onceImage("kayak", "kayak", PLACES.kayak.x, PLACES.kayak.y, { depth: PLACES.kayak.y });
+    this.onceImage("paddle", "paddle", PLACES.paddle.x, PLACES.paddle.y, {
+      depth: PLACES.paddle.y,
+    });
+
+    this.placeSeawall();
+    this.placePiers();
+    this.placeTraps();
+    this.placeBoat();
+    this.placeClouds();
+  }
+
+  private placeSeawall(): void {
+    if (!this.textures.exists("seawall")) {
+      return;
+    }
+    const frame = this.textures.get("seawall").get();
+    const tileW = frame.width;
+    let i = 0;
+    for (let x = tileW / 2; x < WORLD_WIDTH + tileW; x += tileW) {
+      this.onceImage(`seawall-${i}`, "seawall", x, LAND_TOP_Y + 8, { depth: 34 });
+      i += 1;
+    }
+    this.onceImage("seawall-stairs", "seawall-stairs", PLACES.coffee.x - 20, LAND_TOP_Y + 8, {
+      depth: 35,
+    });
+  }
+
+  private placePiers(): void {
+    this.onceImage("pier-dock", "pier", PLACES.pier.x, PLACES.pier.y, { depth: 36 });
+    this.onceImage("pier-pylon", "pier", PLACES.pylon.x, PLACES.pylon.y + 6, { depth: 37 });
+    this.onceImage("pier-fg-0", "pier", 96, LAND_BOTTOM_Y - 2, {
+      scrollFactor: SCROLL.foreground,
+      depth: 900,
+    });
+    this.onceImage("pier-fg-1", "pier", 168, LAND_BOTTOM_Y, {
+      scrollFactor: SCROLL.foreground,
+      depth: 901,
+    });
+    this.onceImage("pier-fg-2", "pier", 430, LAND_BOTTOM_Y, {
+      scrollFactor: SCROLL.foreground,
+      depth: 902,
+    });
+  }
+
+  private placeTraps(): void {
+    this.onceImage("trap-0", "trap", 198, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
+    this.onceImage("trap-stack", "trap-stack", 214, LAND_TOP_Y + 8, { depth: LAND_TOP_Y + 8 });
+    this.onceImage("trap-buoy", "trap-buoy", 760, LAND_TOP_Y + 4, { depth: LAND_TOP_Y + 4 });
+    this.onceImage("trap-1", "trap", 900, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
+  }
+
+  private placeBoat(): void {
+    if (this.boat || !this.textures.exists("boat")) {
+      return;
+    }
+    this.boat = this.onceImage("boat", "boat", PLACES.boat.x, PLACES.boat.y, {
+      depth: PLACES.boat.y,
+      flipX: true,
+    });
+    if (this.textures.exists("wake") && !this.wake) {
+      this.wake = this.add.tileSprite(PLACES.boat.x - 70, PLACES.boat.y - 6, 96, 16, "wake");
+      this.wake.setOrigin(0.5, 1);
+      this.wake.setScrollFactor(SCROLL.actors);
+      this.wake.setDepth(PLACES.boat.y - 1);
+      this.wake.setVisible(false);
+      this.wake.setLighting(true);
+    }
+  }
+
+  private placeClouds(): void {
+    if (!this.textures.exists("cloud") || this.clouds.length > 0) {
+      return;
+    }
+    const spots = [
+      { x: 80, y: 28 },
+      { x: 260, y: 44 },
+      { x: 520, y: 22 },
+      { x: 880, y: 36 },
+    ];
+    for (const spot of spots) {
+      const cloud = this.add.image(spot.x, spot.y, "cloud");
+      cloud.setScrollFactor(SCROLL.sky);
+      cloud.setDepth(-20);
+      this.clouds.push(cloud);
+    }
+  }
+
+  private tileIfNeeded(
+    id: string,
+    key: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    scrollFactor: number,
+    depth: number,
+  ): Phaser.GameObjects.TileSprite | undefined {
+    if (this.placed.has(id) || !this.textures.exists(key)) {
+      return this.children.getByName(id) as Phaser.GameObjects.TileSprite | undefined;
+    }
+    const sprite = this.add.tileSprite(x, y, width, height, key);
+    sprite.setName(id);
+    sprite.setOrigin(0.5, 1);
+    sprite.setScrollFactor(scrollFactor);
+    sprite.setDepth(depth);
+    sprite.setLighting(true);
+    this.placed.add(id);
+    return sprite;
+  }
+
+  private onceImage(
+    id: string,
+    key: string,
+    x: number,
+    y: number,
+    opts: {
+      scrollFactor?: number;
+      depth?: number;
+      flipX?: boolean;
+    } = {},
+  ): Phaser.GameObjects.Image | undefined {
+    if (this.placed.has(id) || !this.textures.exists(key)) {
+      return this.children.getByName(id) as Phaser.GameObjects.Image | undefined;
+    }
+    const img = this.add.image(x, y, key);
+    img.setName(id);
+    img.setOrigin(0.5, 1);
+    img.setScrollFactor(opts.scrollFactor ?? SCROLL.land);
+    img.setDepth(opts.depth ?? y);
+    img.setLighting(true);
+    if (opts.flipX) {
+      img.setFlipX(true);
+    }
+    this.placed.add(id);
+    return img;
+  }
+
+  private bindInput(): void {
+    const keyboard = this.input.keyboard;
+    if (!keyboard) {
+      return;
+    }
+    this.cursors = keyboard.createCursorKeys();
+    this.wasd = keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+      e: Phaser.Input.Keyboard.KeyCodes.E,
+    }) as Keys;
+
+    keyboard.on("keydown-E", () => this.tryInteract());
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      this.walkTarget = { x: world.x, y: world.y };
+    });
+  }
+
+  private onHudInteract = (): void => {
+    this.tryInteract();
+  };
+
+  private wish(dt: number): { x: number; y: number; keyed: boolean } {
+    void dt;
+    let x = 0;
+    let y = 0;
+    if (this.cursors.left.isDown || this.wasd.left.isDown) {
+      x -= 1;
+    }
+    if (this.cursors.right.isDown || this.wasd.right.isDown) {
+      x += 1;
+    }
+    if (this.cursors.up.isDown || this.wasd.up.isDown) {
+      y -= 1;
+    }
+    if (this.cursors.down.isDown || this.wasd.down.isDown) {
+      y += 1;
+    }
+    const keyed = x !== 0 || y !== 0;
+    if (keyed) {
+      this.walkTarget = null;
+    } else if (this.walkTarget) {
+      const body = this.possession === "boat" && this.boat ? this.boat : this.player;
+      x = this.walkTarget.x - body.x;
+      y = this.walkTarget.y - body.y;
+      if (Math.hypot(x, y) < 4) {
+        this.walkTarget = null;
+        x = 0;
+        y = 0;
+      }
+    }
+    const mag = Math.hypot(x, y);
+    if (mag > 0) {
+      x /= mag;
+      y /= mag;
+    }
+    return { x, y, keyed };
+  }
+
+  private steer(dt: number): void {
+    const wish = this.wish(dt);
+    if (this.possession === "boat" && this.boat) {
+      this.boatVx += (wish.x * 96 - this.boatVx) * Math.min(1, 1.6 * dt);
+      this.boatVy += (wish.y * 52 - this.boatVy) * Math.min(1, 1.6 * dt);
+      this.boat.x = Phaser.Math.Clamp(this.boat.x + this.boatVx * dt, 60, WORLD_WIDTH - 60);
+      this.boat.y = Phaser.Math.Clamp(this.boat.y + this.boatVy * dt, WATER_SURFACE_Y + 18, WATER_BOTTOM_Y - 6);
+      if (Math.abs(this.boatVx) > 8) {
+        this.boat.setFlipX(this.boatVx > 0);
+      }
+      const moving = Math.hypot(this.boatVx, this.boatVy) > 12;
+      if (moving && this.textures.exists("boat-underway")) {
+        this.boat.setTexture("boat-underway");
+      } else if (this.textures.exists("boat")) {
+        this.boat.setTexture("boat");
+      }
+      this.player.setPosition(this.boat.x, this.boat.y - 8);
+      return;
+    }
+
+    const speed = 72;
+    const using = this.time.now < this.usingUntil;
+    if (using) {
+      this.player.play("player-use", true);
+      return;
+    }
+    this.player.x = Phaser.Math.Clamp(
+      this.player.x + wish.x * speed * dt,
+      24,
+      WORLD_WIDTH - 24,
+    );
+    this.player.y = Phaser.Math.Clamp(
+      this.player.y + wish.y * speed * dt,
+      this.minWalkerY(this.player.x),
+      LAND_BOTTOM_Y,
+    );
+    if (wish.x !== 0) {
+      this.player.setFlipX(wish.x < 0);
+    }
+    if (wish.x !== 0 || wish.y !== 0) {
+      this.player.play("player-walk", true);
+    } else {
+      this.player.play("player-idle", true);
+    }
+  }
+
+  private minWalkerY(x: number): number {
+    if (x > 40 && x < 210) {
+      return 176;
+    }
+    return LAND_TOP_Y + 10;
+  }
+
+  private updateDepth(): void {
+    this.player.setDepth(this.player.y);
+    if (this.boat) {
+      this.boat.setDepth(this.boat.y);
+    }
+    if (this.wake && this.boat) {
+      this.wake.setDepth(this.boat.y - 1);
+    }
+  }
+
+  private updateWake(): void {
+    if (!this.wake || !this.boat) {
+      return;
+    }
+    const moving = this.possession === "boat" && Math.hypot(this.boatVx, this.boatVy) > 14;
+    this.wake.setVisible(moving);
+    if (!moving) {
+      return;
+    }
+    const facingRight = this.boat.flipX;
+    const stern = facingRight ? -78 : 78;
+    this.wake.setPosition(this.boat.x + stern, this.boat.y - 4);
+    this.wake.setFlipX(!facingRight);
+    this.wake.tilePositionX += facingRight ? 40 * 0.016 : -40 * 0.016;
+  }
+
+  private scrollWater(dt: number): void {
+    if (this.water) {
+      this.water.tilePositionX += 12 * dt;
+    }
+  }
+
+  private driftClouds(dt: number): void {
+    for (const cloud of this.clouds) {
+      cloud.x += 6 * dt;
+      if (cloud.x > WORLD_WIDTH + 80) {
+        cloud.x = -80;
+      }
+    }
+  }
+
+  private spawnShark(): void {
+    if (this.shark || !this.textures.exists("shark-fin")) {
+      return;
+    }
+    this.sharkDir = Math.random() > 0.5 ? 1 : -1;
+    const x = this.sharkDir > 0 ? 40 : WORLD_WIDTH - 40;
+    const y = WATER_SURFACE_Y + 20 + Math.random() * 18;
+    this.shark = this.add.image(x, y, "shark-fin");
+    this.shark.setOrigin(0.5, 1);
+    this.shark.setScrollFactor(SCROLL.actors);
+    this.shark.setDepth(y);
+    this.shark.setFlipX(this.sharkDir < 0);
+    this.shark.setLighting(true);
+  }
+
+  private updateShark(dt: number): void {
+    if (!this.shark) {
+      return;
+    }
+    this.shark.x += this.sharkDir * 28 * dt;
+    this.shark.setDepth(this.shark.y);
+    if (this.shark.x < -40 || this.shark.x > WORLD_WIDTH + 40) {
+      this.shark.destroy();
+      this.shark = undefined;
+    }
+  }
+
+  private updateBeam(dt: number): void {
+    if (!this.beam) {
+      return;
+    }
+    this.beamAngle += 0.55 * dt;
+    const lantern = this.lanternWorld();
+    this.beam.x = lantern.x;
+    this.beam.y = lantern.y;
+    this.beam.setConeRotation(this.beamAngle);
+    const on = this.mood === "night";
+    this.beam.setIntensity(on ? 2.6 : 0);
+    this.beam.setVisible(on);
+  }
+
+  private lanternWorld(): { x: number; y: number } {
+    const sx = this.lighthouse?.x ?? PLACES.lighthouse.x;
+    const sy = this.lighthouse?.y ?? PLACES.lighthouse.y;
+    const sf = SCROLL.farShore;
+    const cam = this.cameras.main;
+    return {
+      x: sx - 28 + cam.scrollX * (1 - sf),
+      y: sy - 78 + cam.scrollY * (1 - sf),
+    };
+  }
+
+  private zones(): Zone[] {
+    const zones: Zone[] = [
+      { id: "cafe", x: PLACES.coffee.x + 28, y: LAND_TOP_Y + 18, w: 50, h: 36, mode: "walker" },
+      { id: "board", x: PLACES.boat.x, y: 184, w: 70, h: 40, mode: "walker" },
+      { id: "dismount", x: PLACES.pylon.x + 10, y: 176, w: 70, h: 40, mode: "boat" },
+      { id: "github", x: PLACES.signGithub.x, y: LAND_TOP_Y + 16, w: 36, h: 40, mode: "walker" },
+      { id: "x", x: PLACES.signX.x, y: LAND_TOP_Y + 16, w: 36, h: 40, mode: "walker" },
+      { id: "zoning", x: PLACES.shackA.x - 8, y: LAND_TOP_Y + 16, w: 50, h: 36, mode: "walker" },
+      { id: "potager", x: PLACES.shackB.x - 8, y: LAND_TOP_Y + 16, w: 50, h: 36, mode: "walker" },
+    ];
+    return zones;
+  }
+
+  private overlappingZone(): InteractId | null {
+    const body = this.possession === "boat" && this.boat ? this.boat : this.player;
+    for (const zone of this.zones()) {
+      if (zone.mode !== this.possession) {
+        continue;
+      }
+      if (Math.abs(body.x - zone.x) <= zone.w / 2 && Math.abs(body.y - zone.y) <= zone.h / 2) {
+        return zone.id;
+      }
+    }
+    return null;
+  }
+
+  private refreshPrompt(): void {
+    const next = this.overlappingZone();
+    if (next === this.activeZone) {
+      return;
+    }
+    this.activeZone = next;
+    EventBus.emit("harbor-prompt", next);
+  }
+
+  private tryInteract(): void {
+    const id = this.overlappingZone();
+    if (!id) {
+      return;
+    }
+    this.usingUntil = this.time.now + 220;
+    if (this.possession === "walker") {
+      this.player.play("player-use", true);
+    }
+    switch (id) {
+      case "cafe":
+        this.enterCafe();
+        break;
+      case "board":
+        this.board();
+        break;
+      case "dismount":
+        this.dismount();
+        break;
+      case "github":
+      case "x":
+      case "zoning":
+      case "potager":
+        openInteractUrl(id);
+        break;
+      case "leave":
+        break;
+      default: {
+        const _exhaustive: never = id;
+        return _exhaustive;
+      }
+    }
+  }
+
+  private enterCafe(): void {
+    if (this.entering) {
+      return;
+    }
+    this.entering = true;
+    this.cameras.main.fadeOut(220, 0, 0, 0);
+    this.cameras.main.once("camerafadeoutcomplete", () => {
+      this.entering = false;
+      this.scene.pause();
+      this.scene.launch("Interior", { id: "cafe" });
+    });
+  }
+
+  private board(): void {
+    if (!this.boat) {
+      return;
+    }
+    this.possession = "boat";
+    this.player.setVisible(false);
+    this.walkTarget = null;
+    this.boatVx = 0;
+    this.boatVy = 0;
+    applyHarborCamera(this, this.boat);
+  }
+
+  private dismount(): void {
+    this.possession = "walker";
+    this.player.setVisible(true);
+    this.player.setPosition(PLACES.pylon.x + 24, LAND_TOP_Y + 22);
+    this.boatVx = 0;
+    this.boatVy = 0;
+    if (this.boat && this.textures.exists("boat")) {
+      this.boat.setTexture("boat");
+    }
+    if (this.wake) {
+      this.wake.setVisible(false);
+    }
+    applyHarborCamera(this, this.player);
+  }
+
+  private applyMood(mood: WeatherMood): void {
+    this.mood = mood;
+    const sky = skyColor(mood);
+    this.cameras.main.setBackgroundColor(sky);
+    const skyRect = this.children.getByName("sky") as Phaser.GameObjects.Rectangle | null;
+    if (skyRect) {
+      skyRect.setFillStyle(sky, 1);
+    }
+    this.lights.setAmbientColor(ambientColor(mood));
+    if (this.fogVeil) {
+      this.fogVeil.setVisible(mood === "fog");
+    }
+    if (this.farShore) {
+      this.farShore.setVisible(mood !== "fog");
+    }
+    if (this.lighthouse) {
+      this.lighthouse.setVisible(mood !== "fog");
+    }
+    if (this.rain) {
+      if (mood === "rain") {
+        this.rain.start();
+      } else {
+        this.rain.stop();
+      }
+    }
+    EventBus.emit("harbor-weather", mood);
+  }
+
+  private layoutRain(): void {
+    if (!this.rain) {
+      return;
+    }
+    const visW = Math.max(480, Math.ceil(this.scale.width / Math.max(1, this.cameras.main.zoom)));
+    const visH = Math.max(270, Math.ceil(this.scale.height / Math.max(1, this.cameras.main.zoom)));
+    this.rain.setConfig({ x: { min: 0, max: visW } });
+    if (this.fogVeil) {
+      this.fogVeil.setSize(visW + 8, visH + 8);
+    }
+  }
+}

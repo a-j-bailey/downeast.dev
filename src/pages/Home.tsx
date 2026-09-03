@@ -1,20 +1,12 @@
 import { DocumentTitle } from "../components/DocumentTitle";
+import { HarborGame } from "../components/HarborGame";
 
 export function Home() {
   return (
-    <article className="home">
+    <div className="harbor-page">
       <DocumentTitle kind="home" />
-      <figure className="hero">
-        <img
-          src="/boat.png"
-          alt="Ink drawing of a man working on a laptop at the stern of a Downeast motorboat."
-          width={1936}
-          height={979}
-        />
-      </figure>
-      <h1 className="wordmark">downeast.dev</h1>
-      <p className="name">Adam Bailey</p>
-      <p className="lede">fresh New England software</p>
-    </article>
+      <HarborGame />
+      <h1 className="harbor-wordmark">downeast.dev</h1>
+    </div>
   );
 }

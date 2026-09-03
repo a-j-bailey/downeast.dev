@@ -47,6 +47,16 @@ html {
   background: var(--bg);
 }
 
+html.harbor-play,
+html.harbor-play body,
+html.harbor-play #root {
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #5b93c5;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -174,6 +184,51 @@ img {
 
 .home {
   padding-top: 0.15rem;
+}
+
+.harbor-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #5b93c5;
+}
+
+.harbor-root {
+  position: absolute;
+  inset: 0;
+  outline: none;
+}
+
+.harbor-root canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.harbor-wordmark {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  z-index: 2;
+  margin: 0;
+  transform: translateX(-50%);
+  color: #fffcf0;
+  font-family: var(--font-display);
+  font-size: clamp(1.85rem, 6vw, 3.25rem);
+  font-weight: 500;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow:
+    1px 0 0 #100f0f,
+    -1px 0 0 #100f0f,
+    0 1px 0 #100f0f,
+    0 -1px 0 #100f0f;
 }
 
 .hero {
