@@ -19,8 +19,11 @@ export class HudScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.transparent = true;
-    this.cameras.main.setBackgroundColor("rgba(0,0,0,0)");
+    const hudCam = this.cameras.main;
+    if (hudCam) {
+      hudCam.transparent = true;
+      hudCam.setBackgroundColor("rgba(0,0,0,0)");
+    }
     this.chip = this.add.nineslice(0, 0, TEX.chip, 0, 96, 16, 2, 2, 2, 2);
     this.chip.setOrigin(0.5, 1);
     this.chip.setScrollFactor(0);
@@ -56,12 +59,13 @@ export class HudScene extends Phaser.Scene {
     this.layout();
     this.setPrompt(null);
 
-    this.scale.on("resize", () => this.layout());
+    this.scale.on("resize", this.onResize, this);
     EventBus.on("harbor-prompt", this.onPrompt);
     EventBus.on("harbor-weather", this.onWeather);
     this.events.once("shutdown", () => {
       EventBus.off("harbor-prompt", this.onPrompt);
       EventBus.off("harbor-weather", this.onWeather);
+      this.scale.off("resize", this.onResize, this);
     });
 
     this.time.addEvent({
@@ -72,6 +76,13 @@ export class HudScene extends Phaser.Scene {
       },
     });
   }
+
+  private onResize = (): void => {
+    if (!this.sys.isActive()) {
+      return;
+    }
+    this.layout();
+  };
 
   private onPrompt = (...args: unknown[]): void => {
     const id = (args[0] ?? null) as InteractId | null;

@@ -36,13 +36,6 @@ type Zone = {
   mode: Possession;
 };
 
-function enableLight(obj: Phaser.GameObjects.GameObject): void {
-  const lit = obj as Phaser.GameObjects.GameObject & {
-    setLighting: (enable: boolean) => unknown;
-  };
-  lit.setLighting(true);
-}
-
 type Keys = {
   up: Phaser.Input.Keyboard.Key;
   down: Phaser.Input.Keyboard.Key;
@@ -92,11 +85,7 @@ export class HarborScene extends Phaser.Scene {
     this.streamRest();
     this.bindInput();
     applyHarborCamera(this, this.player);
-    this.scale.on("resize", () => {
-      const follow = this.possession === "boat" && this.boat ? this.boat : this.player;
-      applyHarborCamera(this, follow);
-      this.layoutRain();
-    });
+    this.scale.on("resize", this.onResize, this);
 
     void loadWeatherMood(window.location.search).then((mood) => {
       if (!this.sys.isActive()) {
@@ -115,8 +104,18 @@ export class HarborScene extends Phaser.Scene {
     EventBus.emit("current-scene-ready", this);
     this.events.once("shutdown", () => {
       EventBus.off("harbor-interact", this.onHudInteract);
+      this.scale.off("resize", this.onResize, this);
     });
   }
+
+  private onResize = (): void => {
+    if (!this.sys.isActive()) {
+      return;
+    }
+    const follow = this.possession === "boat" && this.boat ? this.boat : this.player;
+    applyHarborCamera(this, follow);
+    this.layoutRain();
+  };
 
   update(_time: number, delta: number): void {
     const dt = Math.min(0.05, delta / 1000);
@@ -172,7 +171,6 @@ export class HarborScene extends Phaser.Scene {
     );
     deep.setScrollFactor(SCROLL.water);
     deep.setDepth(18);
-    enableLight(deep);
 
     this.water = this.add.tileSprite(
       WORLD_WIDTH / 2,
@@ -183,7 +181,6 @@ export class HarborScene extends Phaser.Scene {
     );
     this.water.setScrollFactor(SCROLL.water);
     this.water.setDepth(20);
-    this.water.setLighting(true);
 
     const land = this.add.rectangle(
       WORLD_WIDTH / 2,
@@ -194,12 +191,10 @@ export class HarborScene extends Phaser.Scene {
     );
     land.setScrollFactor(SCROLL.land);
     land.setDepth(30);
-    enableLight(land);
 
     const dirt = this.add.rectangle(WORLD_WIDTH / 2, LAND_TOP_Y + 4, WORLD_WIDTH, 10, 0x6b542e);
     dirt.setScrollFactor(SCROLL.land);
     dirt.setDepth(31);
-    enableLight(dirt);
 
     this.fogVeil = this.add.rectangle(0, 0, 800, 400, 0xb8bec4, 0.4);
     this.fogVeil.setOrigin(0, 0);
@@ -243,13 +238,16 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private streamRest(): void {
+    let queued = 0;
     for (const key of STREAM_IMAGES) {
       if (!this.textures.exists(key)) {
         this.load.image(key, artUrl(key));
+        queued += 1;
       }
     }
+    this.load.once("complete", () => this.placeReadyProps());
     this.load.on("filecomplete", () => this.placeReadyProps());
-    if (this.load.totalToLoad > 0) {
+    if (queued > 0) {
       this.load.start();
     } else {
       this.placeReadyProps();

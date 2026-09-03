@@ -12,7 +12,6 @@ export class BootScene extends Phaser.Scene {
   create(): void {
     ensureUiTextures(this);
     this.drawLoader(0);
-    this.scale.on("resize", () => this.drawLoader(this.load.progress));
 
     this.load.on("progress", (value: number) => {
       this.drawLoader(value);
@@ -28,7 +27,18 @@ export class BootScene extends Phaser.Scene {
       this.load.image(key, artUrl(key));
     }
     this.load.start();
+    this.events.once("shutdown", () => {
+      this.scale.off("resize", this.onResize, this);
+    });
+    this.scale.on("resize", this.onResize, this);
   }
+
+  private onResize = (): void => {
+    if (!this.sys.isActive()) {
+      return;
+    }
+    this.drawLoader(this.load.progress);
+  };
 
   private drawLoader(progress: number): void {
     const view = applyHudCamera(this);

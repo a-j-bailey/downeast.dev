@@ -23,11 +23,10 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
       antialiasGL: false,
     },
     scale: {
-      // RESIZE + integer camera zoom: fills the viewport, keeps 1:1 pixels,
-      // and shows extra harbor on wide screens. FIT + MAX_ZOOM letterboxes.
-      mode: Phaser.Scale.RESIZE,
+      mode: Phaser.Scale.EXPAND,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      zoom: Phaser.Scale.MAX_ZOOM,
       autoRound: true,
-      expandParent: false,
     },
     physics: {
       default: "arcade",

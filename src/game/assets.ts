@@ -9,23 +9,23 @@ export const BOOT_IMAGES = [
   "player-walk-3",
   "player-use",
   "coffee-shop",
-] as const;
-
-export const STREAM_IMAGES = [
-  "far-shore",
-  "cloud",
   "lighthouse",
+  "far-shore",
   "seawall",
-  "seawall-stairs",
   "pier",
   "boat",
-  "boat-underway",
-  "wake",
   "shack-a",
   "shack-b",
   "sign-github",
   "sign-x",
   "kayak",
+  "cloud",
+] as const;
+
+export const STREAM_IMAGES = [
+  "seawall-stairs",
+  "boat-underway",
+  "wake",
   "paddle",
   "trap",
   "trap-stack",

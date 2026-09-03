@@ -1,22 +1,31 @@
 import type Phaser from "phaser";
-import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_WIDTH, integerZoom } from "./view";
+import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_WIDTH } from "./view";
+
+function mainCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Camera | undefined {
+  const manager = scene.cameras;
+  if (!manager) {
+    return undefined;
+  }
+  return manager.main ?? manager.cameras[0];
+}
 
 export function applyHarborCamera(
   scene: Phaser.Scene,
   follow?: Phaser.GameObjects.GameObject,
 ): void {
-  const zoom = integerZoom(scene.scale.width, scene.scale.height);
-  const visibleH = Math.max(1, Math.ceil(scene.scale.height / zoom));
-  const cam = scene.cameras.main;
-  cam.setZoom(zoom);
+  const cam = mainCamera(scene);
+  if (!cam) {
+    return;
+  }
   cam.setRoundPixels(true);
-  const boundY = Math.min(0, WORLD_HEIGHT - visibleH);
-  cam.setBounds(0, boundY, WORLD_WIDTH, Math.max(WORLD_HEIGHT, visibleH));
+  const viewH = scene.scale.height || VIEW_HEIGHT;
+  const boundY = Math.min(0, WORLD_HEIGHT - viewH);
+  cam.setBounds(0, boundY, WORLD_WIDTH, Math.max(WORLD_HEIGHT, viewH));
   if (follow) {
-    const skyPad = Math.round(visibleH / 3 - 24);
+    const skyPad = Math.round(viewH / 3 - 24);
     cam.startFollow(follow, true, 0.12, 0.12);
     cam.setFollowOffset(0, -skyPad);
-    cam.setDeadzone(Math.round(scene.scale.width / zoom / 6), Math.round(visibleH / 8));
+    cam.setDeadzone(Math.round((scene.scale.width || 480) / 6), Math.round(viewH / 8));
   }
 }
 
@@ -25,14 +34,12 @@ export function applyHudCamera(scene: Phaser.Scene): {
   width: number;
   height: number;
 } {
-  const zoom = integerZoom(scene.scale.width, scene.scale.height);
-  const width = Math.max(1, Math.ceil(scene.scale.width / zoom));
-  const height = Math.max(1, Math.ceil(scene.scale.height / zoom));
-  const cam = scene.cameras.main;
-  cam.setZoom(zoom);
-  cam.setRoundPixels(true);
-  cam.centerOn(width / 2, height / 2);
-  cam.setScroll(0, 0);
-  void VIEW_HEIGHT;
-  return { zoom, width, height };
+  const cam = mainCamera(scene);
+  const width = Math.max(1, Math.floor(scene.scale.width || 480));
+  const height = Math.max(1, Math.floor(scene.scale.height || 270));
+  if (cam) {
+    cam.setRoundPixels(true);
+    cam.setScroll(0, 0);
+  }
+  return { zoom: 1, width, height };
 }
