@@ -8,18 +8,29 @@ export function Layout() {
   const location = useLocation();
   const isHome = location.pathname === "/";
 
+  if (isHome) {
+    return (
+      <>
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+        <main id="main" className="harbor-main">
+          <Outlet />
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
       <div className="shell">
-        <header className={isHome ? "site-header is-home" : "site-header"}>
-          {isHome ? null : (
-            <NavLink to="/" className="wordmark-link">
-              downeast.dev
-            </NavLink>
-          )}
+        <header className="site-header">
+          <NavLink to="/" className="wordmark-link">
+            downeast.dev
+          </NavLink>
           <nav className="nav" aria-label="Site">
             {projects.length > 0 ? (
               <NavLink to="/projects">Projects</NavLink>

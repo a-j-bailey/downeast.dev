@@ -1,8 +1,20 @@
 # downeast.dev
 
-Personal site for [Adam Bailey](https://github.com/a-j-bailey). Ink on paper. The drawing is the thing people remember.
+Personal site for [Adam Bailey](https://github.com/a-j-bailey). The homepage is a walkable side-view Maine harbor. The original boat drawing hangs as a painting in the coffee shop.
 
 This is a static Vite + React SPA. It deploys as a Cloudflare Worker named `downeast-dev` that serves `dist/` as static assets with SPA fallback. There is no Worker script.
+
+## Walk the harbor
+
+On [downeast.dev](https://downeast.dev):
+
+- **Arrows** or **WASD** — walk left/right (onto the pier). In the boat: steer, **up/down** to throttle out to open water.
+- **E** or **Enter** — use the nearest door, sign, or boat. **Esc** leaves the coffee shop.
+- **Tap** the ground to walk; tap a building or sign to use it.
+
+GitHub and X are the trail signs in the street. The coffee shop is enterable. The shacks are closed until they have interiors. Weather follows Bristol, Rhode Island.
+
+How to grow the world: `.cursor/skills/harbor-world/SKILL.md` and `harbor/ART.md`.
 
 ## Develop
 
@@ -64,11 +76,11 @@ builds `dist/` and deploys. GitHub Actions (`.github/workflows/deploy.yml`) depl
 
 ## Color
 
-The palette is [Flexoki](https://stephango.com/flexoki) by Steph Ango (MIT). Tokens live in `src/index.css` as `--bg`, `--bg-2`, `--ui`, `--tx`, `--cy`, and the rest. Do not add greys from outside that set. The paper background is Flexoki `--bg` (`#FFFCF0`) so the ink drawing sits on the intended sheet.
+Type and chrome still use [Flexoki](https://stephango.com/flexoki) by Steph Ango (MIT) in `src/index.css`. Harbor sprites use the coastal palette in `harbor/ART.md` — Flexoki is optional there.
 
 ## Assets
 
-The source drawing is `public/boat.jpeg` (ink on paper). `scripts/punch-boat.py` knocks the paper out and writes `public/boat.png` in Flexoki black. Favicons, the apple touch icon, the Open Graph image, and the 404 wake are cropped or composited from that PNG.
+The source drawing is `public/boat.jpeg` (ink on paper). `scripts/punch-boat.py` knocks the paper out and writes `public/boat.png` in Flexoki black. Favicons, the apple touch icon, the Open Graph image, and the 404 wake are cropped or composited from that PNG. Harbor sprites live in `public/harbor/` and are regenerated with `python3 scripts/harbor-sprites.py`.
 
 ```sh
 python3 scripts/punch-boat.py
