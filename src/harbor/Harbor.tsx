@@ -8,16 +8,6 @@ import { GITHUB_PROFILE_URL, PERSON_NAME, X_PROFILE_URL } from "../content/site"
 import { createGame } from "./game";
 import "./harbor.css";
 import type { Period, Prompt } from "./types";
-import { VIEW_H, VIEW_W } from "./view";
-
-function fit(wrap: HTMLElement, canvas: HTMLCanvasElement): void {
-  const scale = Math.max(
-    1,
-    Math.floor(Math.min(wrap.clientWidth / VIEW_W, wrap.clientHeight / VIEW_H)),
-  );
-  canvas.style.width = `${VIEW_W * scale}px`;
-  canvas.style.height = `${VIEW_H * scale}px`;
-}
 
 export function Harbor() {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -35,13 +25,8 @@ export function Harbor() {
       onPrompt: setPrompt,
       onPeriod: setPeriod,
     });
-    const resize = () => fit(wrap, canvas);
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(wrap);
     return () => {
       game.destroy();
-      ro.disconnect();
     };
   }, []);
 
@@ -50,8 +35,8 @@ export function Harbor() {
       <canvas
         ref={canvasRef}
         className="harbor-canvas"
-        width={VIEW_W}
-        height={VIEW_H}
+        width={1}
+        height={1}
         aria-hidden="true"
       />
       <div className="harbor-sky">

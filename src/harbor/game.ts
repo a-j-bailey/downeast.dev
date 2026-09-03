@@ -2,7 +2,15 @@ import { loadAssets, type Assets } from "./assets";
 import { bindInput, type Input } from "./input";
 import { drawFrame, type DrawState } from "./render";
 import type { Mode, Place, Prompt, Weather } from "./types";
-import { GROUND_Y, VIEW_H, VIEW_W } from "./view";
+import {
+  GROUND_Y,
+  OCEAN_MIN,
+  ROOM_H,
+  VIEW_H,
+  VIEW_W,
+  WALK_MAX,
+  WALK_MIN,
+} from "./view";
 import { cachedWeather, loadWeather } from "./weather";
 import {
   BUILDINGS,
@@ -50,7 +58,8 @@ const REACH = 28;
 
 function playerY(place: Place): number {
   if (place === "coffee") {
-    return INTERIORS.coffee.floorY - 32;
+    const interiorScaleY = VIEW_H / ROOM_H;
+    return INTERIORS.coffee.floorY - 32 * interiorScaleY;
   }
   return GROUND_Y - 32;
 }
@@ -100,9 +109,11 @@ function followCam(state: State, focusX: number): void {
   } else if (view > deadR) {
     state.camX = focusX - deadR;
   }
-  const min = state.mode === "boat" ? -680 : 0;
-  const max = 680 - VIEW_W;
-  state.camX = Math.round(Math.max(min, Math.min(max, state.camX)));
+  const worldMin = state.mode === "boat" ? OCEAN_MIN : WALK_MIN;
+  const worldMax = WALK_MAX;
+  const lo = Math.min(worldMax - VIEW_W, worldMin);
+  const hi = Math.max(worldMax - VIEW_W, worldMin);
+  state.camX = Math.round(Math.max(lo, Math.min(hi, state.camX)));
 }
 
 function applyUse(state: State): void {
@@ -241,11 +252,48 @@ export function createGame(canvas: HTMLCanvasElement, hooks: GameHooks): GameHan
   if (!ctx) {
     throw new Error("Canvas 2D unavailable");
   }
-  canvas.width = VIEW_W;
-  canvas.height = VIEW_H;
   ctx.imageSmoothingEnabled = false;
 
-  const input: Input = bindInput(canvas);
+  let transformScale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let lastCssW = 0;
+  let lastCssH = 0;
+
+  const resize = (): void => {
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.floor(rect.width);
+    const cssH = Math.floor(rect.height);
+    if (cssW <= 0 || cssH <= 0) {
+      return;
+    }
+    if (cssW === lastCssW && cssH === lastCssH) {
+      return;
+    }
+    lastCssW = cssW;
+    lastCssH = cssH;
+
+    const dpr = window.devicePixelRatio || 1;
+    // Integer-ish zoom in *CSS pixels* so sprites stay crisp.
+    const integerScale = Math.max(1, Math.ceil(Math.max(cssW / VIEW_W, cssH / VIEW_H)));
+
+    canvas.width = Math.max(1, Math.floor(cssW * dpr));
+    canvas.height = Math.max(1, Math.floor(cssH * dpr));
+
+    transformScale = integerScale * dpr;
+    offsetX = Math.floor((canvas.width - VIEW_W * transformScale) / 2);
+    offsetY = Math.floor((canvas.height - VIEW_H * transformScale) / 2);
+  };
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  const input: Input = bindInput(canvas, (clientX: number) => {
+    const rect = canvas.getBoundingClientRect();
+    const denom = rect.width || 1;
+    const xCanvas = (clientX - rect.left) * (canvas.width / denom);
+    return (xCanvas - offsetX) / transformScale;
+  });
   let assets: Assets | null = null;
   let raf = 0;
   let last = performance.now();
@@ -281,6 +329,7 @@ export function createGame(canvas: HTMLCanvasElement, hooks: GameHooks): GameHan
     if (!alive) {
       return;
     }
+    resize();
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     state.time += dt * 1000;
@@ -415,7 +464,12 @@ export function createGame(canvas: HTMLCanvasElement, hooks: GameHooks): GameHan
       hooks.onPeriod(state.weather.period);
     }
 
-    ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+    // Clear in physical pixels, then render in logical harbor coordinates.
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.setTransform(transformScale, 0, 0, transformScale, offsetX, offsetY);
+    ctx.imageSmoothingEnabled = false;
     if (assets) {
       drawFrame(ctx, toDraw(state), assets);
     } else {
@@ -433,6 +487,7 @@ export function createGame(canvas: HTMLCanvasElement, hooks: GameHooks): GameHan
       alive = false;
       cancelAnimationFrame(raf);
       window.clearInterval(weatherTimer);
+      window.removeEventListener("resize", resize);
       input.destroy();
     },
   };

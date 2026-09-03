@@ -36,7 +36,10 @@ export type Input = {
   destroy: () => void;
 };
 
-export function bindInput(canvas: HTMLCanvasElement): Input {
+export function bindInput(
+  canvas: HTMLCanvasElement,
+  toLocalX?: (clientX: number) => number,
+): Input {
   const down = new Set<string>();
   let useLatch = false;
   let escapeLatch = false;
@@ -66,7 +69,7 @@ export function bindInput(canvas: HTMLCanvasElement): Input {
     down.delete(e.code);
   };
 
-  const toLocalX = (clientX: number): number => {
+  const toLocalXLegacy = (clientX: number): number => {
     const rect = canvas.getBoundingClientRect();
     const scale = rect.width / canvas.width;
     return (clientX - rect.left) / scale;
@@ -76,7 +79,7 @@ export function bindInput(canvas: HTMLCanvasElement): Input {
     if (e.button !== 0) {
       return;
     }
-    const x = toLocalX(e.clientX);
+    const x = (toLocalX ?? toLocalXLegacy)(e.clientX);
     tapX = x;
     tapUse = true;
   };

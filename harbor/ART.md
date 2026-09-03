@@ -5,9 +5,15 @@ Side-view theatrical diorama. Not a 3/4 farm map. The walkable street is a singl
 ## Rendering
 
 - Native sprite size is ~16px tiles (player ~18×32, buildings 50–100px wide).
-- Integer zoom only. Letterbox, never stretch.
+- Integer zoom only. No smoothing; never stretch sprite bitmaps.
+  The renderer uses integer-ish cover scaling (cropping as needed) and rounds draw
+  positions to integers.
 - `image-rendering: pixelated`. Canvas `imageSmoothingEnabled = false`. Round draw positions to integers.
 - Do not ship one flattened background as the world. Layers: `src/harbor/layers.ts`.
+- Source-of-truth art:
+  - raw sheets: `public/harbor/source/sheets/`
+  - full slices: `public/harbor/source/sliced/`
+  - downscaled game sprites (what the app loads): `public/harbor/*.png`
 
 ## Palette
 
@@ -38,7 +44,8 @@ Keep name and tagline readable on the sky: ink on day paper, paper on night ink,
 **Cafe interior is locked.** Adam signed off on this room. Same layout, palette, counter, window, framed boat painting. Do not restyle, regenerate, or swap in a different interior.
 
 - Canonical file: `harbor/locked/coffee-interior.png`
-- Game loads: `public/harbor/coffee-interior.png` (a copy; `scripts/harbor-sprites.py` recopies the locked file and will not redraw it)
+- Game loads: `public/harbor/coffee-interior.png` (a copy of the locked interior).
+- `scripts/harbor-sprites.py` verifies it exists and is non-empty; it does not regenerate.
 - Runtime only: blit `public/boat.png` into the existing frame rect in `INTERIORS.coffee.painting`
 
 Slice or crop only if the bitmap is larger than the 320×180 room. Do not paint over the counter, window, brick, or furniture.
@@ -67,12 +74,12 @@ Outdoor facade + interior room + door interact + fade. That is the whole pattern
 | `src/harbor/layers.ts` | Layer names + parallax |
 | `src/harbor/world.ts` | Buildings, interiors, signs, vehicles |
 | `src/harbor/palette.ts` | Hex used by the renderer |
-| `scripts/harbor-sprites.py` | Regenerates game-ready PNGs |
+| `scripts/harbor-sprites.py` | Verifies game-ready PNGs + source sheets/slices |
 | `public/harbor/*.png` | Sprites the game loads |
 | `harbor/PROMPTS.md` | Image-gen templates for new art |
 | `.cursor/skills/harbor-world/SKILL.md` | Agent recipe |
 
-Regenerate sprites:
+Verify sprites:
 
 ```sh
 python3 scripts/harbor-sprites.py

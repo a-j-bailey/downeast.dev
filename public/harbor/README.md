@@ -1,8 +1,16 @@
 Game-ready harbor sprites (transparent PNG, integer pixels).
 
-`coffee-interior.png` is locked. Regenerating sprites recopies `harbor/locked/coffee-interior.png` and does not redraw the room.
+`coffee-interior.png` is locked (see `harbor/locked/coffee-interior.png`).
 
-Regenerate:
+Source-of-truth inputs:
+- `public/harbor/source/sheets/` (raw 1536x1024 sheets)
+- `public/harbor/source/sliced/` (pre-sliced full-resolution sprites)
+
+`scripts/harbor-sprites.py` is a **read-only verifier**: it only checks that
+the approved game sprites and source art exist and are non-empty (it does
+not regenerate images).
+
+Verify:
 
 ```sh
 python3 scripts/harbor-sprites.py

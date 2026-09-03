@@ -106,11 +106,13 @@ function drawSky(ctx: CanvasRenderingContext2D, state: DrawState, assets: Assets
         ctx.fillRect(x, y - 1, 1, 3);
       }
     }
-    blit(ctx, assets.moon, VIEW_W - 48, 18);
   } else {
     const sunX = weather.period === "dusk" ? VIEW_W - 70 : 40;
     const sunY = weather.period === "dusk" ? 36 : 14;
-    blit(ctx, assets.sun, sunX, sunY);
+    // Approved sprites don’t include explicit sun/moon assets; keep a tiny
+    // pixel-ish marker via palette colors.
+    ctx.fillStyle = "#ad8301";
+    ctx.fillRect(sunX, sunY, 2, 2);
   }
 
   const par = LAYERS.sky.parallax;
@@ -166,20 +168,16 @@ function drawLand(ctx: CanvasRenderingContext2D, state: DrawState, assets: Asset
   const streetR = viewX(640, cam, par);
   ctx.fillStyle = "#6e5234";
   ctx.fillRect(streetL, groundY, streetR - streetL, VIEW_H - groundY);
-  const tile = assets.ground;
-  for (let x = streetL; x < streetR; x += tile.width) {
-    blit(ctx, tile, x, groundY);
-  }
   const wall = assets.seawall;
+  const wallY = groundY - wall.height;
   for (let wx = 80; wx < 640; wx += wall.width) {
-    blit(ctx, wall, viewX(wx, cam, par), 122);
+    blit(ctx, wall, viewX(wx, cam, par), wallY);
   }
-  blit(ctx, assets.seawallStairs, viewX(168, cam, par), 122);
+  blit(ctx, assets.seawallStairs, viewX(168, cam, par), wallY);
   blit(ctx, assets.pier, viewX(PIER.x, cam, par), PIER.y);
   for (const b of BUILDINGS) {
     blit(ctx, facadeImage(assets, b.facade), viewX(b.x, cam, par), b.y);
   }
-  blit(ctx, assets.barrel, viewX(332, cam, par), groundY - 16);
   for (const t of TRAPS) {
     const img = trapImage(assets, t.kind);
     blit(ctx, img, viewX(t.x, cam, par), groundY - img.height + 4);
@@ -250,21 +248,25 @@ function drawPlayer(
 
 function drawInterior(ctx: CanvasRenderingContext2D, state: DrawState, assets: Assets): void {
   const room = INTERIORS.coffee;
-  blit(ctx, assets.coffeeInterior, 0, 0);
+  // Coffee interior is pre-approved at 320x180; our internal view is 640x360
+  // so draw it at an integer 2x scale to fill the viewport.
+  ctx.drawImage(assets.coffeeInterior, 0, 0, room.w, room.h);
   const p = room.painting;
-  ctx.imageSmoothingEnabled = true;
   ctx.drawImage(assets.painting, p.x, p.y, p.w, p.h);
-  ctx.imageSmoothingEnabled = false;
   drawPlayer(ctx, assets, state, state.playerX, state.playerY);
 }
 
-function drawWeather(ctx: CanvasRenderingContext2D, state: DrawState, assets: Assets): void {
+function drawWeather(ctx: CanvasRenderingContext2D, state: DrawState): void {
   const { weather, time, camX } = state;
   if (weather.fog) {
+    // Fog banks as translucent bands (no unapproved bitmap overlays).
     const par = LAYERS.water.parallax;
-    for (let i = 0; i < 8; i++) {
-      const wx = i * 90 + ((time / 40) % 90);
-      blit(ctx, assets.fog, viewX(wx, camX, par), WATER_Y - 4 + (i % 3) * 4);
+    ctx.fillStyle = "rgba(210, 222, 230, 0.22)";
+    for (let i = 0; i < 6; i++) {
+      const wx = i * 110 + ((time / 50) % 110);
+      const x = viewX(wx, camX, par);
+      const y = WATER_Y - 10 + (i % 3) * 6;
+      ctx.fillRect(x, y, 90, 18);
     }
   }
   if (weather.rain) {
@@ -301,7 +303,7 @@ export function drawFrame(
     drawLand(ctx, state, assets);
     drawActors(ctx, state, assets);
     drawFg(ctx, state, assets);
-    drawWeather(ctx, state, assets);
+    drawWeather(ctx, state);
   }
   if (state.fade > 0) {
     ctx.fillStyle = `rgba(16, 15, 15, ${state.fade})`;

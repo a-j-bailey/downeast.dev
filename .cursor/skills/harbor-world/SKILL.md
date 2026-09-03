@@ -17,11 +17,19 @@ downeast.dev’s homepage is a **side-view** Canvas 2D harbor, not Phaser, not a
 | `src/harbor/render.ts` | Draws `LAYER_ORDER` back to front |
 | `src/harbor/weather.ts` | Open-Meteo Bristol RI, fail-open |
 | `src/harbor/Harbor.tsx` | React shell, DOM title, links, prompt |
-| `scripts/harbor-sprites.py` | Regenerates `public/harbor/*.png` |
+| `scripts/harbor-sprites.py` | Verifies `public/harbor/*.png` + source sheets/slices (read-only) |
 | `harbor/ART.md` | Art bible |
 | `harbor/PROMPTS.md` | Image-gen templates |
 
 Do not add a second homepage layout. Do not flatten layers into one background PNG.
+
+## Sprite source-of-truth
+
+`public/harbor/source/` is the canonical art input:
+- `public/harbor/source/sheets/` (raw 1536x1024 sheets)
+- `public/harbor/source/sliced/` (pre-sliced full-resolution sprites)
+
+Any tooling may only **read/slice** these assets (no hand-drawing / no procedural painting). The game loads the approved, downscaled outputs from `public/harbor/*.png`.
 
 ## Layer stack
 
