@@ -63,8 +63,8 @@ export class HarborScene extends Phaser.Scene {
   private rain?: Phaser.GameObjects.Particles.ParticleEmitter;
   private beam?: Phaser.GameObjects.Light;
   private clouds: Phaser.GameObjects.Image[] = [];
-  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private wasd!: Keys;
+  private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
+  private wasd?: Keys;
   private possession: Possession = "walker";
   private walkTarget: { x: number; y: number } | null = null;
   private boatVx = 0;
@@ -637,25 +637,46 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private bindInput(): void {
-    const keyboard = this.input.keyboard;
-    if (!keyboard) {
-      return;
-    }
-    this.cursors = keyboard.createCursorKeys();
-    this.wasd = keyboard.addKeys({
-      up: Phaser.Input.Keyboard.KeyCodes.W,
-      down: Phaser.Input.Keyboard.KeyCodes.S,
-      left: Phaser.Input.Keyboard.KeyCodes.A,
-      right: Phaser.Input.Keyboard.KeyCodes.D,
-      e: Phaser.Input.Keyboard.KeyCodes.E,
-    }) as Keys;
+    const focusHost = (): void => {
+      const host = this.game.canvas?.parentElement as HTMLElement | null;
+      host?.focus({ preventScroll: true });
+      this.game.canvas?.focus({ preventScroll: true });
+    };
 
-    keyboard.on("keydown-E", () => this.tryInteract());
+    const keyboard = this.input.keyboard;
+    if (keyboard) {
+      keyboard.addCapture([
+        Phaser.Input.Keyboard.KeyCodes.UP,
+        Phaser.Input.Keyboard.KeyCodes.DOWN,
+        Phaser.Input.Keyboard.KeyCodes.LEFT,
+        Phaser.Input.Keyboard.KeyCodes.RIGHT,
+        Phaser.Input.Keyboard.KeyCodes.W,
+        Phaser.Input.Keyboard.KeyCodes.A,
+        Phaser.Input.Keyboard.KeyCodes.S,
+        Phaser.Input.Keyboard.KeyCodes.D,
+        Phaser.Input.Keyboard.KeyCodes.E,
+      ]);
+      this.cursors = keyboard.createCursorKeys();
+      this.wasd = keyboard.addKeys({
+        up: Phaser.Input.Keyboard.KeyCodes.W,
+        down: Phaser.Input.Keyboard.KeyCodes.S,
+        left: Phaser.Input.Keyboard.KeyCodes.A,
+        right: Phaser.Input.Keyboard.KeyCodes.D,
+        e: Phaser.Input.Keyboard.KeyCodes.E,
+      }) as Keys;
+      keyboard.on("keydown-E", () => this.tryInteract());
+    } else {
+      console.warn("[harbor] Phaser keyboard plugin unavailable; arrow/WASD disabled");
+    }
+
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      focusHost();
       const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
       // Side-view: pointer walk uses X only; Y stays on the ground line.
       this.walkTarget = { x: world.x, y: WALK_Y };
     });
+
+    focusHost();
   }
 
   private onHudInteract = (): void => {
@@ -666,10 +687,12 @@ export class HarborScene extends Phaser.Scene {
     void dt;
     let x = 0;
     // Vertical wish ignored for walker and boat (side-view lock).
-    if (this.cursors.left.isDown || this.wasd.left.isDown) {
+    const leftDown = Boolean(this.cursors?.left?.isDown || this.wasd?.left?.isDown);
+    const rightDown = Boolean(this.cursors?.right?.isDown || this.wasd?.right?.isDown);
+    if (leftDown) {
       x -= 1;
     }
-    if (this.cursors.right.isDown || this.wasd.right.isDown) {
+    if (rightDown) {
       x += 1;
     }
     const keyed = x !== 0;

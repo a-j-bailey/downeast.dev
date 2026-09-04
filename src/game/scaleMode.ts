@@ -1,4 +1,3 @@
-import Phaser from "phaser";
 import { VIEW_HEIGHT, VIEW_WIDTH } from "./view";
 
 /** Portrait-ish: fill height and crop sides. Landscape: FIT. */
@@ -9,26 +8,36 @@ export function parentIsTall(width: number, height: number): boolean {
 }
 
 /**
- * Tall parent: HEIGHT_CONTROLS_WIDTH so 480×270 fills phone height and crops
- * sides. Wide: FIT + CENTER_BOTH. Never EXPAND — that grows the camera.
+ * Manual CSS layout for Phaser.Scale.NONE.
+ * Camera stays 480×270 — never grow with phone CSS height.
+ * Tall: zoom = parentH/270, fill height, crop sides.
+ * Wide: FIT (letterbox both axes).
  */
-export function applyResponsiveScale(game: Phaser.Game): void {
-  const parent = game.scale.parent as HTMLElement | null;
-  const pw = parent?.clientWidth || game.scale.parentSize.width;
-  const ph = parent?.clientHeight || game.scale.parentSize.height;
-  const mode = parentIsTall(pw, ph)
-    ? Phaser.Scale.HEIGHT_CONTROLS_WIDTH
-    : Phaser.Scale.FIT;
-  const center = Phaser.Scale.CENTER_BOTH;
-  const changed = game.scale.scaleMode !== mode || game.scale.autoCenter !== center;
-  game.scale.scaleMode = mode;
-  game.scale.autoCenter = center;
-  if (changed && mode !== Phaser.Scale.RESIZE && mode !== Phaser.Scale.EXPAND) {
-    game.scale.displaySize.setAspectMode(mode);
+export function layoutHarborCanvas(parent: HTMLElement, canvas: HTMLCanvasElement): void {
+  const parentW = Math.max(1, parent.clientWidth || window.innerWidth || 1);
+  const parentH = Math.max(1, parent.clientHeight || window.innerHeight || 1);
+  const tall = parentIsTall(parentW, parentH);
+
+  let cssW: number;
+  let cssH: number;
+  if (tall) {
+    const zoom = parentH / VIEW_HEIGHT;
+    cssH = parentH;
+    cssW = VIEW_WIDTH * zoom;
+  } else {
+    const zoom = Math.min(parentW / VIEW_WIDTH, parentH / VIEW_HEIGHT);
+    cssW = VIEW_WIDTH * zoom;
+    cssH = VIEW_HEIGHT * zoom;
   }
-  if (game.scale.gameSize.width !== VIEW_WIDTH || game.scale.gameSize.height !== VIEW_HEIGHT) {
-    game.scale.setGameSize(VIEW_WIDTH, VIEW_HEIGHT);
-  } else if (changed) {
-    game.scale.refresh();
-  }
+
+  canvas.style.position = "absolute";
+  canvas.style.left = "50%";
+  canvas.style.top = "50%";
+  canvas.style.transform = "translate(-50%, -50%)";
+  canvas.style.width = `${Math.round(cssW)}px`;
+  canvas.style.height = `${Math.round(cssH)}px`;
+  canvas.style.maxWidth = "none";
+  canvas.style.maxHeight = "none";
+  canvas.style.margin = "0";
+  canvas.style.imageRendering = "pixelated";
 }

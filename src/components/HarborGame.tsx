@@ -26,34 +26,50 @@ export function HarborGame() {
     }
 
     document.documentElement.classList.add("harbor-play");
-    parent.focus();
+    parent.tabIndex = 0;
+    parent.focus({ preventScroll: true });
 
     let cancelled = false;
-    let game: { destroy: (removeCanvas: boolean) => void } | undefined;
+    let game: { destroy: (removeCanvas: boolean) => void; canvas?: HTMLCanvasElement } | undefined;
+
+    const focusParent = (): void => {
+      parentRef.current?.focus({ preventScroll: true });
+    };
 
     const onReady = (): void => {
-      parentRef.current?.focus();
+      focusParent();
     };
+
     const onWeather = (...args: unknown[]): void => {
       const mood = args[0];
       if (isMood(mood)) {
         applySky(mood);
       }
     };
+
+    const onPointerDown = (): void => {
+      focusParent();
+    };
+
     EventBus.on("current-scene-ready", onReady);
     EventBus.on("harbor-weather", onWeather);
+    parent.addEventListener("pointerdown", onPointerDown);
 
     void import("../game/createGame").then(({ createHarborGame }) => {
       if (cancelled || !parentRef.current) {
         return;
       }
       game = createHarborGame(parentRef.current);
+      focusParent();
+      game.canvas?.addEventListener("pointerdown", onPointerDown);
     });
 
     return () => {
       cancelled = true;
       EventBus.off("current-scene-ready", onReady);
       EventBus.off("harbor-weather", onWeather);
+      parent.removeEventListener("pointerdown", onPointerDown);
+      game?.canvas?.removeEventListener("pointerdown", onPointerDown);
       document.documentElement.classList.remove("harbor-play");
       document.documentElement.style.removeProperty("--harbor-sky");
       game?.destroy(true);
@@ -65,7 +81,7 @@ export function HarborGame() {
       ref={parentRef}
       className="harbor-root"
       id="harbor-game"
-      tabIndex={-1}
+      tabIndex={0}
       role="application"
       aria-label="Downeast harbor"
     />

@@ -81,6 +81,11 @@ export function skyColor(mood: WeatherMood): number {
   }
 }
 
+/** CSS hex for page/letterbox edges so cropped sides match mood. */
+export function skyCss(mood: WeatherMood): string {
+  return `#${skyColor(mood).toString(16).padStart(6, "0")}`;
+}
+
 export function ambientColor(mood: WeatherMood): number {
   switch (mood) {
     case "clearDay":
@@ -100,9 +105,6 @@ export function ambientColor(mood: WeatherMood): number {
   }
 }
 
-export function skyCss(mood: WeatherMood): string {
-  return `#${skyColor(mood).toString(16).padStart(6, "0")}`;
-}
 
 export function nyClock(now = new Date()): string {
   return new Intl.DateTimeFormat("en-US", {
