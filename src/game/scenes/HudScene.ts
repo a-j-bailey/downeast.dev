@@ -3,10 +3,9 @@ import { applyHudCamera } from "../camera";
 import { EventBus } from "../EventBus";
 import { promptText, type InteractId } from "../interact";
 import { TEX } from "../textures";
-import { shouldShowVirtualStick } from "../touchControls";
+import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
 import { nyClock, type WeatherMood } from "../weather";
 
-const STICK_DEADZONE = 0.15;
 /** Chip height tuned for 7px bitmap glyphs + padding. */
 const CHIP_H = 16;
 const FONT_SIZE = 7;

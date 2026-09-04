@@ -7,6 +7,7 @@ type InteriorData = { id?: string };
 
 export class InteriorScene extends Phaser.Scene {
   private leaving = false;
+  private postcard?: Phaser.GameObjects.Image;
 
   constructor() {
     super({ key: "Interior" });
@@ -32,28 +33,52 @@ export class InteriorScene extends Phaser.Scene {
 
     EventBus.emit("harbor-prompt", "leave");
 
-    this.input.keyboard?.on("keydown-ESC", () => this.leave());
-    this.input.keyboard?.on("keydown-E", () => this.leave());
-    this.input.on("pointerdown", () => this.leave());
+    this.input.keyboard?.on("keydown-ESC", this.onLeaveKey);
+    this.input.keyboard?.on("keydown-E", this.onLeaveKey);
     EventBus.on("harbor-interact", this.onInteract);
+    this.scale.on("resize", this.onResize, this);
     this.events.once("shutdown", () => {
       EventBus.off("harbor-interact", this.onInteract);
+      this.scale.off("resize", this.onResize, this);
+      this.input.keyboard?.off("keydown-ESC", this.onLeaveKey);
+      this.input.keyboard?.off("keydown-E", this.onLeaveKey);
     });
   }
+
+  private onLeaveKey = (): void => {
+    this.leave();
+  };
 
   private onInteract = (): void => {
     this.leave();
   };
 
-  private placeInterior(): void {
-    if (!this.textures.exists("cafe-interior")) {
+  private onResize = (): void => {
+    if (!this.sys.isActive()) {
       return;
     }
+    this.layoutPostcard();
+  };
+
+  private placeInterior(): void {
+    if (!this.textures.exists("cafe-interior") || this.postcard) {
+      this.layoutPostcard();
+      return;
+    }
+    this.postcard = this.add.image(0, 0, "cafe-interior");
+    this.postcard.setScrollFactor(0);
+    this.layoutPostcard();
+  }
+
+  private layoutPostcard(): void {
     const view = applyHudCamera(this);
-    const image = this.add.image(view.width / 2, view.height / 2, "cafe-interior");
-    const scale = Math.min(view.width / image.width, view.height / image.height);
-    image.setScale(scale);
-    image.setScrollFactor(0);
+    if (!this.postcard) {
+      return;
+    }
+    const frame = this.postcard.frame;
+    const scale = Math.min(view.width / frame.width, view.height / frame.height);
+    this.postcard.setPosition(view.width / 2, view.height / 2);
+    this.postcard.setScale(scale);
   }
 
   private leave(): void {
