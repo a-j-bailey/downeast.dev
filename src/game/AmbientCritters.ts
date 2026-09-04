@@ -2,13 +2,11 @@ import Phaser from "phaser";
 import { SCROLL } from "./layers";
 import { WATER_SURFACE_Y, WORLD_WIDTH } from "./layout";
 
-/** Shark-fin spawn plus a cheap trap-buoy bob on the water phase. */
+/** Occasional shark-fin crossing. */
 export class AmbientCritters {
   private scene: Phaser.Scene;
   private shark?: Phaser.GameObjects.Image;
   private sharkDir = 1;
-  private buoy?: Phaser.GameObjects.Image;
-  private buoyBaseY = 0;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -29,12 +27,7 @@ export class AmbientCritters {
     this.shark.setLighting(true);
   }
 
-  update(dt: number, waterPhase: number): void {
-    this.updateShark(dt);
-    this.bobBuoy(waterPhase);
-  }
-
-  private updateShark(dt: number): void {
+  update(dt: number): void {
     if (!this.shark) {
       return;
     }
@@ -44,17 +37,5 @@ export class AmbientCritters {
       this.shark.destroy();
       this.shark = undefined;
     }
-  }
-
-  private bobBuoy(waterPhase: number): void {
-    if (!this.buoy) {
-      const img = this.scene.children.getByName("trap-buoy") as Phaser.GameObjects.Image | null;
-      if (!img) {
-        return;
-      }
-      this.buoy = img;
-      this.buoyBaseY = img.y;
-    }
-    this.buoy.y = this.buoyBaseY + Math.sin(waterPhase * 1.6) * 1.2;
   }
 }

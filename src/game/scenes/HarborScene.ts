@@ -133,7 +133,7 @@ export class HarborScene extends Phaser.Scene {
     this.boat.updateDepth();
     this.boat.updateWake(this.possession);
     this.boat.syncNav(this.possession === "boat");
-    this.critters.update(dt, this.world.waterPhase);
+    this.critters.update(dt);
     this.night.updateBeam(dt, this.mood);
     this.night.updatePlayerLantern(
       this.player,
