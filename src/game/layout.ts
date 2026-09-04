@@ -22,8 +22,6 @@ export const BOAT_OPEN_MIN_Y = WATER_SURFACE_Y + 48;
 export const BOAT_OPEN_MAX_Y = BOAT_DOCK_Y;
 export const BOAT_OPEN_MIN_X = 60;
 
-export const SPAWN = { x: 148, y: WALKER_Y };
-
 export const PLACES = {
   // Wood finger-dock midground; boat docks in front at bottom edge.
   dock: { x: 96, y: BOAT_DOCK_Y - 18 },
@@ -43,6 +41,18 @@ export const PLACES = {
   kayak: { x: 690, y: LAND_TOP_Y - 2 },
   paddle: { x: 708, y: LAND_TOP_Y - 1 },
 } as const;
+
+/**
+ * Halfway between the flagpole and the leftmost shack (Zoning Radar).
+ * Flagpole origin is the pole; shack-a.png is 76×91 with origin (0.5, 1),
+ * so this uses the left façade rather than the footprint center — the
+ * open street between pole and building, still on WALKER_Y.
+ */
+const SHACK_A_WIDTH = 76;
+export const SPAWN = {
+  x: Math.round((PLACES.flagpole.x + PLACES.shackA.x - SHACK_A_WIDTH / 2) / 2),
+  y: WALKER_Y,
+};
 
 /** Underway cannot pass the dock toward town. */
 export const BOAT_DOCK_MAX_X = PLACES.boat.x;
