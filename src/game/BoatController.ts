@@ -12,6 +12,7 @@ import {
   BOAT_SEAT_X,
   BOAT_SEAT_Y,
   PLACES,
+  VIEW_HEIGHT,
   WAKE_SPEED,
   boatFacingRight,
   boatSternOffsetX,
@@ -94,9 +95,11 @@ export class BoatController {
     const trail = Math.max(36, Math.round(this.wake.displayWidth * 0.42));
     const bob = Math.round(Math.sin(this.scene.time.now / 140) * 2);
     const sternX = this.sprite.x + boatSternOffsetX(facingRight) + behind * (trail + bob);
-    this.wake.setPosition(Math.round(sternX), Math.round(this.sprite.y - 8));
+    const wakeH = Math.round(this.wake.displayHeight);
+    const wakeY = Math.min(VIEW_HEIGHT - wakeH - 1, this.sprite.y - 16);
+    this.wake.setPosition(Math.round(sternX), Math.round(wakeY));
     this.wake.setFlipX(facingRight);
-    this.wake.setAlpha(0.85 + 0.12 * Math.sin(this.scene.time.now / 160 + dt * 3));
+    this.wake.setAlpha(0.88 + 0.1 * Math.sin(this.scene.time.now / 160 + dt * 3));
   }
 
   syncNav(boarded: boolean): void {
