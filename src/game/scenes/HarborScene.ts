@@ -255,6 +255,7 @@ export class HarborScene extends Phaser.Scene {
     this.boat.place();
     this.night.ensureDecor(this.mood);
     this.world.applySkyDressing(this.mood);
+    this.critters.ensure(this.mood);
   }
 
   private bindInput(): void {
@@ -522,5 +523,6 @@ export class HarborScene extends Phaser.Scene {
       this.time.now,
     );
     EventBus.emit("harbor-weather", mood);
+    this.critters.ensure(mood);
   }
 }
