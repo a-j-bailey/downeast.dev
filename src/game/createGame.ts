@@ -16,6 +16,8 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
     height: VIEW_HEIGHT,
     backgroundColor: "#5b93c5",
     banner: false,
+    // Harbor bed is a dedicated Web Audio graph (soundBed.ts). Keep Phaser
+    // silent so boot does not create an AudioContext before a user gesture.
     audio: { noAudio: true },
     pixelArt: true,
     roundPixels: true,

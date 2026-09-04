@@ -10,6 +10,8 @@ export const TEX = {
   glyphRain: "ui-glyph-rain",
   glyphFog: "ui-glyph-fog",
   glyphNight: "ui-glyph-night",
+  glyphMuteOn: "ui-glyph-mute-on",
+  glyphMuteOff: "ui-glyph-mute-off",
 } as const;
 
 function stamp(
@@ -104,5 +106,27 @@ export function ensureUiTextures(scene: Phaser.Scene): void {
     g.fillRect(2, 13, 1, 1);
     g.fillRect(8, 15, 1, 1);
     g.fillRect(13, 12, 1, 1);
+  });
+
+  stamp(scene, TEX.glyphMuteOn, 7, 7, (g) => {
+    g.fillStyle(0x100f0f, 1);
+    g.fillRect(0, 2, 2, 3);
+    g.fillRect(2, 1, 1, 5);
+    g.fillRect(3, 0, 1, 7);
+    g.fillRect(5, 2, 1, 3);
+    g.fillRect(6, 1, 1, 1);
+    g.fillRect(6, 5, 1, 1);
+  });
+
+  stamp(scene, TEX.glyphMuteOff, 7, 7, (g) => {
+    g.fillStyle(0x100f0f, 1);
+    g.fillRect(0, 2, 2, 3);
+    g.fillRect(2, 1, 1, 5);
+    g.fillRect(3, 0, 1, 7);
+    g.fillRect(4, 1, 1, 1);
+    g.fillRect(5, 2, 1, 1);
+    g.fillRect(6, 3, 1, 1);
+    g.fillRect(5, 4, 1, 1);
+    g.fillRect(4, 5, 1, 1);
   });
 }
