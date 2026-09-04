@@ -58,6 +58,8 @@ export class AmbientCritters {
     this.shark.setDepth(y);
     // Fin art faces LEFT, same as the hull — flip only when swimming right.
     this.shark.setFlipX(this.sharkDir > 0);
+    this.shark.x = Math.round(this.shark.x);
+    this.shark.y = Math.round(this.shark.y);
     this.shark.setLighting(true);
   }
 
@@ -91,6 +93,7 @@ export class AmbientCritters {
       return;
     }
     this.shark.x += this.sharkDir * 28 * dt;
+    this.shark.x = Math.round(this.shark.x);
     this.shark.setDepth(this.shark.y);
     if (this.shark.x < WORLD_MIN_X - 40 || this.shark.x > WORLD_MAX_X + 40) {
       this.shark.destroy();

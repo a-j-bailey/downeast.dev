@@ -1,12 +1,12 @@
 import Phaser from "phaser";
 import { activeCrossing, bowFacesRight, ferryForced, type Terminal } from "./ferrySchedule";
 import { DEPTH, SCROLL } from "./layers";
-import { WATER_SURFACE_Y, WORLD_MAX_X, WORLD_MIN_X, WORLD_MID_X } from "./layout";
+import { setPixelHome } from "./camera";
+import { WATER_SURFACE_Y, WORLD_MID_X, WORLD_WIDTH } from "./layout";
 import type { WeatherMood } from "./weather";
 
 /** One-way `?ferry=1` crossing. Real Bristol↔Prudence runs are 30 minutes. */
 export const FORCE_CROSSING_SEC = 90;
-const MARGIN = 48;
 const LAYER = SCROLL.farShore;
 const CABIN_OY = -11;
 const HULL_TINT = 0xf2eee4;
@@ -98,13 +98,15 @@ export class FarShoreFerry {
     }
     const p = Phaser.Math.Clamp(progress, 0, 1);
     const right = bowFacesRight(from);
-    const x0 = WORLD_MIN_X + MARGIN;
-    const x1 = WORLD_MAX_X - MARGIN;
+    const x0 = 48;
+    const x1 = WORLD_WIDTH - 48;
     const worldX = right ? x0 + (x1 - x0) * p : x1 - (x1 - x0) * p;
     this.sprite.setPosition(Math.round(worldX), this.keelY);
     this.sprite.setFlipX(!right);
     this.sprite.setDepth(DEPTH.ferry);
     this.sprite.setLighting(false);
+    this.sprite.setScrollFactor(LAYER);
+    setPixelHome(this.sprite);
     this.syncNight(isDark && this.sprite.visible);
   }
 
@@ -114,12 +116,14 @@ export class FarShoreFerry {
     const cabinY = this.keelY + CABIN_OY;
     if (this.cabinGlow) {
       this.cabinGlow.setPosition(cabinX, cabinY);
+      this.cabinGlow.setScrollFactor(LAYER);
+      setPixelHome(this.cabinGlow);
       this.cabinGlow.setVisible(on);
     }
     if (this.cabinLight) {
       const cam = this.scene.cameras.main;
-      this.cabinLight.x = cabinX + cam.scrollX * (1 - LAYER);
-      this.cabinLight.y = cabinY + cam.scrollY * (1 - LAYER);
+      this.cabinLight.x = Math.round(cabinX + cam.scrollX * (1 - LAYER));
+      this.cabinLight.y = Math.round(cabinY + cam.scrollY * (1 - LAYER));
       this.cabinLight.setIntensity(on ? 1.2 : 0);
       this.cabinLight.setVisible(on);
     }

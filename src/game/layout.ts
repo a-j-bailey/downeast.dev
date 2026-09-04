@@ -1,4 +1,4 @@
-import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_MIN_X } from "./view";
+import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_MAX_X, WORLD_MIN_X } from "./view";
 
 /** Ground line sits in the bottom third of the 270-tall design view. */
 export const HORIZON_Y = 102;
@@ -57,6 +57,17 @@ export const SPAWN = {
 
 /** Underway cannot pass the dock toward town. */
 export const BOAT_DOCK_MAX_X = PLACES.boat.x;
+
+/** First seawall tile center (seaward / left terminus). */
+export const SEAWALL_TILE_W = 142;
+export const SEAWALL_ORIGIN_X = Math.max(Math.round(SEAWALL_TILE_W / 2), PLACES.dock.x + 70);
+/** Left edge of the stone seawall — street/planks stop here. */
+export const SEAWALL_LEFT_X = Math.round(SEAWALL_ORIGIN_X - SEAWALL_TILE_W / 2);
+export const LAND_RIGHT_X = WORLD_MAX_X + 128;
+export const LAND_BAND_W = LAND_RIGHT_X - SEAWALL_LEFT_X;
+export const LAND_BAND_X = SEAWALL_LEFT_X + LAND_BAND_W / 2;
+/** Walker stays on dock + town; open water is boat-only. */
+export const WALKER_MIN_X = Math.round(PLACES.dock.x - 60);
 
 /** Boat in front of wood dock midground. */
 export const DOCK_DEPTH = BOAT_DOCK_Y - 10;

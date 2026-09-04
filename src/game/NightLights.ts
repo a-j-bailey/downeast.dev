@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { Possession } from "./interact";
 import { DEPTH, SCROLL } from "./layers";
+import { setPixelHome } from "./camera";
 import {
   BOAT_BOW_Y,
   BOAT_STERN_Y,
@@ -155,6 +156,7 @@ export class NightLights {
         glow.setBlendMode(Phaser.BlendModes.ADD);
         glow.setLighting(false);
         glow.setVisible(false);
+        setPixelHome(glow);
         this.nightGlows.push(glow);
       }
     }
@@ -165,8 +167,8 @@ export class NightLights {
     const cam = this.scene.cameras.main;
     const sf = SCROLL.farShore;
     for (const far of this.farLights) {
-      far.light.x = far.x + cam.scrollX * (1 - sf);
-      far.light.y = far.y + cam.scrollY * (1 - sf);
+      far.light.x = Math.round(far.x + cam.scrollX * (1 - sf));
+      far.light.y = Math.round(far.y + cam.scrollY * (1 - sf));
       far.light.setIntensity(on ? 0.55 : 0);
       far.light.setVisible(on);
     }
@@ -342,8 +344,8 @@ export class NightLights {
     const sf = SCROLL.farShore;
     const cam = this.scene.cameras.main;
     return {
-      x: sx - 13 + cam.scrollX * (1 - sf),
-      y: sy - 72 + cam.scrollY * (1 - sf),
+      x: Math.round(sx - 13 + cam.scrollX * (1 - sf)),
+      y: Math.round(sy - 72 + cam.scrollY * (1 - sf)),
     };
   }
 }

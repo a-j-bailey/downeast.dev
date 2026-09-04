@@ -4,7 +4,7 @@ import { AmbientCritters } from "../AmbientCritters";
 import { BoatController } from "../BoatController";
 import { FarShoreFerry } from "../FarShoreFerry";
 import { HarborWorld } from "../buildWorld";
-import { applyHarborCamera, harborViewSize, snapHarborCamera } from "../camera";
+import { applyHarborCamera, bindPixelSnap, harborViewSize, snapHarborCamera } from "../camera";
 import { EventBus } from "../EventBus";
 import { NightLights } from "../NightLights";
 import { SCROLL } from "../layers";
@@ -18,6 +18,7 @@ import {
   BOAT_DOCK_Y,
   PLACES,
   SPAWN,
+  WALKER_MIN_X,
   WALKER_Y,
   WORLD_WIDTH,
 } from "../layout";
@@ -107,6 +108,7 @@ export class HarborScene extends Phaser.Scene {
     this.streamRest();
     this.bindInput();
     applyHarborCamera(this, this.player);
+    bindPixelSnap(this);
     this.scale.on("resize", this.onResize, this);
 
     void loadAtmosphere(window.location.search).then((atmo) => {
@@ -172,6 +174,12 @@ export class HarborScene extends Phaser.Scene {
     this.steer(dt);
     this.maybeOfferPostcard();
     this.player.setDepth(this.player.y);
+    if (this.boat.sprite) {
+      this.boat.sprite.x = Math.round(this.boat.sprite.x);
+      this.boat.sprite.y = Math.round(this.boat.sprite.y);
+    }
+    this.player.x = Math.round(this.player.x);
+    this.player.y = Math.round(this.player.y);
     this.boat.updateDepth();
     this.boat.updateWake(this.possession, dt);
     this.boat.syncNav(this.possession === "boat");
@@ -333,7 +341,10 @@ export class HarborScene extends Phaser.Scene {
         return;
       }
       const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-      this.walkTarget = { x: world.x, y: WALKER_Y };
+      this.walkTarget = {
+        x: Phaser.Math.Clamp(world.x, WALKER_MIN_X, WORLD_WIDTH - 24),
+        y: WALKER_Y,
+      };
     });
 
     focusHost();
@@ -419,7 +430,11 @@ export class HarborScene extends Phaser.Scene {
       this.player.play("player-use", true);
       return;
     }
-    this.player.x = Phaser.Math.Clamp(this.player.x + wish.x * speed * dt, 24, WORLD_WIDTH - 24);
+    this.player.x = Phaser.Math.Clamp(
+      this.player.x + wish.x * speed * dt,
+      WALKER_MIN_X,
+      WORLD_WIDTH - 24,
+    );
     this.player.y = WALKER_Y;
     if (wish.x !== 0) {
       this.player.setFlipX(wish.x < 0);

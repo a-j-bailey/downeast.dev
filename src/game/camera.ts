@@ -7,6 +7,13 @@ import {
   WORLD_SPAN,
 } from "./view";
 
+type PixelObj = Phaser.GameObjects.GameObject & {
+  x: number;
+  y: number;
+  scrollFactorX: number;
+  setScrollFactor: (value: number) => unknown;
+};
+
 function mainCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Camera | undefined {
   const manager = scene.cameras;
   if (!manager) {
@@ -56,6 +63,66 @@ export function snapHarborCamera(scene: Phaser.Scene): void {
   }
   cam.scrollX = Math.round(cam.scrollX);
   cam.scrollY = Math.round(cam.scrollY);
+}
+
+/** Store integer world home + original scrollFactor for parallax snap. */
+export function setPixelHome(obj: PixelObj): void {
+  obj.setData("pixelX", Math.round(obj.x));
+  obj.setData("pixelY", Math.round(obj.y));
+  if (typeof obj.getData("pixelSf") !== "number") {
+    obj.setData("pixelSf", obj.scrollFactorX);
+  }
+}
+
+function isPixelObj(child: Phaser.GameObjects.GameObject): child is PixelObj {
+  return typeof (child as PixelObj).x === "number" && typeof (child as PixelObj).y === "number";
+}
+
+/**
+ * Round camera scroll and sprite positions after follow.
+ * Fractional-scrollFactor layers are drawn at
+ * `round(home + scroll * (1 - sf))` with display scrollFactor 1 so tiles
+ * don't shimmer.
+ */
+export function snapPixelWorld(scene: Phaser.Scene): void {
+  const cam = mainCamera(scene);
+  if (!cam) {
+    return;
+  }
+  cam.roundPixels = true;
+  cam.scrollX = Math.round(cam.scrollX);
+  cam.scrollY = Math.round(cam.scrollY);
+  const sx = cam.scrollX;
+  const sy = cam.scrollY;
+  for (const child of scene.children.list) {
+    if (!isPixelObj(child)) {
+      continue;
+    }
+    const sf = child.getData("pixelSf");
+    if (typeof sf === "number" && sf > 0 && sf < 1) {
+      const hx = child.getData("pixelX");
+      const hy = child.getData("pixelY");
+      if (typeof hx === "number" && typeof hy === "number") {
+        child.setScrollFactor(1);
+        child.x = Math.round(hx + sx * (1 - sf));
+        child.y = Math.round(hy + sy * (1 - sf));
+        continue;
+      }
+    }
+    child.x = Math.round(child.x);
+    child.y = Math.round(child.y);
+  }
+}
+
+/** Snap after Camera#follow so integer scroll isn't overwritten. */
+export function bindPixelSnap(scene: Phaser.Scene): void {
+  const onPreRender = (): void => {
+    snapPixelWorld(scene);
+  };
+  scene.events.on("prerender", onPreRender);
+  scene.events.once("shutdown", () => {
+    scene.events.off("prerender", onPreRender);
+  });
 }
 
 export function applyHudCamera(scene: Phaser.Scene): {

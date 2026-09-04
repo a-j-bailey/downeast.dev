@@ -4,8 +4,12 @@ import {
   DOCK_DEPTH,
   FLAGPOLE_DEPTH,
   HORIZON_Y,
+  LAND_BAND_W,
+  LAND_BAND_X,
   LAND_TOP_Y,
   PLACES,
+  SEAWALL_ORIGIN_X,
+  SEAWALL_TILE_W,
   WORLD_HEIGHT,
   WORLD_MAX_X,
   WORLD_MID_X,
@@ -13,6 +17,7 @@ import {
   WORLD_SPAN,
   WORLD_WIDTH,
 } from "./layout";
+import { setPixelHome } from "./camera";
 import { TEX } from "./textures";
 import { tideShoreY, tideSurfaceY, tideWaterTop } from "./tide";
 import type { WeatherMood } from "./weather";
@@ -53,6 +58,7 @@ export class HarborWorld {
   private deepFill?: Phaser.GameObjects.Rectangle;
   private landBack?: Phaser.GameObjects.Rectangle;
   private landFill?: Phaser.GameObjects.TileSprite | Phaser.GameObjects.Rectangle;
+  private landPlanks?: Phaser.GameObjects.TileSprite | Phaser.GameObjects.Rectangle;
   private flagpole?: Phaser.GameObjects.Image;
   private flag?: Phaser.GameObjects.Image;
 
@@ -81,11 +87,13 @@ export class HarborWorld {
     this.waterDeep.setScrollFactor(SCROLL.water);
     this.waterDeep.setDepth(DEPTH.waterDeep);
     this.waterDeep.setLighting(true);
+    setPixelHome(this.waterDeep);
 
     this.deepFill = this.scene.add.rectangle(bandX, 0, bandW, 4, 0x16344f);
     this.deepFill.setOrigin(0.5, 0);
     this.deepFill.setScrollFactor(SCROLL.water);
     this.deepFill.setDepth(DEPTH.waterFill);
+    setPixelHome(this.deepFill);
 
     if (this.scene.textures.exists("waves-0")) {
       this.wavesLayer = this.scene.add.tileSprite(bandX, 0, bandW, 16, "waves-0");
@@ -93,6 +101,7 @@ export class HarborWorld {
       this.wavesLayer.setScrollFactor(SCROLL.water);
       this.wavesLayer.setDepth(DEPTH.waves);
       this.wavesLayer.setLighting(true);
+      setPixelHome(this.wavesLayer);
     }
 
     const surfaceKey = this.scene.textures.exists("water") ? "water" : deepKey;
@@ -102,6 +111,7 @@ export class HarborWorld {
     this.water.setDepth(DEPTH.water);
     this.water.setLighting(true);
     this.water.setAlpha(this.scene.textures.exists("water-deep") ? 0.55 : 1);
+    setPixelHome(this.water);
 
     if (this.scene.textures.exists("waves-foam")) {
       const foamH = Math.max(12, this.scene.textures.get("waves-foam").get().height);
@@ -110,17 +120,18 @@ export class HarborWorld {
       this.foam.setScrollFactor(SCROLL.water);
       this.foam.setDepth(DEPTH.foam);
       this.foam.setLighting(true);
+      setPixelHome(this.foam);
 
-      this.shoreFoam = this.scene.add.tileSprite(bandX, 0, bandW, foamH, "waves-foam");
+      this.shoreFoam = this.scene.add.tileSprite(LAND_BAND_X, 0, LAND_BAND_W, foamH, "waves-foam");
       this.shoreFoam.setOrigin(0.5, 0.5);
       this.shoreFoam.setScrollFactor(SCROLL.land);
       this.shoreFoam.setDepth(DEPTH.shoreFoam);
       this.shoreFoam.setLighting(true);
 
       this.shoreWash = this.scene.add.tileSprite(
-        bandX,
+        LAND_BAND_X,
         0,
-        bandW,
+        LAND_BAND_W,
         8,
         this.scene.textures.exists("water-deep") ? "water-deep" : "waves-foam",
       );
@@ -131,19 +142,18 @@ export class HarborWorld {
       this.shoreWash.setVisible(false);
     }
 
-    this.landBack = this.scene.add.rectangle(bandX, 0, bandW, 8, 0x3a3228);
+    this.landBack = this.scene.add.rectangle(LAND_BAND_X, 0, LAND_BAND_W, 8, 0x3a3228);
     this.landBack.setOrigin(0.5, 0);
     this.landBack.setScrollFactor(SCROLL.land);
     this.landBack.setDepth(DEPTH.landBack);
 
     if (this.scene.textures.exists("road-stone")) {
-      this.landFill = this.scene.add.tileSprite(bandX, 0, bandW, 8, "road-stone");
+      this.landFill = this.scene.add.tileSprite(LAND_BAND_X, 0, LAND_BAND_W, 8, "road-stone");
       this.landFill.setOrigin(0.5, 0);
       this.landFill.setScrollFactor(SCROLL.land);
       this.landFill.setDepth(DEPTH.land);
-      this.landFill.setLighting(true);
     } else {
-      this.landFill = this.scene.add.rectangle(bandX, 0, bandW, 8, 0x5f7034);
+      this.landFill = this.scene.add.rectangle(LAND_BAND_X, 0, LAND_BAND_W, 8, 0x5f7034);
       this.landFill.setOrigin(0.5, 0);
       this.landFill.setScrollFactor(SCROLL.land);
       this.landFill.setDepth(DEPTH.land);
@@ -154,22 +164,28 @@ export class HarborWorld {
     if (this.scene.textures.exists("wharf-planks")) {
       const plankTop = LAND_TOP_Y - 8;
       const stripH = WORLD_HEIGHT - plankTop + 6;
-      const strip = this.scene.add.tileSprite(
-        bandX,
+      this.landPlanks = this.scene.add.tileSprite(
+        LAND_BAND_X,
         plankTop,
-        bandW,
+        LAND_BAND_W,
         stripH,
         "wharf-planks",
       );
-      strip.setOrigin(0.5, 0);
-      strip.setScrollFactor(SCROLL.land);
-      strip.setDepth(DEPTH.planks);
-      strip.setLighting(true);
+      this.landPlanks.setOrigin(0.5, 0);
+      this.landPlanks.setScrollFactor(SCROLL.land);
+      this.landPlanks.setDepth(DEPTH.planks);
+      this.landPlanks.setLighting(true);
     } else {
-      const dirt = this.scene.add.rectangle(bandX, LAND_TOP_Y, bandW, WORLD_HEIGHT - LAND_TOP_Y, 0x6b542e);
-      dirt.setOrigin(0.5, 0);
-      dirt.setScrollFactor(SCROLL.land);
-      dirt.setDepth(DEPTH.planks);
+      this.landPlanks = this.scene.add.rectangle(
+        LAND_BAND_X,
+        LAND_TOP_Y,
+        LAND_BAND_W,
+        WORLD_HEIGHT - LAND_TOP_Y,
+        0x6b542e,
+      );
+      this.landPlanks.setOrigin(0.5, 0);
+      this.landPlanks.setScrollFactor(SCROLL.land);
+      this.landPlanks.setDepth(DEPTH.planks);
     }
 
     this.fogVeil = this.scene.add.rectangle(0, 0, 800, 400, 0xb8bec4, 0.4);
@@ -218,12 +234,15 @@ export class HarborWorld {
 
     this.placeBuilding("coffee-shop", "coffee-shop", PLACES.coffee.x, PLACES.coffee.y, {
       depth: PLACES.coffee.y - 8,
+      lighting: false,
     });
     this.placeBuilding("shack-a", "shack-a", PLACES.shackA.x, PLACES.shackA.y, {
       depth: PLACES.shackA.y - 8,
+      lighting: false,
     });
     this.placeBuilding("shack-b", "shack-b", PLACES.shackB.x, PLACES.shackB.y, {
       depth: PLACES.shackB.y - 8,
+      lighting: false,
     });
     this.onceImage("sign-github", "sign-github", PLACES.signGithub.x, PLACES.signGithub.y, {
       depth: PLACES.signGithub.y,
@@ -314,27 +333,33 @@ export class HarborWorld {
       this.foam.setPosition(bandX, Math.round(surfaceY));
     }
     if (this.shoreFoam) {
-      this.shoreFoam.setPosition(bandX, Math.round(shoreY));
+      this.shoreFoam.setPosition(LAND_BAND_X, Math.round(shoreY));
     }
     if (this.shoreWash) {
       const washH = Math.max(0, shoreY - LAND_TOP_Y);
       this.shoreWash.setVisible(washH > 0);
       if (washH > 0) {
         const h = Math.max(8, washH + 2);
-        this.shoreWash.setSize(bandW, h);
-        this.shoreWash.setPosition(bandX, Math.round(LAND_TOP_Y + washH / 2));
+        this.shoreWash.setSize(LAND_BAND_W, h);
+        this.shoreWash.setPosition(LAND_BAND_X, Math.round(LAND_TOP_Y + washH / 2));
       }
     }
     const landTop = Math.min(LAND_TOP_Y, shoreY) - 12;
     const landH = WORLD_HEIGHT - landTop + 8;
     if (this.landBack) {
-      this.landBack.setSize(bandW, landH);
-      this.landBack.setPosition(bandX, Math.round(landTop));
+      this.landBack.setSize(LAND_BAND_W, landH);
+      this.landBack.setPosition(LAND_BAND_X, Math.round(landTop));
     }
     if (this.landFill) {
-      this.landFill.setSize(bandW, landH);
-      this.landFill.setPosition(bandX, Math.round(landTop));
+      this.landFill.setSize(LAND_BAND_W, landH);
+      this.landFill.setPosition(LAND_BAND_X, Math.round(landTop));
     }
+    if (this.landPlanks) {
+      const plankTop = Math.round(LAND_TOP_Y - 8);
+      this.landPlanks.setSize(LAND_BAND_W, WORLD_HEIGHT - plankTop + 6);
+      this.landPlanks.setPosition(LAND_BAND_X, plankTop);
+    }
+    this.markWaterHomes();
   }
 
   scrollWater(dt: number): void {
@@ -380,12 +405,12 @@ export class HarborWorld {
       this.foam.setAlpha(0.35 + 0.4 * (0.5 + 0.5 * Math.sin(t * 1.9 + 0.6)));
     }
     if (this.shoreFoam) {
-      this.shoreFoam.tilePositionX = Math.sin(t * 1.6 + 2.1) * 2.4;
-      this.shoreFoam.tilePositionY = Math.sin(t * 1.9 + 0.4) * 0.5;
+      this.shoreFoam.tilePositionX = Math.round(Math.sin(t * 1.6 + 2.1) * 2.4);
+      this.shoreFoam.tilePositionY = Math.round(Math.sin(t * 1.9 + 0.4) * 0.5);
       this.shoreFoam.setAlpha(0.22 + 0.28 * (0.5 + 0.5 * Math.sin(t * 1.7 + 1.1)));
     }
     if (this.shoreWash) {
-      this.shoreWash.tilePositionX = Math.sin(t * 0.9 + 0.4) * 1.2;
+      this.shoreWash.tilePositionX = Math.round(Math.sin(t * 0.9 + 0.4) * 1.2);
       this.shoreWash.setAlpha(0.72 + 0.1 * Math.sin(t * 1.5));
     }
   }
@@ -396,6 +421,8 @@ export class HarborWorld {
       if (cloud.x > WORLD_MAX_X + 80) {
         cloud.x = WORLD_MIN_X - 80;
       }
+      cloud.x = Math.round(cloud.x);
+      cloud.y = Math.round(cloud.y);
     }
   }
 
@@ -432,8 +459,14 @@ export class HarborWorld {
     this.placeSkyDressing();
   }
 
-  private placeBuilding(id: string, key: string, x: number, y: number, opts: { depth: number }): void {
-    this.onceImage(id, key, x, y, { depth: opts.depth });
+  private placeBuilding(
+    id: string,
+    key: string,
+    x: number,
+    y: number,
+    opts: { depth: number; lighting?: boolean },
+  ): void {
+    this.onceImage(id, key, x, y, { depth: opts.depth, lighting: opts.lighting });
   }
 
   private placeFarCottages(): void {
@@ -456,11 +489,9 @@ export class HarborWorld {
     if (!this.scene.textures.exists("seawall")) {
       return;
     }
-    const frame = this.scene.textures.get("seawall").get();
-    const tileW = frame.width;
-    const startX = Math.max(tileW / 2, PLACES.dock.x + 70);
+    const startX = SEAWALL_ORIGIN_X;
     let i = 0;
-    for (let x = startX; x < WORLD_WIDTH + tileW; x += Math.max(1, tileW - 1)) {
+    for (let x = startX; x < WORLD_WIDTH + SEAWALL_TILE_W; x += Math.max(1, SEAWALL_TILE_W - 1)) {
       this.onceImage(`seawall-${i}`, "seawall", x, LAND_TOP_Y + 8, { depth: DEPTH.seawall });
       i += 1;
     }
@@ -637,6 +668,9 @@ export class HarborWorld {
     sprite.setScrollFactor(scrollFactor);
     sprite.setDepth(depth);
     sprite.setLighting(true);
+    if (scrollFactor > 0 && scrollFactor < 1) {
+      setPixelHome(sprite);
+    }
     this.placed.add(id);
     return sprite;
   }
@@ -665,7 +699,29 @@ export class HarborWorld {
     if (opts.flipX) {
       img.setFlipX(true);
     }
+    img.x = Math.round(img.x);
+    img.y = Math.round(img.y);
+    const sf = opts.scrollFactor ?? SCROLL.land;
+    if (sf > 0 && sf < 1) {
+      setPixelHome(img);
+    }
     this.placed.add(id);
     return img;
+  }
+
+  private markWaterHomes(): void {
+    const layers = [
+      this.waterDeep,
+      this.deepFill,
+      this.wavesLayer,
+      this.water,
+      this.foam,
+      this.farShore,
+    ];
+    for (const layer of layers) {
+      if (layer) {
+        setPixelHome(layer);
+      }
+    }
   }
 }

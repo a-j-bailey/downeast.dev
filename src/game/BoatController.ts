@@ -66,6 +66,8 @@ export class BoatController {
     const yTargetMax = nearDock ? BOAT_DOCK_Y : BOAT_OPEN_MAX_Y;
     const yMin = nearDock ? BOAT_DOCK_Y - 12 : BOAT_OPEN_MIN_Y;
     this.sprite.y = Phaser.Math.Clamp(this.sprite.y + this.vy * dt, yMin, yTargetMax);
+    this.sprite.x = Math.round(this.sprite.x);
+    this.sprite.y = Math.round(this.sprite.y);
     if (nearDock && wish.y === 0 && Math.abs(this.vy) < 10) {
       this.sprite.y += (BOAT_DOCK_Y - this.sprite.y) * Math.min(1, 3 * dt);
     }

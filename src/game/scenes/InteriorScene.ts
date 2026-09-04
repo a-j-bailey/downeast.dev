@@ -22,6 +22,7 @@ export class InteriorScene extends Phaser.Scene {
   create(data: InteriorData): void {
     void data;
     applyHudCamera(this);
+    this.cameras.main.roundPixels = true;
     this.cameras.main.setBackgroundColor("#1c140e");
     this.cameras.main.fadeIn(220, 0, 0, 0);
 

@@ -46,11 +46,11 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
     }
     const parentW = Math.max(1, parent.clientWidth || window.innerWidth || 1);
     const parentH = Math.max(1, parent.clientHeight || window.innerHeight || 1);
-    const { viewW, viewH, zoom } = computeHarborView(parentW, parentH);
+    const { viewW, viewH } = computeHarborView(parentW, parentH);
     if (Math.round(game.scale.width) !== viewW || Math.round(game.scale.height) !== viewH) {
       game.scale.resize(viewW, viewH);
     }
-    layoutHarborCanvas(parent, game.canvas, viewW, viewH, zoom);
+    layoutHarborCanvas(parent, game.canvas, viewW, viewH);
     if (game.canvas.tabIndex < 0) {
       game.canvas.tabIndex = 0;
     }

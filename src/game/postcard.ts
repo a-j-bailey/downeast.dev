@@ -2,7 +2,7 @@ import { SITE_URL } from "../content/site";
 
 export const POSTCARD_STORAGE_KEY = "harbor-postcard-v1";
 export const POSTCARD_WALK_S = 30;
-export const POSTCARD_FORCE_DELAY_MS = 1200;
+export const POSTCARD_FORCE_DELAY_MS = 400;
 export const POSTCARD_ART_KEY = "postcard-harbor";
 export const POSTCARD_STAMP_KEY = "postcard-stamp";
 export const POSTCARD_ART_W = 192;

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { applyHudCamera } from "../camera";
+import { applyHudCamera, bindPixelSnap } from "../camera";
 import { EventBus } from "../EventBus";
 import { HarborPostcard } from "../HarborPostcard";
 import { promptText, type InteractId } from "../interact";
@@ -50,7 +50,9 @@ export class HudScene extends Phaser.Scene {
     if (hudCam) {
       hudCam.transparent = true;
       hudCam.setBackgroundColor("rgba(0,0,0,0)");
+      hudCam.roundPixels = true;
     }
+    bindPixelSnap(this);
 
     const fontTex = this.textures.get("hud-font");
     if (fontTex && fontTex.key !== "__MISSING") {
@@ -367,8 +369,8 @@ export class HudScene extends Phaser.Scene {
     }
 
     this.clockText.setTint(this.hudCream || this.isDark || this.mood === "rain" ? CREAM : INK);
-    this.clockText.setPosition(this.viewW - 6, 6);
-    this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
+    this.clockText.setPosition(Math.round(this.viewW - 10), 6);
+    this.glyph.setPosition(Math.round(this.viewW - 12 - this.clockText.width), 6);
     this.cameraIcon.setPosition(6, 6);
     this.cameraHit.setPosition(4, 4);
   }
