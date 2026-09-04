@@ -22,6 +22,7 @@ export class NightLights {
   private nightLights: Phaser.GameObjects.Light[] = [];
   private nightGlows: Phaser.GameObjects.Image[] = [];
   private boatNavLights: Phaser.GameObjects.Light[] = [];
+  private farLights: { light: Phaser.GameObjects.Light; x: number; y: number }[] = [];
   private playerLantern?: Phaser.GameObjects.Image;
   private playerLanternGlow?: Phaser.GameObjects.Image;
   private playerLanternLight?: Phaser.GameObjects.Light;
@@ -127,7 +128,44 @@ export class NightLights {
       this.scene.lights.addLight(PLACES.signX.x, PLACES.signX.y - 12, 48, 0xfff2d0, 0),
     );
 
+    this.placeFarCottageNight();
     this.setDecorVisible(dark);
+  }
+
+  private placeFarCottageNight(): void {
+    if (this.farLights.length > 0) {
+      return;
+    }
+    const windows = [
+      { x: PLACES.farCottageA.x - 1, y: PLACES.farCottageA.y - 8, w: 3, h: 3 },
+      { x: PLACES.farCottageB.x + 1, y: PLACES.farCottageB.y - 7, w: 3, h: 3 },
+    ];
+    for (const win of windows) {
+      const light = this.scene.lights.addLight(win.x, win.y, 28, 0xffb060, 0);
+      this.farLights.push({ light, x: win.x, y: win.y });
+      if (this.scene.textures.exists("glow-window")) {
+        const glow = this.scene.add.image(win.x, win.y, "glow-window");
+        glow.setDisplaySize(win.w, win.h);
+        glow.setScrollFactor(SCROLL.farShore);
+        glow.setDepth(11);
+        glow.setBlendMode(Phaser.BlendModes.ADD);
+        glow.setLighting(false);
+        glow.setVisible(false);
+        this.nightGlows.push(glow);
+      }
+    }
+  }
+
+  updateFarShore(dark: boolean): void {
+    const on = dark;
+    const cam = this.scene.cameras.main;
+    const sf = SCROLL.farShore;
+    for (const far of this.farLights) {
+      far.light.x = far.x + cam.scrollX * (1 - sf);
+      far.light.y = far.y + cam.scrollY * (1 - sf);
+      far.light.setIntensity(on ? 0.55 : 0);
+      far.light.setVisible(on);
+    }
   }
 
   setDecorVisible(on: boolean): void {

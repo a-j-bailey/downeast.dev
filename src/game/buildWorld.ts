@@ -31,6 +31,7 @@ export class HarborWorld {
   shoreWash?: Phaser.GameObjects.TileSprite;
   wavesLayer?: Phaser.GameObjects.TileSprite;
   lighthouse?: Phaser.GameObjects.Image;
+  farCottages: Phaser.GameObjects.Image[] = [];
   farShore?: Phaser.GameObjects.TileSprite;
   fogVeil?: Phaser.GameObjects.Rectangle;
   rain?: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -218,6 +219,7 @@ export class HarborWorld {
       8,
     );
 
+    this.placeFarCottages();
     this.onceImage("lighthouse", "lighthouse", PLACES.lighthouse.x, PLACES.lighthouse.y, {
       scrollFactor: SCROLL.farShore,
       depth: 12,
@@ -428,6 +430,9 @@ export class HarborWorld {
     if (this.lighthouse) {
       this.lighthouse.setVisible(mood !== "fog");
     }
+    for (const cottage of this.farCottages) {
+      cottage.setVisible(mood !== "fog");
+    }
     if (this.rain) {
       if (mood === "rain") {
         this.rain.start();
@@ -463,6 +468,22 @@ export class HarborWorld {
       this.placed.add(`${id}-under`);
     }
     this.onceImage(id, key, x, y, { depth: opts.depth });
+  }
+
+  private placeFarCottages(): void {
+    const spots = [
+      { id: "far-cottage-a", key: "far-cottage-a", x: PLACES.farCottageA.x, y: PLACES.farCottageA.y },
+      { id: "far-cottage-b", key: "far-cottage-b", x: PLACES.farCottageB.x, y: PLACES.farCottageB.y },
+    ];
+    for (const spot of spots) {
+      const img = this.onceImage(spot.id, spot.key, spot.x, spot.y, {
+        scrollFactor: SCROLL.farShore,
+        depth: 10,
+      });
+      if (img && !this.farCottages.includes(img)) {
+        this.farCottages.push(img);
+      }
+    }
   }
 
   private placeSeawall(): void {
