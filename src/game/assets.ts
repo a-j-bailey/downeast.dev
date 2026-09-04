@@ -20,6 +20,7 @@ export const BOOT_IMAGES = [
   "far-shore",
   "seawall",
   "pier",
+  "dock",
   "fender",
   "boat",
   "boat-nav-lights",

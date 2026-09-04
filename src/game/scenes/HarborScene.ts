@@ -10,6 +10,9 @@ import {
 } from "../interact";
 import { SCROLL } from "../layers";
 import {
+  BOAT_DOCK_Y,
+  BOAT_OPEN_MAX_Y,
+  BOAT_OPEN_MIN_Y,
   HORIZON_Y,
   LAND_BOTTOM_Y,
   LAND_TOP_Y,
@@ -47,12 +50,17 @@ type Keys = {
 };
 
 const WALK_Y = WALKER_Y;
-const BOAT_WATER_Y = PLACES.boat.y;
-/** Boat draws in front of pier midground (pier depth ~36). */
-const BOAT_DEPTH = WALK_Y + 40;
+/** Boat in front of wood dock midground. */
+const DOCK_DEPTH = BOAT_DOCK_Y - 10;
+const BOAT_DEPTH = BOAT_DOCK_Y + 20;
 /** Underway cannot pass dock toward town. */
 const BOAT_DOCK_MAX_X = PLACES.boat.x;
 const BOAT_OPEN_MIN_X = 60;
+/** boat.png 171×51 origin 0.5,1 — bow tip / transom top. */
+const BOAT_BOW_X = 84;
+const BOAT_BOW_Y = -8;
+const BOAT_STERN_X = 84;
+const BOAT_STERN_Y = -34;
 
 export class HarborScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Sprite;
@@ -75,6 +83,7 @@ export class HarborScene extends Phaser.Scene {
   private stickX = 0;
   private touchStick = false;
   private boatVx = 0;
+  private boatVy = 0;
   private beamAngle = 0;
   private mood: WeatherMood = "clearDay";
   private placed = new Set<string>();
@@ -498,7 +507,7 @@ export class HarborScene extends Phaser.Scene {
     });
 
     this.placeSeawall();
-    this.placePiers();
+    this.placeDock();
     this.placeTraps();
     this.placeBoat();
     this.placeFenders();
@@ -637,9 +646,11 @@ export class HarborScene extends Phaser.Scene {
     }
     const frame = this.textures.get("seawall").get();
     const tileW = frame.width;
+    // Town wall only — start after the wood dock / open-water slip (not a stone berth).
+    const startX = Math.max(tileW / 2, PLACES.dock.x + 70);
     let i = 0;
     // Overlap 1px so stone blocks meet with no hairline gap.
-    for (let x = tileW / 2; x < WORLD_WIDTH + tileW; x += Math.max(1, tileW - 1)) {
+    for (let x = startX; x < WORLD_WIDTH + tileW; x += Math.max(1, tileW - 1)) {
       this.onceImage(`seawall-${i}`, "seawall", x, LAND_TOP_Y + 8, { depth: 34 });
       i += 1;
     }
@@ -648,19 +659,32 @@ export class HarborScene extends Phaser.Scene {
     });
   }
 
-  private placePiers(): void {
-    this.onceImage("pier-dock", "pier", PLACES.pier.x, PLACES.pier.y, { depth: 36 });
-    this.onceImage("pier-pylon", "pier", PLACES.pylon.x, PLACES.pylon.y + 6, { depth: 37 });
-    this.onceImage("pier-finger", "pier", PLACES.pierFinger.x, PLACES.pierFinger.y, { depth: 36 });
-    this.onceImage("pier-fg-0", "pier", 72, LAND_BOTTOM_Y - 2, {
-      scrollFactor: SCROLL.foreground,
-      depth: 900,
-    });
-    this.onceImage("pier-fg-1", "pier", 168, LAND_BOTTOM_Y, {
-      scrollFactor: SCROLL.foreground,
-      depth: 901,
-    });
-    this.onceImage("pier-fg-2", "pier", 430, LAND_BOTTOM_Y, {
+  private placeDock(): void {
+    // Wooden finger-dock midground; water stays visible beyond it toward far shore.
+    if (this.textures.exists("dock")) {
+      this.onceImage("dock", "dock", PLACES.dock.x, PLACES.dock.y, {
+        depth: DOCK_DEPTH,
+      });
+    } else if (this.textures.exists("wharf-planks")) {
+      // Fallback: plank deck + pier posts if dock.png missing.
+      const deck = this.add.tileSprite(PLACES.dock.x, PLACES.dock.y - 12, 120, 16, "wharf-planks");
+      deck.setName("dock-planks");
+      deck.setOrigin(0.5, 1);
+      deck.setScrollFactor(SCROLL.land);
+      deck.setDepth(DOCK_DEPTH);
+      deck.setLighting(true);
+      this.placed.add("dock-planks");
+      if (this.textures.exists("pier")) {
+        this.onceImage("dock-post-0", "pier", PLACES.dock.x - 36, PLACES.dock.y, {
+          depth: DOCK_DEPTH + 1,
+        });
+        this.onceImage("dock-post-1", "pier", PLACES.dock.x + 20, PLACES.dock.y, {
+          depth: DOCK_DEPTH + 1,
+        });
+      }
+    }
+    // One distant decorative pier far from the berth (town side), not a stone berth.
+    this.onceImage("pier-town", "pier", 430, LAND_BOTTOM_Y, {
       scrollFactor: SCROLL.foreground,
       depth: 902,
     });
@@ -671,15 +695,15 @@ export class HarborScene extends Phaser.Scene {
     if (!this.textures.exists("fender")) {
       return;
     }
-    // Tire/rope fenders along the pier face at the berth (behind boat visually).
+    // Tire/rope fenders along the wood dock face (behind boat visually).
     const spots = [
-      { id: "fender-0", x: PLACES.boat.x - 28, y: PLACES.pier.y + 10 },
-      { id: "fender-1", x: PLACES.boat.x - 6, y: PLACES.pier.y + 12 },
-      { id: "fender-2", x: PLACES.boat.x + 18, y: PLACES.pier.y + 10 },
+      { id: "fender-0", x: PLACES.dock.x - 32, y: PLACES.dock.y - 2 },
+      { id: "fender-1", x: PLACES.dock.x - 6, y: PLACES.dock.y },
+      { id: "fender-2", x: PLACES.dock.x + 22, y: PLACES.dock.y - 2 },
     ];
     for (const spot of spots) {
       this.onceImage(spot.id, "fender", spot.x, spot.y, {
-        depth: BOAT_DEPTH - 2,
+        depth: DOCK_DEPTH + 2,
       });
     }
   }
@@ -932,19 +956,30 @@ export class HarborScene extends Phaser.Scene {
   private wish(dt: number): { x: number; y: number; keyed: boolean } {
     void dt;
     let x = 0;
-    // Vertical wish ignored for walker and boat (side-view lock).
+    let y = 0;
     const leftDown = Boolean(this.cursors?.left?.isDown || this.wasd?.left?.isDown);
     const rightDown = Boolean(this.cursors?.right?.isDown || this.wasd?.right?.isDown);
+    const upDown = Boolean(this.cursors?.up?.isDown || this.wasd?.up?.isDown);
+    const downDown = Boolean(this.cursors?.down?.isDown || this.wasd?.down?.isDown);
     if (leftDown) {
       x -= 1;
     }
     if (rightDown) {
       x += 1;
     }
+    // Boat may ease into open water on Y; walker stays locked to WALK_Y.
+    if (this.possession === "boat") {
+      if (upDown) {
+        y -= 1;
+      }
+      if (downDown) {
+        y += 1;
+      }
+    }
     if (x === 0 && this.stickX !== 0) {
       x = this.stickX;
     }
-    const keyed = x !== 0;
+    const keyed = x !== 0 || y !== 0;
     if (keyed) {
       this.walkTarget = null;
     } else if (this.walkTarget) {
@@ -959,20 +994,32 @@ export class HarborScene extends Phaser.Scene {
       // Stick can be analog; keys/tap stay unit.
       x = Math.abs(x) >= 1 ? Math.sign(x) : x;
     }
-    return { x, y: 0, keyed };
+    return { x, y, keyed };
   }
 
   private steer(dt: number): void {
     const wish = this.wish(dt);
     if (this.possession === "boat" && this.boat) {
       this.boatVx += (wish.x * 96 - this.boatVx) * Math.min(1, 1.6 * dt);
-      this.boat.x = Phaser.Math.Clamp(this.boat.x + this.boatVx * dt, BOAT_OPEN_MIN_X, BOAT_DOCK_MAX_X);
-      this.boat.y = BOAT_WATER_Y;
+      this.boatVy += (wish.y * 56 - this.boatVy) * Math.min(1, 1.6 * dt);
+      this.boat.x = Phaser.Math.Clamp(
+        this.boat.x + this.boatVx * dt,
+        BOAT_OPEN_MIN_X,
+        BOAT_DOCK_MAX_X,
+      );
+      // Out to sea left: allow Y into the water a bit; snap toward dock Y when near slip.
+      const nearDock = this.boat.x > BOAT_DOCK_MAX_X - 36;
+      const yTargetMax = nearDock ? BOAT_DOCK_Y : BOAT_OPEN_MAX_Y;
+      const yMin = nearDock ? BOAT_DOCK_Y - 12 : BOAT_OPEN_MIN_Y;
+      this.boat.y = Phaser.Math.Clamp(this.boat.y + this.boatVy * dt, yMin, yTargetMax);
+      if (nearDock && wish.y === 0 && Math.abs(this.boatVy) < 10) {
+        this.boat.y += (BOAT_DOCK_Y - this.boat.y) * Math.min(1, 3 * dt);
+      }
       if (Math.abs(this.boatVx) > 8) {
-        // Sprite faces right by default; flip when moving left.
+        // Unflipped sprite faces right; flipX when underway left.
         this.boat.setFlipX(this.boatVx < 0);
       }
-      const moving = Math.abs(this.boatVx) > 12;
+      const moving = Math.abs(this.boatVx) > 12 || Math.abs(this.boatVy) > 12;
       if (moving && this.textures.exists("boat-underway")) {
         this.boat.setTexture("boat-underway");
       } else if (this.textures.exists("boat")) {
@@ -1028,7 +1075,7 @@ export class HarborScene extends Phaser.Scene {
     }
     // flipX true => bow left (unflipped sprite faces right).
     const facingRight = !this.boat.flipX;
-    const stern = facingRight ? -78 : 78;
+    const stern = facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
     this.wake.setPosition(this.boat.x + stern, this.boat.y - 4);
     this.wake.setFlipX(!facingRight);
     this.wake.tilePositionX += facingRight ? 40 * 0.016 : -40 * 0.016;
@@ -1038,10 +1085,16 @@ export class HarborScene extends Phaser.Scene {
     if (this.boatNavLights.length > 0 || !this.boat) {
       return;
     }
-    // [0] bow (color by facing), [1] unused, [2] stern white — intensities toggled on board.
-    this.boatNavLights.push(this.lights.addLight(this.boat.x - 20, this.boat.y - 18, 42, 0xff3355, 0));
-    this.boatNavLights.push(this.lights.addLight(this.boat.x + 20, this.boat.y - 18, 42, 0x44ff88, 0));
-    this.boatNavLights.push(this.lights.addLight(this.boat.x, this.boat.y - 28, 36, 0xfff5e0, 0));
+    // [0] bow color, [1] unused, [2] stern white — intensities toggled on board.
+    this.boatNavLights.push(
+      this.lights.addLight(this.boat.x + BOAT_BOW_X, this.boat.y + BOAT_BOW_Y, 42, 0xff3355, 0),
+    );
+    this.boatNavLights.push(
+      this.lights.addLight(this.boat.x - BOAT_BOW_X, this.boat.y + BOAT_BOW_Y, 42, 0x44ff88, 0),
+    );
+    this.boatNavLights.push(
+      this.lights.addLight(this.boat.x - BOAT_STERN_X, this.boat.y + BOAT_STERN_Y, 36, 0xfff5e0, 0),
+    );
   }
 
   private setBoatNavVisible(on: boolean): void {
@@ -1061,15 +1114,15 @@ export class HarborScene extends Phaser.Scene {
       return;
     }
     this.ensureBoatNavLights();
-    // flipX true => facing left. Colored light on the bow; white on the stern.
+    // facingRight = !flipX (unflipped sprite faces right).
     const facingRight = !this.boat.flipX;
-    const bow = facingRight ? 56 : -56;
-    const stern = facingRight ? -56 : 56;
-    const bowColor = facingRight ? 0x44ff88 : 0xff3355; // green when right, red when left
-    // [0] bow color, [1] unused, [2] stern white
+    const bow = facingRight ? BOAT_BOW_X : -BOAT_BOW_X;
+    const stern = facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
+    // Red when facing left, green when facing right — at the very bow tip.
+    const bowColor = facingRight ? 0x44ff88 : 0xff3355;
     if (this.boatNavLights[0]) {
       this.boatNavLights[0].x = this.boat.x + bow;
-      this.boatNavLights[0].y = this.boat.y - 16;
+      this.boatNavLights[0].y = this.boat.y + BOAT_BOW_Y;
       this.boatNavLights[0].setColor(bowColor);
       this.boatNavLights[0].setIntensity(1.8);
       this.boatNavLights[0].setVisible(true);
@@ -1078,9 +1131,10 @@ export class HarborScene extends Phaser.Scene {
       this.boatNavLights[1].setIntensity(0);
       this.boatNavLights[1].setVisible(false);
     }
+    // White at the very top of the transom (stern), not mid-hull.
     if (this.boatNavLights[2]) {
       this.boatNavLights[2].x = this.boat.x + stern;
-      this.boatNavLights[2].y = this.boat.y - 14;
+      this.boatNavLights[2].y = this.boat.y + BOAT_STERN_Y;
       this.boatNavLights[2].setColor(0xfff5e0);
       this.boatNavLights[2].setIntensity(1.4);
       this.boatNavLights[2].setVisible(true);
@@ -1204,8 +1258,8 @@ export class HarborScene extends Phaser.Scene {
     // Walker Y is locked to WALK_Y — zone centers must sit on that line.
     const zones: Zone[] = [
       { id: "cafe", x: PLACES.coffee.x + 28, y: WALK_Y, w: 56, h: 48, mode: "walker" },
-      { id: "board", x: PLACES.boat.x + 8, y: WALK_Y, w: 80, h: 48, mode: "walker" },
-      { id: "dismount", x: PLACES.pylon.x + 10, y: BOAT_WATER_Y, w: 70, h: 48, mode: "boat" },
+      { id: "board", x: PLACES.dock.x + 8, y: WALK_Y, w: 90, h: 48, mode: "walker" },
+      { id: "dismount", x: PLACES.boat.x, y: BOAT_DOCK_Y, w: 90, h: 64, mode: "boat" },
       { id: "github", x: PLACES.signGithub.x, y: WALK_Y, w: 40, h: 48, mode: "walker" },
       { id: "x", x: PLACES.signX.x, y: WALK_Y, w: 40, h: 48, mode: "walker" },
       { id: "zoning", x: PLACES.shackA.x - 8, y: WALK_Y, w: 56, h: 48, mode: "walker" },
@@ -1291,7 +1345,8 @@ export class HarborScene extends Phaser.Scene {
     this.player.setVisible(false);
     this.walkTarget = null;
     this.boatVx = 0;
-    this.boat.y = BOAT_WATER_Y;
+    this.boatVy = 0;
+    this.boat.setPosition(PLACES.boat.x, BOAT_DOCK_Y);
     this.setBoatNavVisible(true);
     this.syncBoatNav();
     applyHarborCamera(this, this.boat);
@@ -1300,10 +1355,11 @@ export class HarborScene extends Phaser.Scene {
   private dismount(): void {
     this.possession = "walker";
     this.player.setVisible(true);
-    this.player.setPosition(PLACES.pylon.x + 24, WALK_Y);
+    this.player.setPosition(PLACES.dock.x + 36, WALK_Y);
     this.boatVx = 0;
+    this.boatVy = 0;
     if (this.boat) {
-      this.boat.y = BOAT_WATER_Y;
+      this.boat.setPosition(PLACES.boat.x, BOAT_DOCK_Y);
       if (this.textures.exists("boat")) {
         this.boat.setTexture("boat");
       }

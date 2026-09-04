@@ -140,7 +140,20 @@ export function ensureHarborFallbacks(scene: Phaser.Scene): void {
     g.fillRect(0, 2, 5, 1);
   });
 
-  stamp(scene, "fender", 12, 14, (g) => {
+  stamp(scene, "dock", 120, 40, (g) => {
+    g.fillStyle(0x765630, 1);
+    g.fillRect(4, 2, 112, 14);
+    g.fillStyle(0x342016, 1);
+    for (let x = 4; x < 116; x += 16) {
+      g.fillRect(x, 2, 1, 14);
+    }
+    g.fillStyle(0x5a4028, 1);
+    for (const px of [14, 42, 70, 98]) {
+      g.fillRect(px, 16, 5, 22);
+    }
+  });
+
+    stamp(scene, "fender", 12, 14, (g) => {
     g.fillStyle(0x2a2620, 1);
     g.fillRect(2, 2, 8, 10);
     g.fillStyle(0x96863e, 1);
