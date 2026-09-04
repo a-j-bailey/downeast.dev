@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { VIEW_HEIGHT, VIEW_WIDTH } from "./view";
-import { layoutHarborCanvas } from "./scaleMode";
+import { computeHarborView, layoutHarborCanvas } from "./scaleMode";
 import { BootScene } from "./scenes/BootScene";
 import { HarborScene } from "./scenes/HarborScene";
 import { HudScene } from "./scenes/HudScene";
@@ -29,9 +29,8 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
       antialiasGL: false,
     },
     scale: {
-      // Camera stays 480×270 (see camera.ts). Manual CSS resize below.
+      // Camera height stays 270. Tall phones shrink width via resize below.
       // Never EXPAND / MAX_ZOOM / grow camera from scale.height.
-      // ENVELOP / HEIGHT_CONTROLS via scaleMode assignment proved unreliable.
       mode: Phaser.Scale.NONE,
       autoCenter: Phaser.Scale.NO_CENTER,
       width: VIEW_WIDTH,
@@ -52,7 +51,13 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
     if (!game.canvas) {
       return;
     }
-    layoutHarborCanvas(parent, game.canvas);
+    const parentW = Math.max(1, parent.clientWidth || window.innerWidth || 1);
+    const parentH = Math.max(1, parent.clientHeight || window.innerHeight || 1);
+    const { viewW, viewH } = computeHarborView(parentW, parentH);
+    if (Math.round(game.scale.width) !== viewW || Math.round(game.scale.height) !== viewH) {
+      game.scale.resize(viewW, viewH);
+    }
+    layoutHarborCanvas(parent, game.canvas, viewW, viewH);
     if (game.canvas.tabIndex < 0) {
       game.canvas.tabIndex = 0;
     }

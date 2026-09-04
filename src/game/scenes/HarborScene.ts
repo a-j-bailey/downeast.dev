@@ -1,7 +1,8 @@
 import Phaser from "phaser";
 import { STREAM_IMAGES, artUrl } from "../assets";
-import { applyHarborCamera } from "../camera";
+import { applyHarborCamera, harborViewSize, snapHarborCamera } from "../camera";
 import { EventBus } from "../EventBus";
+import { shouldShowVirtualStick } from "../touchControls";
 import {
   openInteractUrl,
   type InteractId,
@@ -20,7 +21,6 @@ import {
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from "../layout";
-import { VIEW_HEIGHT, VIEW_WIDTH } from "../view";
 import { TEX } from "../textures";
 import {
   ambientColor,
@@ -67,6 +67,8 @@ export class HarborScene extends Phaser.Scene {
   private wasd?: Keys;
   private possession: Possession = "walker";
   private walkTarget: { x: number; y: number } | null = null;
+  private stickX = 0;
+  private touchStick = false;
   private boatVx = 0;
   private beamAngle = 0;
   private mood: WeatherMood = "clearDay";
@@ -111,10 +113,13 @@ export class HarborScene extends Phaser.Scene {
       callback: () => this.spawnShark(),
     });
 
+    this.touchStick = shouldShowVirtualStick();
     EventBus.on("harbor-interact", this.onHudInteract);
+    EventBus.on("harbor-stick", this.onStick);
     EventBus.emit("current-scene-ready", this);
     this.events.once("shutdown", () => {
       EventBus.off("harbor-interact", this.onHudInteract);
+      EventBus.off("harbor-stick", this.onStick);
       this.scale.off("resize", this.onResize, this);
     });
   }
@@ -139,6 +144,7 @@ export class HarborScene extends Phaser.Scene {
     this.updateShark(dt);
     this.updateBeam(dt);
     this.refreshPrompt();
+    snapHarborCamera(this);
   }
 
   private idleTextureKey(): string {
@@ -552,7 +558,8 @@ export class HarborScene extends Phaser.Scene {
   private placePiers(): void {
     this.onceImage("pier-dock", "pier", PLACES.pier.x, PLACES.pier.y, { depth: 36 });
     this.onceImage("pier-pylon", "pier", PLACES.pylon.x, PLACES.pylon.y + 6, { depth: 37 });
-    this.onceImage("pier-fg-0", "pier", 96, LAND_BOTTOM_Y - 2, {
+    this.onceImage("pier-finger", "pier", PLACES.pierFinger.x, PLACES.pierFinger.y, { depth: 36 });
+    this.onceImage("pier-fg-0", "pier", 72, LAND_BOTTOM_Y - 2, {
       scrollFactor: SCROLL.foreground,
       depth: 900,
     });
@@ -705,6 +712,10 @@ export class HarborScene extends Phaser.Scene {
 
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       focusHost();
+      // Virtual stick owns movement on touch; keep tap-to-walk for mouse desktop.
+      if (this.touchStick) {
+        return;
+      }
       const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
       // Side-view: pointer walk uses X only; Y stays on the ground line.
       this.walkTarget = { x: world.x, y: WALK_Y };
@@ -715,6 +726,15 @@ export class HarborScene extends Phaser.Scene {
 
   private onHudInteract = (): void => {
     this.tryInteract();
+  };
+
+  private onStick = (...args: unknown[]): void => {
+    const payload = args[0] as { x?: number } | undefined;
+    const x = typeof payload?.x === "number" ? payload.x : 0;
+    this.stickX = Math.abs(x) < 0.15 ? 0 : Phaser.Math.Clamp(x, -1, 1);
+    if (this.stickX !== 0) {
+      this.walkTarget = null;
+    }
   };
 
   private wish(dt: number): { x: number; y: number; keyed: boolean } {
@@ -729,6 +749,9 @@ export class HarborScene extends Phaser.Scene {
     if (rightDown) {
       x += 1;
     }
+    if (x === 0 && this.stickX !== 0) {
+      x = this.stickX;
+    }
     const keyed = x !== 0;
     if (keyed) {
       this.walkTarget = null;
@@ -741,7 +764,8 @@ export class HarborScene extends Phaser.Scene {
       }
     }
     if (x !== 0) {
-      x = Math.sign(x);
+      // Stick can be analog; keys/tap stay unit.
+      x = Math.abs(x) >= 1 ? Math.sign(x) : x;
     }
     return { x, y: 0, keyed };
   }
@@ -1088,8 +1112,7 @@ export class HarborScene extends Phaser.Scene {
     if (!this.rain) {
       return;
     }
-    const visW = VIEW_WIDTH;
-    const visH = VIEW_HEIGHT;
+    const { width: visW, height: visH } = harborViewSize(this);
     this.rain.setConfig({ x: { min: 0, max: visW } });
     if (this.fogVeil) {
       this.fogVeil.setSize(visW + 8, visH + 8);

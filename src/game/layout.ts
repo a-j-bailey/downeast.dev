@@ -13,10 +13,13 @@ export const WALKER_Y = 228;
 export const SPAWN = { x: 148, y: WALKER_Y };
 
 export const PLACES = {
-  pylon: { x: 72, y: LAND_TOP_Y },
-  pier: { x: 108, y: LAND_TOP_Y + 8 },
-  // Docked in front of the pier face (audit: x 96–110, y 168–176).
-  boat: { x: 102, y: 172 },
+  // Extended left so boat approach stays on-screen on tall phones.
+  pylon: { x: 46, y: LAND_TOP_Y },
+  pier: { x: 86, y: LAND_TOP_Y + 8 },
+  // Extra finger between pylon and boat (see HarborScene.placePiers).
+  pierFinger: { x: 66, y: LAND_TOP_Y + 4 },
+  // Docked on the extended pier face.
+  boat: { x: 98, y: 172 },
   shackA: { x: 248, y: LAND_TOP_Y },
   shackB: { x: 338, y: LAND_TOP_Y },
   coffee: { x: 448, y: LAND_TOP_Y },
