@@ -1,16 +1,10 @@
 import Phaser from "phaser";
 import { VIEW_HEIGHT, VIEW_WIDTH } from "./view";
+import { applyResponsiveScale } from "./scaleMode";
 import { BootScene } from "./scenes/BootScene";
 import { HarborScene } from "./scenes/HarborScene";
 import { HudScene } from "./scenes/HudScene";
 import { InteriorScene } from "./scenes/InteriorScene";
-
-/** Tall phones: ENVELOP (fill height, crop sides). Wide: FIT (letterbox). */
-function scaleModeForParent(parent: HTMLElement): number {
-  const w = parent.clientWidth || window.innerWidth || 1;
-  const h = parent.clientHeight || window.innerHeight || 1;
-  return w / h < 1.5 ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT;
-}
 
 export function createHarborGame(parent: HTMLElement): Phaser.Game {
   const game = new Phaser.Game({
@@ -31,7 +25,7 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
     },
     scale: {
       // Camera stays 480×270 (see camera.ts). Never EXPAND / MAX_ZOOM.
-      mode: scaleModeForParent(parent),
+      mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
       autoRound: true,
     },
@@ -46,19 +40,17 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
   });
 
   const syncScaleMode = (): void => {
-    if (!game.scale || !game.canvas) {
+    if (!game.scale) {
       return;
     }
-    const next = scaleModeForParent(parent);
-    if (game.scale.scaleMode !== next) {
-      game.scale.scaleMode = next;
-      game.scale.refresh();
-    }
+    applyResponsiveScale(game);
   };
 
   game.scale.on("resize", syncScaleMode);
   window.addEventListener("resize", syncScaleMode);
+  game.events.once("ready", syncScaleMode);
   game.events.once("destroy", () => {
+    game.scale.off("resize", syncScaleMode);
     window.removeEventListener("resize", syncScaleMode);
   });
 

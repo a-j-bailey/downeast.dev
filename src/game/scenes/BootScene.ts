@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { BOOT_IMAGES, artUrl } from "../assets";
 import { applyHudCamera } from "../camera";
 import { EventBus } from "../EventBus";
-import { ensureUiTextures } from "../textures";
+import { ensureHarborFallbacks, ensureUiTextures } from "../textures";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -17,6 +17,7 @@ export class BootScene extends Phaser.Scene {
       this.drawLoader(value);
     });
     this.load.once("complete", () => {
+      ensureHarborFallbacks(this);
       EventBus.emit("current-scene-ready", this);
       this.scene.start("Harbor");
       this.scene.launch("Hud");

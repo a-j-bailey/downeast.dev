@@ -14,11 +14,13 @@ import {
   LAND_TOP_Y,
   PLACES,
   SPAWN,
+  WALKER_Y,
   WATER_BOTTOM_Y,
   WATER_SURFACE_Y,
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from "../layout";
+import { VIEW_HEIGHT, VIEW_WIDTH } from "../view";
 import { TEX } from "../textures";
 import {
   ambientColor,
@@ -44,7 +46,7 @@ type Keys = {
   e: Phaser.Input.Keyboard.Key;
 };
 
-const WALK_Y = SPAWN.y;
+const WALK_Y = WALKER_Y;
 const BOAT_WATER_Y = PLACES.boat.y;
 
 export class HarborScene extends Phaser.Scene {
@@ -151,15 +153,20 @@ export class HarborScene extends Phaser.Scene {
       this.anims.remove("player-idle");
     }
 
-    const walkFrames: Phaser.Types.Animations.AnimationFrame[] = [];
-    const contacts = ["player-walk-0", "player-walk-1", "player-walk-2", "player-walk-3"];
     const hasPass = this.textures.exists("player-walk-pass");
-    for (const key of contacts) {
-      walkFrames.push({ key });
-      if (hasPass) {
-        walkFrames.push({ key: "player-walk-pass" });
-      }
-    }
+    const walkFrames: Phaser.Types.Animations.AnimationFrame[] = hasPass
+      ? [
+          { key: "player-walk-0" },
+          { key: "player-walk-pass" },
+          { key: "player-walk-2" },
+          { key: "player-walk-pass" },
+        ]
+      : [
+          { key: "player-walk-0" },
+          { key: "player-walk-1" },
+          { key: "player-walk-2" },
+          { key: "player-walk-3" },
+        ];
     this.anims.create({
       key: "player-walk",
       frames: walkFrames,
@@ -188,10 +195,15 @@ export class HarborScene extends Phaser.Scene {
 
     const waterBandH = WATER_BOTTOM_Y - WATER_SURFACE_Y;
     const deepKey = this.textures.exists("water-deep") ? "water-deep" : "water";
-    const deepH = this.textures.exists("water-deep") ? 60 : 32;
+    const deepFrameH = this.textures.exists("water-deep")
+      ? this.textures.get("water-deep").get().height
+      : 32;
+    const deepH = this.textures.exists("water-deep")
+      ? Math.max(56, Math.min(72, Math.max(deepFrameH, waterBandH - 6)))
+      : 32;
     this.waterDeep = this.add.tileSprite(
       WORLD_WIDTH / 2,
-      WATER_SURFACE_Y + deepH / 2 + 4,
+      WATER_SURFACE_Y + deepH / 2,
       WORLD_WIDTH + 128,
       deepH,
       deepKey,
@@ -240,11 +252,12 @@ export class HarborScene extends Phaser.Scene {
     this.water.setAlpha(this.textures.exists("water-deep") ? 0.55 : 1);
 
     if (this.textures.exists("waves-foam")) {
+      const foamH = Math.max(12, this.textures.get("waves-foam").get().height);
       this.foam = this.add.tileSprite(
         WORLD_WIDTH / 2,
-        WATER_SURFACE_Y + 6,
+        WATER_SURFACE_Y + 8,
         WORLD_WIDTH + 128,
-        12,
+        foamH,
         "waves-foam",
       );
       this.foam.setScrollFactor(SCROLL.water);
@@ -680,7 +693,7 @@ export class HarborScene extends Phaser.Scene {
     const wish = this.wish(dt);
     if (this.possession === "boat" && this.boat) {
       this.boatVx += (wish.x * 96 - this.boatVx) * Math.min(1, 1.6 * dt);
-        this.boat.x = Phaser.Math.Clamp(this.boat.x + this.boatVx * dt, 60, WORLD_WIDTH - 60);
+      this.boat.x = Phaser.Math.Clamp(this.boat.x + this.boatVx * dt, 60, WORLD_WIDTH - 60);
       this.boat.y = BOAT_WATER_Y;
       if (Math.abs(this.boatVx) > 8) {
         this.boat.setFlipX(this.boatVx > 0);
@@ -1018,8 +1031,8 @@ export class HarborScene extends Phaser.Scene {
     if (!this.rain) {
       return;
     }
-    const visW = 480;
-    const visH = 270;
+    const visW = VIEW_WIDTH;
+    const visH = VIEW_HEIGHT;
     this.rain.setConfig({ x: { min: 0, max: visW } });
     if (this.fogVeil) {
       this.fogVeil.setSize(visW + 8, visH + 8);

@@ -92,12 +92,16 @@ export function ambientColor(mood: WeatherMood): number {
     case "fog":
       return 0x889099;
     case "night":
-      return 0x2a3344;
+      return 0x2a3348;
     default: {
       const _exhaustive: never = mood;
       return _exhaustive;
     }
   }
+}
+
+export function skyCss(mood: WeatherMood): string {
+  return `#${skyColor(mood).toString(16).padStart(6, "0")}`;
 }
 
 export function nyClock(now = new Date()): string {

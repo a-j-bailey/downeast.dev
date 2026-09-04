@@ -54,7 +54,7 @@ html.harbor-play #root {
   min-height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #5b93c5;
+  background: var(--harbor-sky, #5b93c5);
 }
 
 body {
@@ -192,7 +192,7 @@ img {
   height: 100%;
   min-height: 100dvh;
   overflow: hidden;
-  background: #5b93c5;
+  background: var(--harbor-sky, #5b93c5);
 }
 
 .harbor-root {
@@ -204,7 +204,7 @@ img {
 
 .harbor-root canvas {
   display: block;
-  /* Phaser Scale (FIT / ENVELOP) owns size — never force width/height 100%. */
+  /* Phaser Scale (FIT / HEIGHT_CONTROLS_WIDTH) owns size — never force 100%. */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }

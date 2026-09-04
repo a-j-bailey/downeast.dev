@@ -7,7 +7,10 @@ export const WATER_BOTTOM_Y = 186;
 export const LAND_TOP_Y = 186;
 export const LAND_BOTTOM_Y = WORLD_HEIGHT - 4;
 
-export const SPAWN = { x: 148, y: 228 };
+/** Single walking lane. Walker Y is locked here. */
+export const WALKER_Y = 228;
+
+export const SPAWN = { x: 148, y: WALKER_Y };
 
 export const PLACES = {
   pylon: { x: 72, y: LAND_TOP_Y },
