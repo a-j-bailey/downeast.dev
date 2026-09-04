@@ -222,11 +222,15 @@ export class HarborWorld {
       SCROLL.farShore,
       DEPTH.farShore,
     );
+    if (this.farShore) {
+      this.farShore.setLighting(false);
+    }
 
     this.placeFarCottages();
     this.onceImage("lighthouse", "lighthouse", PLACES.lighthouse.x, PLACES.lighthouse.y, {
       scrollFactor: SCROLL.farShore,
       depth: DEPTH.lighthouse,
+      lighting: false,
     });
     this.lighthouse = this.scene.children.getByName("lighthouse") as
       | Phaser.GameObjects.Image
@@ -314,7 +318,7 @@ export class HarborWorld {
     const bandX = WORLD_MID_X;
     const bandW = WORLD_SPAN + 256;
 
-    const deepH = Math.max(8, waterBot - waterTop);
+    const deepH = Math.max(56, waterBot - waterTop);
     if (this.waterDeep) {
       this.waterDeep.setSize(bandW, deepH);
       this.waterDeep.setPosition(bandX, Math.round(waterTop));
@@ -344,7 +348,7 @@ export class HarborWorld {
         this.shoreWash.setPosition(LAND_BAND_X, Math.round(LAND_TOP_Y + washH / 2));
       }
     }
-    const landTop = Math.min(LAND_TOP_Y, shoreY) - 12;
+    const landTop = Math.min(LAND_TOP_Y, shoreY);
     const landH = WORLD_HEIGHT - landTop + 8;
     if (this.landBack) {
       this.landBack.setSize(LAND_BAND_W, landH);
@@ -478,6 +482,7 @@ export class HarborWorld {
       const img = this.onceImage(spot.id, spot.key, spot.x, spot.y, {
         scrollFactor: SCROLL.farShore,
         depth: DEPTH.farCottage,
+        lighting: false,
       });
       if (img && !this.farCottages.includes(img)) {
         this.farCottages.push(img);
@@ -667,7 +672,7 @@ export class HarborWorld {
     sprite.setOrigin(0.5, 1);
     sprite.setScrollFactor(scrollFactor);
     sprite.setDepth(depth);
-    sprite.setLighting(true);
+    sprite.setLighting(false);
     if (scrollFactor > 0 && scrollFactor < 1) {
       setPixelHome(sprite);
     }

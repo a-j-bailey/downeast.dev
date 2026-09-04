@@ -102,7 +102,8 @@ export function snapHarborCamera(scene: Phaser.Scene): void {
     return;
   }
   cam.scrollX = Math.round(cam.scrollX);
-  cam.scrollY = Math.round(cam.scrollY);
+  // World is one screen tall — never pan the horizon into the street.
+  cam.scrollY = 0;
 }
 
 /** Store integer world home + original scrollFactor for parallax snap. */
@@ -131,9 +132,8 @@ export function snapPixelWorld(scene: Phaser.Scene): void {
   }
   cam.roundPixels = true;
   cam.scrollX = Math.round(cam.scrollX);
-  cam.scrollY = Math.round(cam.scrollY);
+  cam.scrollY = 0;
   const sx = cam.scrollX;
-  const sy = cam.scrollY;
   for (const child of scene.children.list) {
     if (!isPixelObj(child)) {
       continue;
@@ -144,8 +144,10 @@ export function snapPixelWorld(scene: Phaser.Scene): void {
       const hy = child.getData("pixelY");
       if (typeof hx === "number" && typeof hy === "number") {
         child.setScrollFactor(1);
+        // Horizontal parallax only. Baking Y with scrollY pulled the
+        // water and far shore down into the opaque land band.
         child.x = Math.round(hx + sx * (1 - sf));
-        child.y = Math.round(hy + sy * (1 - sf));
+        child.y = Math.round(hy);
         continue;
       }
     }
