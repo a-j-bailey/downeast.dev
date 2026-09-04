@@ -83,7 +83,15 @@ export function syncHarborFollowOffset(
     isBoat ? 0 : Math.round(view.width / 5),
     Math.round(VIEW_HEIGHT / 8),
   );
-  cam.setFollowOffset(atBerth ? 18 : 0, -skyPad);
+  const facingRight = Boolean((follow as { flipX?: boolean }).flipX);
+  let look = 0;
+  if (isBoat) {
+    // Bias toward the bow so a 171px hull keeps water ahead in a 200-wide view.
+    look = facingRight ? -8 : 8;
+  } else if (atBerth) {
+    look = 18;
+  }
+  cam.setFollowOffset(look, -skyPad);
 }
 
 /** Snap camera scroll to whole pixels after follow — kills prop shimmer. */
