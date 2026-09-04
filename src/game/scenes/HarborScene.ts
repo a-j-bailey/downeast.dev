@@ -158,8 +158,9 @@ export class HarborScene extends Phaser.Scene {
     this.critters.update(dt);
     const sky = this.syncSky();
     this.world.updateFlag(this.wind);
-    this.ferry.update(dt, this.mood);
+    this.ferry.update(dt, this.mood, sky.isDark);
     this.night.updateBeam(dt, sky.isDark);
+    this.night.updateFarShore(sky.isDark);
     this.night.updatePlayerLantern(
       this.player,
       sky.isDark,
