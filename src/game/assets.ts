@@ -19,7 +19,6 @@ export const BOOT_IMAGES = [
   "lighthouse",
   "far-shore",
   "seawall",
-  "pier",
   "dock",
   "fender",
   "cormorant-perch",
