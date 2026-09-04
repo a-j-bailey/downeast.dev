@@ -255,16 +255,21 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private placeReadyProps(): void {
-    this.farShore = this.tileIfNeeded(
-      "far-shore",
-      "far-shore",
-      WORLD_WIDTH / 2,
-      HORIZON_Y,
-      WORLD_WIDTH * 2,
-      10,
-      SCROLL.farShore,
-      8,
-    );
+    {
+      const farH = this.textures.exists("far-shore")
+        ? this.textures.get("far-shore").get().height
+        : 10;
+      this.farShore = this.tileIfNeeded(
+        "far-shore",
+        "far-shore",
+        WORLD_WIDTH / 2,
+        HORIZON_Y,
+        WORLD_WIDTH * 2,
+        farH,
+        SCROLL.farShore,
+        8,
+      );
+    }
 
     this.onceImage("lighthouse", "lighthouse", PLACES.lighthouse.x, PLACES.lighthouse.y, {
       scrollFactor: SCROLL.farShore,
@@ -348,7 +353,7 @@ export class HarborScene extends Phaser.Scene {
       flipX: true,
     });
     if (this.textures.exists("wake") && !this.wake) {
-      this.wake = this.add.tileSprite(PLACES.boat.x - 70, PLACES.boat.y - 6, 96, 16, "wake");
+      this.wake = this.add.tileSprite(PLACES.boat.x - 70, PLACES.boat.y - 4, 96, 16, "wake");
       this.wake.setOrigin(0.5, 1);
       this.wake.setScrollFactor(SCROLL.actors);
       this.wake.setDepth(PLACES.boat.y - 1);
@@ -774,8 +779,8 @@ export class HarborScene extends Phaser.Scene {
     if (!this.rain) {
       return;
     }
-    const visW = Math.max(480, Math.ceil(this.scale.width / Math.max(1, this.cameras.main.zoom)));
-    const visH = Math.max(270, Math.ceil(this.scale.height / Math.max(1, this.cameras.main.zoom)));
+    const visW = 480;
+    const visH = 270;
     this.rain.setConfig({ x: { min: 0, max: visW } });
     if (this.fogVeil) {
       this.fogVeil.setSize(visW + 8, visH + 8);

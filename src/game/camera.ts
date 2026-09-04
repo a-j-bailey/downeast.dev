@@ -1,5 +1,5 @@
 import type Phaser from "phaser";
-import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_WIDTH } from "./view";
+import { VIEW_HEIGHT, VIEW_WIDTH, WORLD_HEIGHT, WORLD_WIDTH } from "./view";
 
 function mainCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Camera | undefined {
   const manager = scene.cameras;
@@ -18,14 +18,16 @@ export function applyHarborCamera(
     return;
   }
   cam.setRoundPixels(true);
-  const viewH = scene.scale.height || VIEW_HEIGHT;
-  const boundY = Math.min(0, WORLD_HEIGHT - viewH);
-  cam.setBounds(0, boundY, WORLD_WIDTH, Math.max(WORLD_HEIGHT, viewH));
+  // Always frame the designed 480×270 world. Never use the CSS pixel size of
+  // a tall phone as the camera height — that is what split the layers.
+  cam.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  cam.setSize(VIEW_WIDTH, VIEW_HEIGHT);
   if (follow) {
-    const skyPad = Math.round(viewH / 3 - 24);
+    // Keep roughly the top third as sky for the wordmark.
+    const skyPad = Math.round(VIEW_HEIGHT / 3 - 24);
     cam.startFollow(follow, true, 0.12, 0.12);
     cam.setFollowOffset(0, -skyPad);
-    cam.setDeadzone(Math.round((scene.scale.width || 480) / 6), Math.round(viewH / 8));
+    cam.setDeadzone(Math.round(VIEW_WIDTH / 6), Math.round(VIEW_HEIGHT / 8));
   }
 }
 
@@ -35,11 +37,10 @@ export function applyHudCamera(scene: Phaser.Scene): {
   height: number;
 } {
   const cam = mainCamera(scene);
-  const width = Math.max(1, Math.floor(scene.scale.width || 480));
-  const height = Math.max(1, Math.floor(scene.scale.height || 270));
   if (cam) {
     cam.setRoundPixels(true);
     cam.setScroll(0, 0);
+    cam.setSize(VIEW_WIDTH, VIEW_HEIGHT);
   }
-  return { zoom: 1, width, height };
+  return { zoom: 1, width: VIEW_WIDTH, height: VIEW_HEIGHT };
 }

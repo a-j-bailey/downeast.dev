@@ -23,9 +23,10 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
       antialiasGL: false,
     },
     scale: {
-      mode: Phaser.Scale.EXPAND,
+      // FIT keeps the 480×270 world composed. EXPAND on tall phones tore
+      // parallax layers apart by growing the camera taller than the world.
+      mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
-      zoom: Phaser.Scale.MAX_ZOOM,
       autoRound: true,
     },
     physics: {

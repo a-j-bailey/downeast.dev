@@ -203,8 +203,7 @@ img {
 
 .harbor-root canvas {
   display: block;
-  width: 100% !important;
-  height: 100% !important;
+  /* Let Phaser.Scale.FIT size the canvas; forcing 100% height tore layers on portrait. */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }

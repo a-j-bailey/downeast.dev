@@ -12,7 +12,7 @@ export const SPAWN = { x: 148, y: 228 };
 export const PLACES = {
   pylon: { x: 72, y: LAND_TOP_Y },
   pier: { x: 108, y: LAND_TOP_Y + 8 },
-  boat: { x: 124, y: 176 },
+  boat: { x: 118, y: 148 },
   shackA: { x: 248, y: LAND_TOP_Y },
   shackB: { x: 338, y: LAND_TOP_Y },
   coffee: { x: 448, y: LAND_TOP_Y },
