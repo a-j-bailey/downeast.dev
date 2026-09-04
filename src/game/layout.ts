@@ -1,4 +1,4 @@
-import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_WIDTH } from "./view";
+import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_MIN_X } from "./view";
 
 /** Ground line sits in the bottom third of the 270-tall design view. */
 export const HORIZON_Y = 102;
@@ -20,7 +20,8 @@ export const BOAT_DOCK_Y = VIEW_HEIGHT - 4;
 /** Underway may ease up into open water a bit; not glued to dock Y. */
 export const BOAT_OPEN_MIN_Y = WATER_SURFACE_Y + 48;
 export const BOAT_OPEN_MAX_Y = BOAT_DOCK_Y;
-export const BOAT_OPEN_MIN_X = 60;
+/** Keel margin inside the seaward world edge. */
+export const BOAT_OPEN_MIN_X = WORLD_MIN_X + 64;
 
 export const PLACES = {
   // Wood finger-dock midground; boat docks in front at bottom edge.
@@ -96,4 +97,12 @@ export function boatSternOffsetX(facingRight: boolean): number {
   return facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
 }
 
-export { WORLD_HEIGHT, WORLD_WIDTH, VIEW_HEIGHT };
+export {
+  VIEW_HEIGHT,
+  WORLD_HEIGHT,
+  WORLD_MAX_X,
+  WORLD_MID_X,
+  WORLD_MIN_X,
+  WORLD_SPAN,
+  WORLD_WIDTH,
+} from "./view";

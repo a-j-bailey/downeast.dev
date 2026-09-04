@@ -23,7 +23,7 @@ import {
 } from "../layout";
 import { loadTideLevel, tideShoreY, tideSurfaceY } from "../tide";
 import { DEFAULT_WIND, type WindSample } from "../flag";
-import { DAY_AMBIENT, colorToCss } from "../skyBodies";
+import { DAY_AMBIENT, colorToCss, hudUsesCream } from "../skyBodies";
 import {
   harborNow,
   loadAtmosphere,
@@ -173,12 +173,12 @@ export class HarborScene extends Phaser.Scene {
     this.maybeOfferPostcard();
     this.player.setDepth(this.player.y);
     this.boat.updateDepth();
-    this.boat.updateWake(this.possession);
+    this.boat.updateWake(this.possession, dt);
     this.boat.syncNav(this.possession === "boat");
     this.critters.update(dt);
     const sky = this.syncSky();
     this.world.updateFlag(this.wind);
-    this.ferry.update(dt, this.mood, sky.isDark);
+    this.ferry.update(dt, this.mood, sky.isDark, this.world.surfaceY);
     this.night.updateBeam(dt, sky.isDark);
     this.night.updateFarShore(sky.isDark);
     this.night.updatePlayerLantern(
@@ -601,7 +601,11 @@ export class HarborScene extends Phaser.Scene {
       this.lastSkyCss = css;
       this.cameras.main.setBackgroundColor(sky.skyColor);
       this.lights.setAmbientColor(sky.ambientColor);
-      EventBus.emit("harbor-weather", this.mood, { skyCss: css, isDark: sky.isDark });
+      EventBus.emit("harbor-weather", this.mood, {
+        skyCss: css,
+        isDark: sky.isDark,
+        hudCream: hudUsesCream(sky.skyColor, sky.isDark, this.mood),
+      });
     }
     return sky;
   }
@@ -624,6 +628,7 @@ export class HarborScene extends Phaser.Scene {
     EventBus.emit("harbor-weather", mood, {
       skyCss: colorToCss(sky.skyColor),
       isDark: sky.isDark,
+      hudCream: hudUsesCream(sky.skyColor, sky.isDark, mood),
     });
     this.critters.ensure(mood);
   }

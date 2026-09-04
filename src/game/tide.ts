@@ -12,8 +12,8 @@ export const TIDE_STATION_NAME = "Bristol, Bristol Harbor, Narragansett Bay, RI"
 export const TIDE_OVERRIDES = ["high", "low", "mid"] as const;
 export type TideOverride = (typeof TIDE_OVERRIDES)[number];
 
-/** Half-range in pixels. High/low differ by 10px; mid is the authored rest pose. */
-export const TIDE_RANGE_PX = 5;
+/** Half-range in pixels. High/low differ by 24px so the waterline is obvious. */
+export const TIDE_RANGE_PX = 12;
 
 /**
  * MLLW feet → 0..1. Bristol Harbor mean range is ~3.6–4.1 ft; 0–4.8 lets

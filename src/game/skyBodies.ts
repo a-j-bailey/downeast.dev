@@ -230,10 +230,7 @@ function mixWeather(
         ambient: lerpColor(solar.ambient, 0x889099, 0.55),
       };
     case "night":
-      return {
-        sky: lerpColor(solar.sky, 0x0e1624, 0.85),
-        ambient: lerpColor(solar.ambient, 0x2a3348, 0.8),
-      };
+      return { sky: 0x0a0e16, ambient: 0x243044 };
     default: {
       const _exhaustive: never = mood;
       return _exhaustive;
@@ -243,6 +240,18 @@ function mixWeather(
 
 export function isDarkOut(sunAltitude: number, mood: WeatherMood): boolean {
   return mood === "night" || sunAltitude < -0.5;
+}
+
+/** Cream HUD glyphs when the sky is too dark for ink. */
+export function hudUsesCream(skyColor: number, isDark: boolean, mood: WeatherMood): boolean {
+  if (isDark || mood === "night" || mood === "rain" || mood === "fog") {
+    return true;
+  }
+  const r = (skyColor >> 16) & 0xff;
+  const g = (skyColor >> 8) & 0xff;
+  const b = skyColor & 0xff;
+  const lum = (r * 299 + g * 587 + b * 114) / 1000;
+  return lum < 152;
 }
 
 const HORIZON_PAD = 22;

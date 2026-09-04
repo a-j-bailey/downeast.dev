@@ -1,5 +1,11 @@
 import type Phaser from "phaser";
-import { VIEW_HEIGHT, VIEW_WIDTH, WORLD_HEIGHT, WORLD_WIDTH } from "./view";
+import {
+  VIEW_HEIGHT,
+  VIEW_WIDTH,
+  WORLD_HEIGHT,
+  WORLD_MIN_X,
+  WORLD_SPAN,
+} from "./view";
 
 function mainCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Camera | undefined {
   const manager = scene.cameras;
@@ -29,7 +35,7 @@ export function applyHarborCamera(
   const view = harborViewSize(scene);
   cam.setRoundPixels(true);
   // Height stays 270 — never grow with phone CSS height (parallax tear).
-  cam.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+  cam.setBounds(WORLD_MIN_X, 0, WORLD_SPAN, WORLD_HEIGHT);
   cam.setSize(view.width, view.height);
   if (follow) {
     // Keep roughly the top third as sky for the wordmark.

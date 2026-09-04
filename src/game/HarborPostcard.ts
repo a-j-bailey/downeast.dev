@@ -14,7 +14,7 @@ const FONT_SIZE = 7;
 const OUTER = 2;
 const PAD = 6;
 const GAP = 5;
-const BTN_H = 14;
+const BTN_H = 16;
 const DEPTH = 50;
 const LINE1 = "GREETINGS FROM";
 const LINE2 = "DOWNEAST.DEV";
@@ -140,6 +140,7 @@ export class HarborPostcard {
     this.laterHit = this.makeButtonHit(this.hide);
     this.shareText = this.makeCaption(SHARE_LABEL);
     this.laterText = this.makeCaption(LATER_LABEL);
+    this.laterText.setTint(CREAM);
 
     this.layout();
   }
@@ -210,13 +211,13 @@ export class HarborPostcard {
     this.line2.setPosition(box.writeX, box.captionY + FONT_SIZE + 2);
 
     drawStampButton(this.frame, box.shareX, box.btnY, box.btnW, BTN_H);
-    drawStampButton(this.frame, box.laterX, box.btnY, box.btnW, BTN_H);
+    drawKeepWalking(this.frame, box.laterX, box.btnY, box.btnW, BTN_H);
     this.shareHit.setPosition(box.shareX, box.btnY);
     this.shareHit.setSize(box.btnW, BTN_H);
     this.laterHit.setPosition(box.laterX, box.btnY);
     this.laterHit.setSize(box.btnW, BTN_H);
     this.shareText.setPosition(box.shareX + 5, box.btnY + 3);
-    this.laterText.setPosition(box.laterX + 5, box.btnY + 3);
+    this.laterText.setPosition(box.laterX + 5, box.btnY + 4);
 
     const stampW = this.stamp?.width ?? 0;
     const stampH = this.stamp?.height ?? 0;
@@ -267,8 +268,8 @@ export class HarborPostcard {
 
     let photoW = nativeW;
     let photoH = nativeH;
-    const maxCardW = this.viewW - 8;
-    const maxCardH = this.viewH - 8;
+    const maxCardW = this.viewW - 56;
+    const maxCardH = this.viewH - 36;
 
     if (sideBySide) {
       const wantW = OUTER * 2 + PAD + photoW + GAP + writeCol + PAD;
@@ -398,6 +399,21 @@ export class HarborPostcard {
     this.shareText = undefined;
     this.laterText = undefined;
   }
+}
+
+function drawKeepWalking(
+  g: Phaser.GameObjects.Graphics,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): void {
+  g.fillStyle(INK, 1);
+  g.fillRect(x, y, w, h);
+  g.fillStyle(CREAM, 1);
+  g.fillRect(x + 1, y + 1, w - 2, h - 2);
+  g.fillStyle(INK, 1);
+  g.fillRect(x + 2, y + 2, w - 4, h - 4);
 }
 
 function dashHLine(g: Phaser.GameObjects.Graphics, x: number, y: number, width: number): void {

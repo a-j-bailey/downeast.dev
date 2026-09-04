@@ -18,11 +18,13 @@ export class HudScene extends Phaser.Scene {
   private viewW = 480;
   private viewH = 270;
   private chip!: Phaser.GameObjects.NineSlice;
+  private chipHit!: Phaser.GameObjects.Zone;
   private chipText!: Phaser.GameObjects.BitmapText;
   private glyph!: Phaser.GameObjects.Image;
   private clockText!: Phaser.GameObjects.BitmapText;
   private mood: WeatherMood = "clearDay";
   private isDark = false;
+  private hudCream = false;
   private promptId: InteractId | null = null;
   private chromeVisible = true;
   private postcard!: HarborPostcard;
@@ -61,6 +63,15 @@ export class HudScene extends Phaser.Scene {
     this.chip.setDepth(20);
     this.chip.setInteractive({ useHandCursor: true });
     this.chip.on("pointerdown", () => {
+      EventBus.emit("harbor-interact");
+    });
+    this.chipHit = this.add
+      .zone(0, 0, 120, 24)
+      .setOrigin(0.5, 1)
+      .setScrollFactor(0)
+      .setDepth(22)
+      .setInteractive({ useHandCursor: true });
+    this.chipHit.on("pointerdown", () => {
       EventBus.emit("harbor-interact");
     });
 
@@ -276,6 +287,8 @@ export class HudScene extends Phaser.Scene {
       this.chip.setVisible(false);
       this.chipText.setVisible(false);
       this.chip.disableInteractive();
+      this.chipHit.disableInteractive();
+      this.chipHit.setVisible(false);
     }
   }
 
@@ -286,7 +299,7 @@ export class HudScene extends Phaser.Scene {
 
   private onWeather = (...args: unknown[]): void => {
     const mood = args[0];
-    const extra = args[1] as { isDark?: boolean } | undefined;
+    const extra = args[1] as { isDark?: boolean; hudCream?: boolean } | undefined;
     if (
       mood === "clearDay" ||
       mood === "overcast" ||
@@ -296,6 +309,10 @@ export class HudScene extends Phaser.Scene {
     ) {
       this.mood = mood;
       this.isDark = typeof extra?.isDark === "boolean" ? extra.isDark : mood === "night";
+      this.hudCream =
+        typeof extra?.hudCream === "boolean"
+          ? extra.hudCream
+          : this.isDark || mood === "rain" || mood === "fog" || mood === "night";
       this.glyph.setTexture(glyphKey(mood));
       this.layout();
     }
@@ -310,6 +327,8 @@ export class HudScene extends Phaser.Scene {
       this.chip.setVisible(false);
       this.chipText.setVisible(false);
       this.chip.disableInteractive();
+      this.chipHit.disableInteractive();
+      this.chipHit.setVisible(false);
       return;
     }
     const text = promptText(id);
@@ -317,8 +336,11 @@ export class HudScene extends Phaser.Scene {
     this.chipText.setVisible(true);
     const width = Math.max(80, Math.ceil(this.chipText.width) + 16);
     this.chip.setSize(width, CHIP_H);
+    this.chipHit.setSize(width + 8, 22);
     this.chip.setVisible(true);
+    this.chipHit.setVisible(true);
     this.chip.setInteractive({ useHandCursor: true });
+    this.chipHit.setInteractive({ useHandCursor: true });
     this.layout();
   }
 
@@ -337,13 +359,14 @@ export class HudScene extends Phaser.Scene {
       this.drawStick(this.stickX);
       this.chip.setPosition(cx, this.viewH - 52);
       this.chipText.setPosition(cx, this.viewH - 56);
+      this.chipHit.setPosition(cx, this.viewH - 50);
     } else {
       this.chip.setPosition(cx, this.viewH - 8);
       this.chipText.setPosition(cx, this.viewH - 12);
+      this.chipHit.setPosition(cx, this.viewH - 6);
     }
 
-    const clockCream = this.isDark || this.mood === "rain";
-    this.clockText.setTint(clockCream ? CREAM : INK);
+    this.clockText.setTint(this.hudCream || this.isDark || this.mood === "rain" ? CREAM : INK);
     this.clockText.setPosition(this.viewW - 6, 6);
     this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
     this.cameraIcon.setPosition(6, 6);
