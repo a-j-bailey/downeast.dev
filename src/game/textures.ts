@@ -112,6 +112,45 @@ export function ensureHarborFallbacks(scene: Phaser.Scene): void {
     g.fillRect(160, 14, 2, 2);
   });
 
+
+  stamp(scene, "sun", 16, 16, (g) => {
+    g.fillStyle(0xffdc50, 1);
+    g.fillRect(5, 5, 6, 6);
+    g.fillStyle(0xfff5b4, 1);
+    g.fillRect(7, 7, 2, 2);
+    g.fillStyle(0xffc83c, 1);
+    g.fillRect(7, 0, 2, 3);
+    g.fillRect(7, 13, 2, 3);
+    g.fillRect(0, 7, 3, 2);
+    g.fillRect(13, 7, 3, 2);
+  });
+
+  stamp(scene, "moon", 12, 12, (g) => {
+    g.fillStyle(0xe6e8d2, 1);
+    g.fillRect(2, 2, 7, 8);
+    g.fillRect(3, 1, 5, 1);
+    g.fillRect(3, 10, 5, 1);
+    g.fillStyle(0x0e1624, 1);
+    g.fillRect(6, 2, 5, 7);
+  });
+
+  stamp(scene, "star", 5, 5, (g) => {
+    g.fillStyle(0xfffce6, 1);
+    g.fillRect(2, 0, 1, 5);
+    g.fillRect(0, 2, 5, 1);
+  });
+
+  stamp(scene, "fender", 12, 14, (g) => {
+    g.fillStyle(0x2a2620, 1);
+    g.fillRect(2, 2, 8, 10);
+    g.fillStyle(0x96863e, 1);
+    g.fillRect(5, 0, 2, 2);
+    g.fillRect(2, 4, 8, 1);
+    g.fillRect(2, 8, 8, 1);
+    g.fillStyle(0x121820, 1);
+    g.fillRect(5, 5, 2, 3);
+  });
+
   stamp(scene, "player-walk-pass", 25, 43, (g) => {
     // Tiny placeholder; real pass frame is player-walk-pass.png.
     g.fillStyle(0x2a4a7a, 1);

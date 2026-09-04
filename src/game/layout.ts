@@ -2,7 +2,8 @@ import { WORLD_HEIGHT, WORLD_WIDTH } from "./view";
 
 /** Ground line sits in the bottom third of the 270-tall design view. */
 export const HORIZON_Y = 102;
-export const WATER_SURFACE_Y = 116;
+/** Water top meets far-shore baseline (was 116 — left a flat navy gap). */
+export const WATER_SURFACE_Y = 102;
 export const WATER_BOTTOM_Y = 186;
 export const LAND_TOP_Y = 186;
 export const LAND_BOTTOM_Y = WORLD_HEIGHT - 4;
@@ -18,8 +19,8 @@ export const PLACES = {
   pier: { x: 86, y: LAND_TOP_Y + 8 },
   // Extra finger between pylon and boat (see HarborScene.placePiers).
   pierFinger: { x: 66, y: LAND_TOP_Y + 4 },
-  // Docked on the extended pier face.
-  boat: { x: 98, y: 172 },
+  // Docked in front of the pier face (foreground of pier midground).
+  boat: { x: 98, y: 204 },
   shackA: { x: 248, y: LAND_TOP_Y },
   shackB: { x: 338, y: LAND_TOP_Y },
   coffee: { x: 448, y: LAND_TOP_Y },
