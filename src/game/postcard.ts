@@ -5,10 +5,10 @@ export const POSTCARD_WALK_S = 30;
 export const POSTCARD_FORCE_DELAY_MS = 1200;
 export const POSTCARD_ART_KEY = "postcard-harbor";
 export const POSTCARD_STAMP_KEY = "postcard-stamp";
-export const POSTCARD_ART_W = 192;
-export const POSTCARD_ART_H = 128;
+export const POSTCARD_ART_W = 384;
+export const POSTCARD_ART_H = 216;
 
-const SHARE_LINE = "Greetings from the harbor.";
+const SHARE_LINE = "Greetings from Downeast.dev.";
 
 export function postcardForced(search: string): boolean {
   return new URLSearchParams(search).get("card") === "1";

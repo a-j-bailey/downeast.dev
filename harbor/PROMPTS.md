@@ -37,5 +37,7 @@ Do not invent replacement art in code while "waiting" for a sheet.
 | `flag-flagpole.png` | Flagpole + American flag flap frames |
 | `flagpole.png` | Isolated flagpole (tall wood + gold ball) |
 | `flag-frames.png` | Four-frame flag strip (limp → strong wind) |
+| `postcard-harbor.png` | Souvenir compose (4× nearest of processed sprites — do not painterly-reduce) |
+| `postcard-stamp.png` | Lighthouse postage stamp |
 
 If a processed slice already exists, use it. Do not regenerate to "match a vibe."
