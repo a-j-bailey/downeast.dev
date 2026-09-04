@@ -48,12 +48,22 @@ export function HarborGame() {
       }
     };
 
+    const onPostcard = (...args: unknown[]): void => {
+      document.documentElement.classList.toggle("harbor-postcard-open", args[0] === true);
+    };
+
+    const onPostcardRequest = (): void => {
+      document.documentElement.classList.add("harbor-postcard-open");
+    };
+
     const onPointerDown = (): void => {
       focusParent();
     };
 
     EventBus.on("current-scene-ready", onReady);
     EventBus.on("harbor-weather", onWeather);
+    EventBus.on("harbor-postcard", onPostcard);
+    EventBus.on("harbor-postcard-request", onPostcardRequest);
     parent.addEventListener("pointerdown", onPointerDown);
 
     void import("../game/createGame").then(({ createHarborGame }) => {
@@ -69,9 +79,12 @@ export function HarborGame() {
       cancelled = true;
       EventBus.off("current-scene-ready", onReady);
       EventBus.off("harbor-weather", onWeather);
+      EventBus.off("harbor-postcard", onPostcard);
+      EventBus.off("harbor-postcard-request", onPostcardRequest);
       parent.removeEventListener("pointerdown", onPointerDown);
       game?.canvas?.removeEventListener("pointerdown", onPointerDown);
       document.documentElement.classList.remove("harbor-play");
+      document.documentElement.classList.remove("harbor-postcard-open");
       document.documentElement.style.removeProperty("--harbor-sky");
       game?.destroy(true);
     };

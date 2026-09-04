@@ -5,7 +5,7 @@
 <pages>
 <page id="0" file="hud-font.png"/>
 </pages>
-<chars count="66">
+<chars count="67">
 <char id="32" x="0" y="0" width="5" height="7" xoffset="0" yoffset="0" xadvance="6" page="0" chnl="15"/>
 <char id="91" x="6" y="0" width="5" height="7" xoffset="0" yoffset="0" xadvance="6" page="0" chnl="15"/>
 <char id="93" x="12" y="0" width="5" height="7" xoffset="0" yoffset="0" xadvance="6" page="0" chnl="15"/>
@@ -72,5 +72,6 @@
 <char id="120" x="90" y="24" width="5" height="7" xoffset="0" yoffset="0" xadvance="6" page="0" chnl="15"/>
 <char id="121" x="0" y="32" width="5" height="7" xoffset="0" yoffset="0" xadvance="6" page="0" chnl="15"/>
 <char id="122" x="6" y="32" width="5" height="7" xoffset="0" yoffset="0" xadvance="6" page="0" chnl="15"/>
+<char id="46" x="12" y="32" width="5" height="7" xoffset="0" yoffset="0" xadvance="6" page="0" chnl="15"/>
 </chars>
 </font>

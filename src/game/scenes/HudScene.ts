@@ -1,7 +1,9 @@
 import Phaser from "phaser";
 import { applyHudCamera } from "../camera";
 import { EventBus } from "../EventBus";
+import { HarborPostcard } from "../HarborPostcard";
 import { promptText, type InteractId } from "../interact";
+import { markPostcardShown, postcardForced } from "../postcard";
 import { TEX } from "../textures";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
 import { nyClock, type WeatherMood } from "../weather";
@@ -21,6 +23,11 @@ export class HudScene extends Phaser.Scene {
   private clockText!: Phaser.GameObjects.BitmapText;
   private mood: WeatherMood = "clearDay";
   private isDark = false;
+  private promptId: InteractId | null = null;
+  private chromeVisible = true;
+  private postcard!: HarborPostcard;
+  private cameraIcon!: Phaser.GameObjects.Image;
+  private cameraHit!: Phaser.GameObjects.Zone;
 
   private stickEnabled = false;
   private stickBase?: Phaser.GameObjects.Graphics;
@@ -72,10 +79,36 @@ export class HudScene extends Phaser.Scene {
       .setDepth(20)
       .setTint(CREAM);
 
+    this.cameraIcon = this.add
+      .image(0, 0, TEX.camera)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(20);
+    this.cameraHit = this.add
+      .zone(0, 0, 18, 16)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(20)
+      .setInteractive({ useHandCursor: true });
+    this.cameraHit.on("pointerdown", this.onCamera);
+
     this.stickEnabled = shouldShowVirtualStick();
     if (this.stickEnabled) {
       this.buildStick();
     }
+
+    this.postcard = new HarborPostcard(this, {
+      onOpen: () => {
+        if (!postcardForced(window.location.search)) {
+          markPostcardShown();
+        }
+        EventBus.emit("harbor-postcard", true);
+      },
+      onClose: () => {
+        this.setChromeVisible(true);
+        EventBus.emit("harbor-postcard", false);
+      },
+    });
 
     this.layout();
     this.setPrompt(null);
@@ -83,10 +116,13 @@ export class HudScene extends Phaser.Scene {
     this.scale.on("resize", this.onResize, this);
     EventBus.on("harbor-prompt", this.onPrompt);
     EventBus.on("harbor-weather", this.onWeather);
+    EventBus.on("harbor-postcard-request", this.onPostcardRequest);
     this.events.once("shutdown", () => {
       EventBus.off("harbor-prompt", this.onPrompt);
       EventBus.off("harbor-weather", this.onWeather);
+      EventBus.off("harbor-postcard-request", this.onPostcardRequest);
       this.scale.off("resize", this.onResize, this);
+      this.postcard.hide();
       this.emitStick(0);
     });
 
@@ -192,6 +228,57 @@ export class HudScene extends Phaser.Scene {
     this.layout();
   };
 
+  private onPostcardRequest = (): void => {
+    this.openPostcard();
+  };
+
+  private onCamera = (): void => {
+    this.openPostcard();
+  };
+
+  private openPostcard(): void {
+    if (this.postcard.isOpen) {
+      return;
+    }
+    this.setChromeVisible(false);
+    this.postcard.show(this.viewW, this.viewH);
+  }
+
+  private setChromeVisible(show: boolean): void {
+    this.chromeVisible = show;
+    this.glyph.setVisible(show);
+    this.clockText.setVisible(show);
+    this.cameraIcon.setVisible(show);
+    if (show) {
+      this.cameraHit.setInteractive({ useHandCursor: true });
+    } else {
+      this.cameraHit.disableInteractive();
+    }
+    if (this.stickBase) {
+      this.stickBase.setVisible(show);
+    }
+    if (this.stickKnob) {
+      this.stickKnob.setVisible(show);
+    }
+    if (this.stickHit) {
+      if (show) {
+        this.stickHit.setInteractive();
+      } else {
+        this.stickHit.disableInteractive();
+        this.stickPointerId = null;
+        this.stickX = 0;
+        this.emitStick(0);
+      }
+    }
+    if (show) {
+      this.setPrompt(this.promptId);
+    } else {
+      this.chip.setVisible(false);
+      this.chipText.setVisible(false);
+      this.chip.disableInteractive();
+    }
+  }
+
   private onPrompt = (...args: unknown[]): void => {
     const id = (args[0] ?? null) as InteractId | null;
     this.setPrompt(id);
@@ -215,6 +302,10 @@ export class HudScene extends Phaser.Scene {
   };
 
   private setPrompt(id: InteractId | null): void {
+    this.promptId = id;
+    if (!this.chromeVisible) {
+      return;
+    }
     if (!id) {
       this.chip.setVisible(false);
       this.chipText.setVisible(false);
@@ -235,6 +326,7 @@ export class HudScene extends Phaser.Scene {
     const view = applyHudCamera(this);
     this.viewW = view.width;
     this.viewH = view.height;
+    this.postcard.setView(this.viewW, this.viewH);
     const cx = Math.floor(this.viewW / 2);
 
     // Stick centered at bottom; chip sits above it when stick is shown.
@@ -254,6 +346,8 @@ export class HudScene extends Phaser.Scene {
     this.clockText.setTint(clockCream ? CREAM : INK);
     this.clockText.setPosition(this.viewW - 6, 6);
     this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
+    this.cameraIcon.setPosition(6, 6);
+    this.cameraHit.setPosition(4, 4);
   }
 }
 

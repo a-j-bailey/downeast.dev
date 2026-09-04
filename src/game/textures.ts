@@ -3,6 +3,8 @@ import type Phaser from "phaser";
 export const TEX = {
   rain: "ui-rain",
   chip: "ui-chip",
+  camera: "ui-camera",
+  grain: "ui-grain",
   glyphClear: "ui-glyph-clear",
   glyphOvercast: "ui-glyph-overcast",
   glyphRain: "ui-glyph-rain",
@@ -74,5 +76,28 @@ export function ensureUiTextures(scene: Phaser.Scene): void {
     g.fillRect(3, 1, 3, 5);
     g.fillStyle(0x1a2233, 1);
     g.fillRect(2, 2, 2, 3);
+  });
+
+  stamp(scene, TEX.camera, 11, 9, (g) => {
+    g.fillStyle(0xfffcf0, 1);
+    g.fillRect(4, 0, 3, 2);
+    g.fillRect(0, 2, 11, 7);
+    g.fillStyle(0x100f0f, 1);
+    g.fillRect(3, 4, 5, 4);
+    g.fillStyle(0xfffcf0, 1);
+    g.fillRect(5, 5, 1, 2);
+  });
+
+  stamp(scene, TEX.grain, 16, 16, (g) => {
+    g.fillStyle(0xe6e4d9, 1);
+    g.fillRect(1, 3, 1, 1);
+    g.fillRect(6, 1, 1, 1);
+    g.fillRect(11, 4, 1, 1);
+    g.fillRect(3, 8, 1, 1);
+    g.fillRect(9, 10, 1, 1);
+    g.fillRect(14, 7, 1, 1);
+    g.fillRect(2, 13, 1, 1);
+    g.fillRect(8, 15, 1, 1);
+    g.fillRect(13, 12, 1, 1);
   });
 }
