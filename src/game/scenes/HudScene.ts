@@ -26,6 +26,8 @@ export class HudScene extends Phaser.Scene {
   private promptId: InteractId | null = null;
   private chromeVisible = true;
   private postcard!: HarborPostcard;
+  private cameraIcon!: Phaser.GameObjects.Image;
+  private cameraHit!: Phaser.GameObjects.Zone;
 
   private stickEnabled = false;
   private stickBase?: Phaser.GameObjects.Graphics;
@@ -76,6 +78,19 @@ export class HudScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(20)
       .setTint(CREAM);
+
+    this.cameraIcon = this.add
+      .image(0, 0, TEX.camera)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(20);
+    this.cameraHit = this.add
+      .zone(0, 0, 18, 16)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(20)
+      .setInteractive({ useHandCursor: true });
+    this.cameraHit.on("pointerdown", this.onCamera);
 
     this.stickEnabled = shouldShowVirtualStick();
     if (this.stickEnabled) {
@@ -214,17 +229,31 @@ export class HudScene extends Phaser.Scene {
   };
 
   private onPostcardRequest = (): void => {
+    this.openPostcard();
+  };
+
+  private onCamera = (): void => {
+    this.openPostcard();
+  };
+
+  private openPostcard(): void {
     if (this.postcard.isOpen) {
       return;
     }
     this.setChromeVisible(false);
-    this.postcard.captureAndShow(this.viewW, this.viewH);
-  };
+    this.postcard.show(this.viewW, this.viewH);
+  }
 
   private setChromeVisible(show: boolean): void {
     this.chromeVisible = show;
     this.glyph.setVisible(show);
     this.clockText.setVisible(show);
+    this.cameraIcon.setVisible(show);
+    if (show) {
+      this.cameraHit.setInteractive({ useHandCursor: true });
+    } else {
+      this.cameraHit.disableInteractive();
+    }
     if (this.stickBase) {
       this.stickBase.setVisible(show);
     }
@@ -317,6 +346,8 @@ export class HudScene extends Phaser.Scene {
     this.clockText.setTint(clockCream ? CREAM : INK);
     this.clockText.setPosition(this.viewW - 6, 6);
     this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
+    this.cameraIcon.setPosition(6, 6);
+    this.cameraHit.setPosition(4, 4);
   }
 }
 

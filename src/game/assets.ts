@@ -46,6 +46,8 @@ export const BOOT_IMAGES = [
   "flag-1",
   "flag-2",
   "flag-3",
+  "postcard-harbor",
+  "postcard-stamp",
 ] as const;
 
 export const STREAM_IMAGES = [
