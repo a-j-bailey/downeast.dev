@@ -17,6 +17,31 @@ export type InteractId = (typeof INTERACT_IDS)[number];
 
 export type Possession = "walker" | "boat";
 
+/** Door knock beat before an interior fade. Keep in the 200–400ms window. */
+export const DOOR_KNOCK_MS = 320;
+/** Short use pose for board / links; does not delay the action. */
+export const USE_POSE_MS = 220;
+
+export function isDoorInteract(id: InteractId): boolean {
+  switch (id) {
+    case "cafe":
+      return true;
+    case "board":
+    case "dismount":
+    case "github":
+    case "x":
+    case "zoning":
+    case "potager":
+    case "weatherOtter":
+    case "leave":
+      return false;
+    default: {
+      const _exhaustive: never = id;
+      return _exhaustive;
+    }
+  }
+}
+
 export function promptText(id: InteractId): string {
   switch (id) {
     case "cafe":

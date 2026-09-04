@@ -7,6 +7,7 @@ type InteriorData = { id?: string };
 
 export class InteriorScene extends Phaser.Scene {
   private leaving = false;
+  private allowELeave = false;
   private postcard?: Phaser.GameObjects.Image;
 
   constructor() {
@@ -33,20 +34,38 @@ export class InteriorScene extends Phaser.Scene {
 
     EventBus.emit("harbor-prompt", "leave");
 
-    this.input.keyboard?.on("keydown-ESC", this.onLeaveKey);
-    this.input.keyboard?.on("keydown-E", this.onLeaveKey);
+    const keyboard = this.input.keyboard;
+    if (keyboard) {
+      const eKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+      this.allowELeave = !eKey.isDown;
+      keyboard.on("keydown-ESC", this.onLeaveKey);
+      keyboard.on("keydown-E", this.onLeaveE);
+      keyboard.on("keyup-E", this.onEUp);
+    }
     EventBus.on("harbor-interact", this.onInteract);
     this.scale.on("resize", this.onResize, this);
     this.events.once("shutdown", () => {
       EventBus.off("harbor-interact", this.onInteract);
       this.scale.off("resize", this.onResize, this);
       this.input.keyboard?.off("keydown-ESC", this.onLeaveKey);
-      this.input.keyboard?.off("keydown-E", this.onLeaveKey);
+      this.input.keyboard?.off("keydown-E", this.onLeaveE);
+      this.input.keyboard?.off("keyup-E", this.onEUp);
     });
   }
 
   private onLeaveKey = (): void => {
     this.leave();
+  };
+
+  private onLeaveE = (): void => {
+    if (!this.allowELeave) {
+      return;
+    }
+    this.leave();
+  };
+
+  private onEUp = (): void => {
+    this.allowELeave = true;
   };
 
   private onInteract = (): void => {

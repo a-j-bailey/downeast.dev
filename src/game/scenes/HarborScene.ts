@@ -9,6 +9,9 @@ import { NightLights } from "../NightLights";
 import { SCROLL } from "../layers";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
 import {
+  DOOR_KNOCK_MS,
+  USE_POSE_MS,
+  isDoorInteract,
   openInteractUrl,
   type InteractId,
   type Possession,
@@ -191,6 +194,19 @@ export class HarborScene extends Phaser.Scene {
         frameRate: 1,
       });
     }
+    if (this.anims.exists("player-knock")) {
+      this.anims.remove("player-knock");
+    }
+    this.anims.create({
+      key: "player-knock",
+      frames: [
+        { key: "player-use" },
+        { key: this.idleTextureKey() },
+        { key: "player-use" },
+      ],
+      duration: DOOR_KNOCK_MS,
+      repeat: 0,
+    });
   }
 
   private buildPlayer(): void {
@@ -361,9 +377,7 @@ export class HarborScene extends Phaser.Scene {
     }
 
     const speed = 72;
-    const using = this.time.now < this.usingUntil;
-    if (using) {
-      this.player.play("player-use", true);
+    if (this.entering || this.time.now < this.usingUntil) {
       return;
     }
     this.player.x = Phaser.Math.Clamp(this.player.x + wish.x * speed * dt, 24, WORLD_WIDTH - 24);
@@ -414,22 +428,23 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private tryInteract(): void {
+    if (this.sys.isPaused() || this.entering || this.time.now < this.usingUntil) {
+      return;
+    }
     const id = this.overlappingZone();
     if (!id) {
       return;
     }
-    this.usingUntil = this.time.now + 220;
-    if (this.possession === "walker") {
-      this.player.play("player-use", true);
-    }
     switch (id) {
       case "cafe":
-        this.enterCafe();
+        this.playDoorKnock(id, () => this.enterCafe());
         break;
       case "board":
+        this.strikeUse();
         this.board();
         break;
       case "dismount":
+        this.strikeUse();
         this.dismount();
         break;
       case "github":
@@ -437,6 +452,7 @@ export class HarborScene extends Phaser.Scene {
       case "zoning":
       case "potager":
       case "weatherOtter":
+        this.strikeUse();
         openInteractUrl(id);
         break;
       case "leave":
@@ -446,6 +462,36 @@ export class HarborScene extends Phaser.Scene {
         return _exhaustive;
       }
     }
+  }
+
+  private strikeUse(): void {
+    this.usingUntil = this.time.now + USE_POSE_MS;
+    if (this.possession === "walker") {
+      this.player.play("player-use", true);
+    }
+  }
+
+  private playDoorKnock(id: InteractId, then: () => void): void {
+    if (!isDoorInteract(id)) {
+      then();
+      return;
+    }
+    const zone = this.zones().find((entry) => entry.id === id);
+    if (zone && Math.abs(this.player.x - zone.x) >= 2) {
+      this.player.setFlipX(this.player.x > zone.x);
+    }
+    this.usingUntil = this.time.now + DOOR_KNOCK_MS;
+    if (this.anims.exists("player-knock")) {
+      this.player.play("player-knock", true);
+    } else {
+      this.player.play("player-use", true);
+    }
+    this.time.delayedCall(DOOR_KNOCK_MS, () => {
+      if (!this.sys.isActive() || this.sys.isPaused() || this.entering) {
+        return;
+      }
+      then();
+    });
   }
 
   private enterCafe(): void {
