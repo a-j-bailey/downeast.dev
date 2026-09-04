@@ -1,7 +1,14 @@
 import Phaser from "phaser";
 import type { Possession } from "./interact";
 import { SCROLL } from "./layers";
-import { BOAT_BOW_X, BOAT_BOW_Y, BOAT_STERN_X, BOAT_STERN_Y, PLACES } from "./layout";
+import {
+  BOAT_BOW_Y,
+  BOAT_STERN_Y,
+  PLACES,
+  boatBowOffsetX,
+  boatFacingRight,
+  boatSternOffsetX,
+} from "./layout";
 import type { WeatherMood } from "./weather";
 
 /**
@@ -237,13 +244,11 @@ export class NightLights {
       return;
     }
     this.ensureBoatNavLights(boat);
-    const facingRight = !boat.flipX;
-    const bow = facingRight ? BOAT_BOW_X : -BOAT_BOW_X;
-    const stern = facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
+    const facingRight = boatFacingRight(boat);
     const bowColor = facingRight ? 0x44ff88 : 0xff3355;
     const bowLight = this.boatNavLights[0];
     if (bowLight) {
-      bowLight.x = boat.x + bow;
+      bowLight.x = boat.x + boatBowOffsetX(facingRight);
       bowLight.y = boat.y + BOAT_BOW_Y;
       bowLight.setColor(bowColor);
       bowLight.setIntensity(1.8);
@@ -251,7 +256,7 @@ export class NightLights {
     }
     const sternLight = this.boatNavLights[1];
     if (sternLight) {
-      sternLight.x = boat.x + stern;
+      sternLight.x = boat.x + boatSternOffsetX(facingRight);
       sternLight.y = boat.y + BOAT_STERN_Y;
       sternLight.setColor(0xfff5e0);
       sternLight.setIntensity(1.4);
@@ -267,11 +272,25 @@ export class NightLights {
     if (!hull) {
       return;
     }
+    const facingRight = boatFacingRight(hull);
+    const bowColor = facingRight ? 0x44ff88 : 0xff3355;
     this.boatNavLights.push(
-      this.scene.lights.addLight(hull.x + BOAT_BOW_X, hull.y + BOAT_BOW_Y, 42, 0xff3355, 0),
+      this.scene.lights.addLight(
+        hull.x + boatBowOffsetX(facingRight),
+        hull.y + BOAT_BOW_Y,
+        42,
+        bowColor,
+        0,
+      ),
     );
     this.boatNavLights.push(
-      this.scene.lights.addLight(hull.x - BOAT_STERN_X, hull.y + BOAT_STERN_Y, 36, 0xfff5e0, 0),
+      this.scene.lights.addLight(
+        hull.x + boatSternOffsetX(facingRight),
+        hull.y + BOAT_STERN_Y,
+        36,
+        0xfff5e0,
+        0,
+      ),
     );
   }
 

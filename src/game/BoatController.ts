@@ -8,8 +8,9 @@ import {
   BOAT_OPEN_MAX_Y,
   BOAT_OPEN_MIN_X,
   BOAT_OPEN_MIN_Y,
-  BOAT_STERN_X,
   PLACES,
+  boatFacingRight,
+  boatSternOffsetX,
 } from "./layout";
 import type { NightLights } from "./NightLights";
 
@@ -96,9 +97,8 @@ export class BoatController {
     if (!moving) {
       return;
     }
-    const facingRight = !this.sprite.flipX;
-    const stern = facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
-    this.wake.setPosition(this.sprite.x + stern, this.sprite.y - 4);
+    const facingRight = boatFacingRight(this.sprite);
+    this.wake.setPosition(this.sprite.x + boatSternOffsetX(facingRight), this.sprite.y - 4);
     this.wake.setFlipX(!facingRight);
     this.wake.tilePositionX += facingRight ? 40 * 0.016 : -40 * 0.016;
   }

@@ -47,10 +47,28 @@ export const BOAT_DOCK_MAX_X = PLACES.boat.x;
 export const DOCK_DEPTH = BOAT_DOCK_Y - 10;
 export const BOAT_DEPTH = BOAT_DOCK_Y + 20;
 
-/** boat.png 171×51 origin 0.5,1 — bow tip / transom top. */
+/**
+ * boat.png is 171×51 with origin (0.5, 1).
+ * Unflipped art faces LEFT: bow/stem on −X, green pennant and transom on +X.
+ * Unsigned distances from that origin to the fixture in unflipped art.
+ * Bow: stem tip (~px 1.5, 14). Stern: flagpole top (~px 158.5, 7), not the waterline.
+ */
 export const BOAT_BOW_X = 84;
-export const BOAT_BOW_Y = -8;
-export const BOAT_STERN_X = 84;
-export const BOAT_STERN_Y = -34;
+export const BOAT_BOW_Y = -37;
+export const BOAT_STERN_X = 73;
+export const BOAT_STERN_Y = -44;
+
+/** Phaser flipX mirrors left-facing boat art, so flipX means the hull faces right. */
+export function boatFacingRight(boat: { flipX: boolean }): boolean {
+  return boat.flipX;
+}
+
+export function boatBowOffsetX(facingRight: boolean): number {
+  return facingRight ? BOAT_BOW_X : -BOAT_BOW_X;
+}
+
+export function boatSternOffsetX(facingRight: boolean): number {
+  return facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
+}
 
 export { WORLD_HEIGHT, WORLD_WIDTH, VIEW_HEIGHT };
