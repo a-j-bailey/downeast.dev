@@ -34,9 +34,12 @@ Do not invent replacement art in code while "waiting" for a sheet.
 | `kayak-lighthouse-shark-waves.png` | Kayak, lighthouse, shark, waves |
 | `harbor-key-art.png` | Key / contact sheet |
 | `cormorant.png` | Perch, wing-dry, preen idle |
-| `flag-flagpole.png` | Flagpole + American flag flap frames |
+| `flag-flagpole.png` | Earlier pole + flap contact sheet (superseded for cloth) |
 | `flagpole.png` | Isolated flagpole (tall wood + gold ball) |
-| `flag-frames.png` | Four-frame flag strip (limp → strong wind) |
+| `flag-frames.png` | Earlier four-frame flap strip (superseded) |
+| `flag-limp.png` | Three limp / hanging cloth frames |
+| `flag-half.png` | Three half-unfurled gentle-ripple frames |
+| `flag-full.png` | Three full-out gentle-ripple frames |
 | `postcard-harbor.png` | Souvenir compose (4× nearest of processed sprites — do not painterly-reduce) |
 | `postcard-stamp.png` | Lighthouse postage stamp |
 

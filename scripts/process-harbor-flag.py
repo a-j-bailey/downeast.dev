@@ -1,7 +1,8 @@
-"""Ingest flagpole + flag frames: cream flood-fill, erode, bleed, block-reduce.
+"""Ingest flagpole + limp / half / full flag sheets.
 
-Unlike process-harbor-art.py this keys only the *background* cream (flood from
-the sheet edges) so flag stripe whites that sit near #fefaf0 are kept.
+Stripe whites sit near cream #fefaf0, so sheets are masked from red/blue cloth
+(then closed) instead of flooding every cream pixel. Flagpole still uses an
+edge flood so the gold ball and shaft keep interior highlights.
 """
 from PIL import Image
 import numpy as np
@@ -15,12 +16,13 @@ DST = os.path.join(ROOT, "public/harbor/processed")
 os.makedirs(DST, exist_ok=True)
 
 CREAM = np.array([254, 250, 240])
+REDUCE = 8
+EXPECTED_FRAMES = 3
 
-FLAG_BOXES = [
-    (268, 360, 410, 610),
-    (520, 360, 790, 590),
-    (840, 350, 1140, 580),
-    (1170, 340, 1490, 580),
+FLAG_SHEETS = [
+    ("flag-limp.png", "flag-limp"),
+    ("flag-half.png", "flag-half"),
+    ("flag-full.png", "flag-full"),
 ]
 
 
@@ -110,10 +112,95 @@ def proc(a, f):
     return Image.fromarray(small, "RGBA")
 
 
-def main():
-    pole_path = os.path.join(SHEET_DIR, "flagpole.png")
-    sheet_path = os.path.join(SHEET_DIR, "flag-flagpole.png")
-    pole = keyed(pole_path)
+def cloth_mask(a):
+    """Keep red/blue cloth and the white stripes trapped between them."""
+    rgb = a[:, :, :3].astype(int)
+    r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
+    red = (r > 120) & (r > g + 40) & (r > b + 40)
+    blue = (b > 70) & (b >= r - 10) & (b > g) & (r < 110)
+    core = red | blue
+    closed = ndimage.binary_closing(core, structure=np.ones((21, 9)))
+    closed = ndimage.binary_dilation(closed, structure=np.ones((7, 7)))
+    return closed
+
+
+def column_boxes(mask, expected=EXPECTED_FRAMES, min_area=2000):
+    labeled, n = ndimage.label(mask)
+    comps = []
+    for i in range(1, n + 1):
+        ys, xs = np.where(labeled == i)
+        if len(ys) < min_area:
+            continue
+        comps.append(
+            {
+                "x0": int(xs.min()),
+                "x1": int(xs.max()) + 1,
+                "y0": int(ys.min()),
+                "y1": int(ys.max()) + 1,
+                "cx": float(xs.mean()),
+            }
+        )
+    if not comps:
+        return []
+    comps.sort(key=lambda c: c["cx"])
+    x_min = comps[0]["cx"]
+    x_max = comps[-1]["cx"]
+    if expected <= 1 or x_max - x_min < 40:
+        clusters = [comps]
+    else:
+        span = x_max - x_min
+        centers = [x_min + (i + 0.5) * span / expected for i in range(expected)]
+        clusters = [[] for _ in range(expected)]
+        for c in comps:
+            j = min(range(expected), key=lambda k: abs(c["cx"] - centers[k]))
+            clusters[j].append(c)
+    boxes = []
+    for cl in clusters:
+        if not cl:
+            continue
+        boxes.append(
+            (
+                min(c["x0"] for c in cl),
+                min(c["y0"] for c in cl),
+                max(c["x1"] for c in cl),
+                max(c["y1"] for c in cl),
+            )
+        )
+    boxes.sort(key=lambda b: b[0])
+    return boxes
+
+
+def process_flag_sheet(filename, prefix):
+    path = os.path.join(SHEET_DIR, filename)
+    im = Image.open(path).convert("RGBA")
+    a = np.asarray(im).copy()
+    mask = cloth_mask(a)
+    boxes = column_boxes(mask)
+    if len(boxes) != EXPECTED_FRAMES:
+        raise SystemExit(f"{filename}: expected {EXPECTED_FRAMES} flags, got {len(boxes)}")
+    frames = []
+    pad = 8
+    h, w = mask.shape
+    for x0, y0, x1, y1 in boxes:
+        sx0, sy0 = max(0, x0 - pad), max(0, y0 - pad)
+        sx1, sy1 = min(w, x1 + pad), min(h, y1 + pad)
+        sl = a[sy0:sy1, sx0:sx1].copy()
+        m = mask[sy0:sy1, sx0:sx1]
+        sl[~m, 3] = 0
+        frames.append(proc(sl, REDUCE))
+    max_w = max(im.size[0] for im in frames)
+    max_h = max(im.size[1] for im in frames)
+    for i, im in enumerate(frames):
+        canvas = Image.new("RGBA", (max_w, max_h), (0, 0, 0, 0))
+        canvas.paste(im, (0, 0), im)
+        out = Image.fromarray(bleed(np.asarray(canvas)), "RGBA")
+        name = f"{prefix}-{i}.png"
+        out.save(os.path.join(DST, name))
+        print(f"  {name} {out.size[0]}x{out.size[1]}")
+
+
+def process_flagpole():
+    pole = keyed(os.path.join(SHEET_DIR, "flagpole.png"))
     ys, xs = np.where(pole[:, :, 3] > 128)
     x0, x1 = int(xs.min()), int(xs.max()) + 1
     y0, y1 = int(ys.min()), int(ys.max()) + 1
@@ -122,32 +209,20 @@ def main():
     y1b = min(y1, y0 + pw * 12)
     pad = 6
     crop = pole[max(0, y0 - pad) : y1b + pad, max(0, x0 - pad) : x1 + pad]
-    pole_im = proc(crop, 8)
+    pole_im = proc(crop, REDUCE)
     pole_im.save(os.path.join(DST, "flagpole.png"))
     print(f"  flagpole.png {pole_im.size[0]}x{pole_im.size[1]}")
 
-    sheet = keyed(sheet_path)
-    flags = []
-    for i, (bx0, by0, bx1, by1) in enumerate(FLAG_BOXES):
-        sl = sheet[by0:by1, bx0:bx1]
-        ys, xs = np.where(sl[:, :, 3] > 128)
-        pad = 6
-        c = sl[
-            max(0, ys.min() - pad) : ys.max() + 1 + pad,
-            max(0, xs.min() - pad) : xs.max() + 1 + pad,
-        ]
-        flags.append(proc(c, 8))
 
-    W = max(im.size[0] for im in flags)
-    H = max(im.size[1] for im in flags)
-    for i, im in enumerate(flags):
-        canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        canvas.paste(im, (0, 0), im)
-        a = bleed(np.asarray(canvas))
-        out = Image.fromarray(a, "RGBA")
-        name = f"flag-{i}.png"
-        out.save(os.path.join(DST, name))
-        print(f"  {name} {out.size[0]}x{out.size[1]}")
+def main():
+    process_flagpole()
+    for filename, prefix in FLAG_SHEETS:
+        process_flag_sheet(filename, prefix)
+    for stale in ("flag-0.png", "flag-1.png", "flag-2.png", "flag-3.png"):
+        path = os.path.join(DST, stale)
+        if os.path.exists(path):
+            os.remove(path)
+            print(f"  removed {stale}")
     print("done")
 
 

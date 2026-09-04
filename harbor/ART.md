@@ -16,7 +16,7 @@ this.load.image('coffee-shop', '/harbor/processed/coffee-shop.png')
 
 Processed means: game-scale, cream keyed, 1px fringe eroded, alpha-bled. **Use these.** Do not redraw, recolor, upscale, or run them through a filter.
 
-Flag sprites (`flagpole.png`, `flag-0.png` … `flag-3.png`) are ingested by `scripts/process-harbor-flag.py`, which flood-fills cream from the sheet *edges* so stripe whites near `#fefaf0` are not keyed out.
+Flag sprites (`flagpole.png`, `flag-limp-0..2`, `flag-half-0..2`, `flag-full-0..2`) are ingested by `scripts/process-harbor-flag.py`. The pole uses an edge cream flood; cloth sheets are masked from red/blue so stripe whites near `#fefaf0` stay.
 
 Locked files:
 
