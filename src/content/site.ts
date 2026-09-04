@@ -1,4 +1,5 @@
 export const SITE_HOST = "downeast.dev";
+export const SITE_URL = `https://${SITE_HOST}`;
 export const PERSON_NAME = "Adam Bailey";
 export const X_PROFILE_URL = "https://x.com/downeastdev";
 export const GITHUB_PROFILE_URL = "https://github.com/a-j-bailey";

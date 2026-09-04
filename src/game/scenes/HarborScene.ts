@@ -29,6 +29,12 @@ import {
   loadAtmosphere,
   type WeatherMood,
 } from "../weather";
+import {
+  POSTCARD_FORCE_DELAY_MS,
+  POSTCARD_WALK_S,
+  postcardForced,
+  shouldOfferPostcard,
+} from "../postcard";
 
 type Zone = {
   id: InteractId;
@@ -67,6 +73,10 @@ export class HarborScene extends Phaser.Scene {
   private activeZone: InteractId | null = null;
   private usingUntil = 0;
   private entering = false;
+  private walkSeconds = 0;
+  private postcardOffered = false;
+  private postcardOpen = false;
+  private postcardForceReady = false;
   private onStreamFile?: () => void;
   private onStreamComplete?: () => void;
   private wind: WindSample = DEFAULT_WIND;
@@ -125,13 +135,22 @@ export class HarborScene extends Phaser.Scene {
     this.touchStick = shouldShowVirtualStick();
     EventBus.on("harbor-interact", this.onHudInteract);
     EventBus.on("harbor-stick", this.onStick);
+    EventBus.on("harbor-postcard", this.onPostcard);
     EventBus.emit("current-scene-ready", this);
     this.events.once("shutdown", () => {
       EventBus.off("harbor-interact", this.onHudInteract);
       EventBus.off("harbor-stick", this.onStick);
+      EventBus.off("harbor-postcard", this.onPostcard);
       this.scale.off("resize", this.onResize, this);
       this.clearStreamListeners();
     });
+
+    if (postcardForced(window.location.search)) {
+      this.time.delayedCall(POSTCARD_FORCE_DELAY_MS, () => {
+        this.postcardForceReady = true;
+        this.maybeOfferPostcard();
+      });
+    }
   }
 
   private onResize = (): void => {
@@ -151,6 +170,7 @@ export class HarborScene extends Phaser.Scene {
     this.easeTide(dt);
     this.world.driftClouds(dt);
     this.steer(dt);
+    this.maybeOfferPostcard();
     this.player.setDepth(this.player.y);
     this.boat.updateDepth();
     this.boat.updateWake(this.possession);
@@ -309,7 +329,7 @@ export class HarborScene extends Phaser.Scene {
 
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       focusHost();
-      if (this.touchStick) {
+      if (this.postcardOpen || this.touchStick) {
         return;
       }
       const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
@@ -320,7 +340,7 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private onHudInteract = (): void => {
-    if (this.sys.isPaused()) {
+    if (this.sys.isPaused() || this.postcardOpen) {
       return;
     }
     this.tryInteract();
@@ -333,6 +353,10 @@ export class HarborScene extends Phaser.Scene {
     if (this.stickX !== 0) {
       this.walkTarget = null;
     }
+  };
+
+  private onPostcard = (...args: unknown[]): void => {
+    this.postcardOpen = args[0] === true;
   };
 
   private wish(dt: number): { x: number; y: number; keyed: boolean } {
@@ -379,6 +403,7 @@ export class HarborScene extends Phaser.Scene {
 
   private steer(dt: number): void {
     const wish = this.wish(dt);
+    this.noteWalk(wish, dt);
     if (this.possession === "boat" && this.boat.sprite) {
       this.boat.steer(dt, wish);
       const seat = this.boat.passengerSeat();
@@ -419,6 +444,40 @@ export class HarborScene extends Phaser.Scene {
     ];
   }
 
+  private noteWalk(wish: { x: number; y: number }, dt: number): void {
+    if (this.time.now < this.usingUntil) {
+      return;
+    }
+    const moving =
+      this.possession === "boat" ? wish.x !== 0 || wish.y !== 0 : wish.x !== 0;
+    if (!moving) {
+      return;
+    }
+    this.walkSeconds += dt;
+  }
+
+  private maybeOfferPostcard(): void {
+    if (this.postcardOffered || this.entering) {
+      return;
+    }
+    if (this.scene.isActive("Interior")) {
+      return;
+    }
+    const search = window.location.search;
+    if (!shouldOfferPostcard(search)) {
+      return;
+    }
+    if (postcardForced(search)) {
+      if (!this.postcardForceReady) {
+        return;
+      }
+    } else if (this.walkSeconds < POSTCARD_WALK_S) {
+      return;
+    }
+    this.postcardOffered = true;
+    EventBus.emit("harbor-postcard-request");
+  }
+
   private overlappingZone(): InteractId | null {
     const body = this.possession === "boat" && this.boat.sprite ? this.boat.sprite : this.player;
     for (const zone of this.zones()) {
@@ -442,6 +501,9 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private tryInteract(): void {
+    if (this.postcardOpen) {
+      return;
+    }
     const id = this.overlappingZone();
     if (!id) {
       return;

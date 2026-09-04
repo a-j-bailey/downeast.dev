@@ -232,6 +232,10 @@ img {
     0 -1px 0 #100f0f;
 }
 
+html.harbor-postcard-open .harbor-wordmark {
+  visibility: hidden;
+}
+
 .page-title {
   margin: 0 0 2rem;
   font-family: var(--font-display);
