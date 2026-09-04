@@ -22,13 +22,6 @@ import {
   type WindSample,
 } from "./flag";
 import { skyState, type SkyBodyState } from "./skyBodies";
-import {
-  BUOY_BOB_AMP,
-  FENDER_BOB_AMP,
-  bobSeedFromX,
-  bobberY,
-  type WaterBobber,
-} from "./waterMotion";
 
 /** Land, water, buildings, dock, traps, and sky props. */
 export class HarborWorld {
@@ -56,7 +49,6 @@ export class HarborWorld {
   private skyStars: Phaser.GameObjects.Image[] = [];
   private deepFill?: Phaser.GameObjects.Rectangle;
   private landFill?: Phaser.GameObjects.TileSprite | Phaser.GameObjects.Rectangle;
-  private waterBobbers: WaterBobber[] = [];
   private flagpole?: Phaser.GameObjects.Image;
   private flag?: Phaser.GameObjects.Image;
 
@@ -538,7 +530,6 @@ export class HarborWorld {
       this.onceImage(spot.id, "fender", spot.x, spot.y, {
         depth: DOCK_DEPTH + 2,
       });
-      this.registerBob(spot.id, spot.y, bobSeedFromX(spot.x), FENDER_BOB_AMP);
     }
   }
 
@@ -546,26 +537,7 @@ export class HarborWorld {
     this.onceImage("trap-0", "trap", 198, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
     this.onceImage("trap-stack", "trap-stack", 214, LAND_TOP_Y + 8, { depth: LAND_TOP_Y + 8 });
     this.onceImage("trap-buoy", "trap-buoy", 760, LAND_TOP_Y + 4, { depth: LAND_TOP_Y + 4 });
-    this.registerBob("trap-buoy", LAND_TOP_Y + 4, bobSeedFromX(760), BUOY_BOB_AMP);
     this.onceImage("trap-1", "trap", 900, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
-  }
-
-  private registerBob(id: string, restY: number, seed: number, amp: number): void {
-    if (this.waterBobbers.some((b) => b.id === id)) {
-      return;
-    }
-    this.waterBobbers.push({ id, restY, seed, amp });
-  }
-
-  applyWaterBobs(): void {
-    for (const bobber of this.waterBobbers) {
-      const img = this.scene.children.getByName(bobber.id) as Phaser.GameObjects.Image | null;
-      if (!img) {
-        continue;
-      }
-      img.y = bobberY(bobber, this.waterPhase);
-      img.setDepth(bobber.restY);
-    }
   }
 
   private placeFlag(): void {

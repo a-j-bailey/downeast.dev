@@ -146,7 +146,6 @@ export class HarborScene extends Phaser.Scene {
     const dt = Math.min(0.05, delta / 1000);
     this.world.scrollWater(dt);
     this.easeTide(dt);
-    this.world.applyWaterBobs();
     this.world.driftClouds(dt);
     this.steer(dt);
     this.player.setDepth(this.player.y);
