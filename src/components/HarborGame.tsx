@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { EventBus } from "../game/EventBus";
+import { SoundBed } from "../game/soundBed";
 import { skyCss, type WeatherMood } from "../game/weather";
 
 function isMood(value: unknown): value is WeatherMood {
@@ -31,6 +32,8 @@ export function HarborGame() {
 
     let cancelled = false;
     let game: { destroy: (removeCanvas: boolean) => void; canvas?: HTMLCanvasElement } | undefined;
+    const soundBed = new SoundBed();
+    soundBed.attach(parent);
 
     const focusParent = (): void => {
       parentRef.current?.focus({ preventScroll: true });
@@ -73,6 +76,7 @@ export function HarborGame() {
       game?.canvas?.removeEventListener("pointerdown", onPointerDown);
       document.documentElement.classList.remove("harbor-play");
       document.documentElement.style.removeProperty("--harbor-sky");
+      soundBed.destroy();
       game?.destroy(true);
     };
   }, []);
