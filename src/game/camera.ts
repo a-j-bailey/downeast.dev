@@ -79,10 +79,11 @@ export function syncHarborFollowOffset(
   const view = harborViewSize(scene);
   // 171px hull in a 200-wide phone view cannot afford a 40px deadzone
   // or the bow clips while cruising.
-  cam.setDeadzone(
-    isBoat ? 0 : Math.round(view.width / 5),
-    Math.round(VIEW_HEIGHT / 8),
-  );
+  if (isBoat) {
+    cam.setDeadzone();
+  } else {
+    cam.setDeadzone(Math.round(view.width / 5), Math.round(VIEW_HEIGHT / 8));
+  }
   const facingRight = Boolean((follow as { flipX?: boolean }).flipX);
   let look = 0;
   if (isBoat) {
