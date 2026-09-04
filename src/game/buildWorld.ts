@@ -313,12 +313,14 @@ export class HarborWorld {
     const surfaceY = tideSurfaceY(level);
     const shoreY = tideShoreY(level);
     const waterTop = tideWaterTop(surfaceY);
-    const waterBot = Math.max(shoreY, LAND_TOP_Y);
     this.surfaceY = surfaceY;
     const bandX = WORLD_MID_X;
     const bandW = WORLD_SPAN + 256;
 
-    const deepH = Math.max(56, waterBot - waterTop);
+    // Fill to the bottom of the view so open sea left of the seawall is
+    // water, not a sky hole under the boat. Land backing still covers
+    // the street from LAND_TOP_Y down.
+    const deepH = Math.max(56, WORLD_HEIGHT - waterTop + 8);
     if (this.waterDeep) {
       this.waterDeep.setSize(bandW, deepH);
       this.waterDeep.setPosition(bandX, Math.round(waterTop));
