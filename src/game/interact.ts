@@ -9,6 +9,7 @@ export const INTERACT_IDS = [
   "x",
   "zoning",
   "potager",
+  "weatherOtter",
   "leave",
 ] as const;
 
@@ -32,6 +33,8 @@ export function promptText(id: InteractId): string {
       return "[E] Zoning Radar";
     case "potager":
       return "[E] Potager";
+    case "weatherOtter":
+      return "[E] Weather Otter";
     case "leave":
       return "[E] Leave cafe";
     default: {
@@ -60,6 +63,8 @@ export function interactUrl(id: InteractId): string | null {
       return linkedProjectUrl("Zoning Radar");
     case "potager":
       return linkedProjectUrl("Potager");
+    case "weatherOtter":
+      return linkedProjectUrl("Weather Otter");
     case "cafe":
     case "board":
     case "dismount":

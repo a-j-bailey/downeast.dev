@@ -18,7 +18,7 @@ Processed means: game-scale, cream keyed, 1px fringe eroded, alpha-bled. **Use t
 
 Locked files:
 
-- `cafe-interior.png` — cafe Interior scene. Do not restyle.
+- `cafe-interior.png` — cafe Interior scene. Do not restyle. Keep processed game-scale (not the 1536×1024 source sheet).
 - `water.png` — 64×32 power-of-two wave tile for `TileSprite`. Must stay POT.
 
 Player frames (25×43, bottom-aligned, right-facing):
@@ -28,6 +28,8 @@ Player frames (25×43, bottom-aligned, right-facing):
 - `player-use`
 
 FlipX for left. No white fringe on dark backgrounds.
+
+Kayak + paddle are STREAM set dressing. The kayak is the Weather Otter interact (`projects.ts`); the paddle is a prop only.
 
 ## Ingest
 

@@ -37,13 +37,6 @@ export function createHarborGame(parent: HTMLElement): Phaser.Game {
       height: VIEW_HEIGHT,
       autoRound: true,
     },
-    physics: {
-      default: "arcade",
-      arcade: {
-        gravity: { x: 0, y: 0 },
-        debug: false,
-      },
-    },
     scene: [BootScene, HarborScene, InteriorScene, HudScene],
   });
 

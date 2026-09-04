@@ -183,10 +183,6 @@ img {
   padding: 0.35rem 0 3rem;
 }
 
-.home {
-  padding-top: 0.15rem;
-}
-
 .harbor-page {
   position: relative;
   width: 100%;
@@ -234,45 +230,6 @@ img {
     -1px 0 0 #100f0f,
     0 1px 0 #100f0f,
     0 -1px 0 #100f0f;
-}
-
-.hero {
-  margin: 0 0 1.6rem;
-}
-
-.hero img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-}
-
-.wordmark {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 9vw, 3.75rem);
-  font-weight: 500;
-  font-variation-settings: "opsz" 144;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
-}
-
-.name {
-  margin: 1.2rem 0 0;
-  color: var(--tx);
-  font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3.6vw, 1.8rem);
-  font-weight: 500;
-  font-variation-settings: "opsz" 72;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.lede {
-  margin: 1.15rem 0 0;
-  max-width: 28rem;
-  color: var(--tx);
-  font-size: 1.0625rem;
 }
 
 .page-title {
@@ -370,14 +327,6 @@ img {
 
   .site-header {
     padding-top: 1.75rem;
-  }
-
-  .home {
-    padding-top: 0.35rem;
-  }
-
-  .hero {
-    margin-bottom: 2rem;
   }
 
   .site-main {

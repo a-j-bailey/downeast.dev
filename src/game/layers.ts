@@ -11,7 +11,6 @@ export const SCROLL = {
   water: 0.4,
   land: 1,
   actors: 1,
-  lighthouseBeam: 1,
   foreground: 1.15,
 } as const;
 
