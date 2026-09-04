@@ -33,5 +33,6 @@ Do not invent replacement art in code while "waiting" for a sheet.
 | `village-buildings.png` | Shacks, cafe, signs |
 | `kayak-lighthouse-shark-waves.png` | Kayak, lighthouse, shark, waves |
 | `harbor-key-art.png` | Key / contact sheet |
+| `cormorant.png` | Perch, wing-dry, preen idle |
 
 If a processed slice already exists, use it. Do not regenerate to "match a vibe."

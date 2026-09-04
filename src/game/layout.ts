@@ -48,6 +48,15 @@ export const DOCK_DEPTH = BOAT_DOCK_Y - 10;
 export const BOAT_DEPTH = BOAT_DOCK_Y + 20;
 
 /**
+ * Cormorant feet on the wood dock deck above the seaward (leftmost) pylon.
+ * Dock sprite is 120×40, origin 0.5,1; deck top is 2px below the texture top.
+ */
+export const CORMORANT = {
+  x: PLACES.dock.x - 44,
+  y: PLACES.dock.y - 38,
+} as const;
+
+/**
  * boat.png is 171×51 with origin (0.5, 1).
  * Unflipped art faces LEFT: bow/stem on −X, green pennant and transom on +X.
  * Unsigned distances from that origin to the fixture in unflipped art.
