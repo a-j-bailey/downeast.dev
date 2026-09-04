@@ -20,6 +20,7 @@ import {
   WALKER_Y,
   WORLD_WIDTH,
 } from "../layout";
+import { loadTideLevel, tideShoreY, tideSurfaceY } from "../tide";
 import {
   ambientColor,
   loadWeatherMood,
@@ -57,6 +58,9 @@ export class HarborScene extends Phaser.Scene {
   private stickX = 0;
   private touchStick = false;
   private mood: WeatherMood = "clearDay";
+  private tideLevel = 0.5;
+  private tideTarget = 0.5;
+  private appliedTideKey = "";
   private activeZone: InteractId | null = null;
   private usingUntil = 0;
   private entering = false;
@@ -94,6 +98,12 @@ export class HarborScene extends Phaser.Scene {
       }
       this.applyMood(mood);
     });
+    void loadTideLevel(window.location.search).then((level) => {
+      if (!this.sys.isActive()) {
+        return;
+      }
+      this.tideTarget = level;
+    });
 
     this.time.addEvent({
       delay: 16000,
@@ -127,6 +137,7 @@ export class HarborScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     const dt = Math.min(0.05, delta / 1000);
     this.world.scrollWater(dt);
+    this.easeTide(dt);
     this.world.driftClouds(dt);
     this.steer(dt);
     this.player.setDepth(this.player.y);
@@ -477,6 +488,22 @@ export class HarborScene extends Phaser.Scene {
     this.player.setPosition(PLACES.dock.x + 36, WALKER_Y);
     this.boat.dismount();
     applyHarborCamera(this, this.player);
+  }
+
+  private easeTide(dt: number): void {
+    this.tideLevel += (this.tideTarget - this.tideLevel) * Math.min(1, 1.8 * dt);
+    if (Math.abs(this.tideTarget - this.tideLevel) < 0.002) {
+      this.tideLevel = this.tideTarget;
+    }
+    const surfaceY = tideSurfaceY(this.tideLevel);
+    const shoreY = tideShoreY(this.tideLevel);
+    const key = `${surfaceY}:${shoreY}`;
+    if (key === this.appliedTideKey) {
+      return;
+    }
+    this.appliedTideKey = key;
+    this.world.applyTide(this.tideLevel);
+    this.critters.setSurfaceY(surfaceY);
   }
 
   private applyMood(mood: WeatherMood): void {
