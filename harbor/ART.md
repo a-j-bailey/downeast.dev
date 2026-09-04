@@ -37,6 +37,8 @@ Kayak + paddle are STREAM set dressing. The kayak is the Weather Otter interact 
 
 `scripts/process-harbor-art.py` is ingest only. It never generates art. Point it at a folder of sliced sprites, then copy the output into `public/harbor/processed/`.
 
+Village facades (`coffee-shop`, `shack-a`, `shack-b`) are re-ingested by `scripts/process-harbor-buildings.py` from `village-buildings.png` (edge cream flood + silhouette close, no global cream-key of shake gaps).
+
 If you need a new prop: generate a sheet, drop it in `source/sheets/`, slice and process, commit the PNG. Do not `fillRect` a shack.
 
 ## Postcard

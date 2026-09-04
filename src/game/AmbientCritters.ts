@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { SCROLL } from "./layers";
-import { CORMORANT, DOCK_DEPTH, WORLD_WIDTH } from "./layout";
+import { CORMORANT, DOCK_DEPTH, WORLD_MAX_X, WORLD_MIN_X } from "./layout";
 import { tideSurfaceY } from "./tide";
 import type { WeatherMood } from "./weather";
 
@@ -50,13 +50,16 @@ export class AmbientCritters {
       return;
     }
     this.sharkDir = Math.random() > 0.5 ? 1 : -1;
-    const x = this.sharkDir > 0 ? 40 : WORLD_WIDTH - 40;
+    const x = this.sharkDir > 0 ? WORLD_MIN_X + 40 : WORLD_MAX_X - 40;
     const y = this.surfaceY + 20 + Math.random() * 18;
     this.shark = this.scene.add.image(x, y, "shark-fin");
     this.shark.setOrigin(0.5, 1);
     this.shark.setScrollFactor(SCROLL.actors);
     this.shark.setDepth(y);
-    this.shark.setFlipX(this.sharkDir < 0);
+    // Fin art faces LEFT, same as the hull — flip only when swimming right.
+    this.shark.setFlipX(this.sharkDir > 0);
+    this.shark.x = Math.round(this.shark.x);
+    this.shark.y = Math.round(this.shark.y);
     this.shark.setLighting(true);
   }
 
@@ -90,8 +93,9 @@ export class AmbientCritters {
       return;
     }
     this.shark.x += this.sharkDir * 28 * dt;
+    this.shark.x = Math.round(this.shark.x);
     this.shark.setDepth(this.shark.y);
-    if (this.shark.x < -40 || this.shark.x > WORLD_WIDTH + 40) {
+    if (this.shark.x < WORLD_MIN_X - 40 || this.shark.x > WORLD_MAX_X + 40) {
       this.shark.destroy();
       this.shark = undefined;
     }

@@ -22,6 +22,7 @@ export class InteriorScene extends Phaser.Scene {
   create(data: InteriorData): void {
     void data;
     applyHudCamera(this);
+    this.cameras.main.roundPixels = true;
     this.cameras.main.setBackgroundColor("#1c140e");
     this.cameras.main.fadeIn(220, 0, 0, 0);
 
@@ -76,8 +77,9 @@ export class InteriorScene extends Phaser.Scene {
       return;
     }
     const frame = this.postcard.frame;
-    const scale = Math.min(view.width / frame.width, view.height / frame.height);
-    this.postcard.setPosition(view.width / 2, view.height / 2);
+    const fit = Math.min(view.width / frame.width, view.height / frame.height);
+    const scale = Math.max(1, Math.floor(fit + 1e-6));
+    this.postcard.setPosition(Math.floor(view.width / 2), Math.floor(view.height / 2));
     this.postcard.setScale(scale);
   }
 

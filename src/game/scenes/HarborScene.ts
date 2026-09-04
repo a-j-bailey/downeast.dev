@@ -4,7 +4,13 @@ import { AmbientCritters } from "../AmbientCritters";
 import { BoatController } from "../BoatController";
 import { FarShoreFerry } from "../FarShoreFerry";
 import { HarborWorld } from "../buildWorld";
-import { applyHarborCamera, harborViewSize, snapHarborCamera } from "../camera";
+import {
+  applyHarborCamera,
+  bindPixelSnap,
+  harborViewSize,
+  snapHarborCamera,
+  syncHarborFollowOffset,
+} from "../camera";
 import { EventBus } from "../EventBus";
 import { NightLights } from "../NightLights";
 import { SCROLL } from "../layers";
@@ -15,18 +21,28 @@ import {
   type Possession,
 } from "../interact";
 import {
+  BOAT_DEPTH,
   BOAT_DOCK_Y,
   PLACES,
   SPAWN,
+  WALKER_MIN_X,
   WALKER_Y,
   WORLD_WIDTH,
 } from "../layout";
-import { loadTideLevel, tideShoreY, tideSurfaceY } from "../tide";
+import {
+  levelFromOverride,
+  loadTideLevel,
+  tideFromQuery,
+  tideShoreY,
+  tideSurfaceY,
+} from "../tide";
 import { DEFAULT_WIND, type WindSample } from "../flag";
-import { DAY_AMBIENT, colorToCss } from "../skyBodies";
+import { DAY_AMBIENT, colorToCss, hudUsesCream } from "../skyBodies";
 import {
   harborNow,
   loadAtmosphere,
+  moodFromClock,
+  weatherFromQuery,
   type WeatherMood,
 } from "../weather";
 import {
@@ -66,6 +82,7 @@ export class HarborScene extends Phaser.Scene {
   private walkTarget: { x: number; y: number } | null = null;
   private stickX = 0;
   private touchStick = false;
+  private playtestCruise = 0;
   private mood: WeatherMood = "clearDay";
   private tideLevel = 0.5;
   private tideTarget = 0.5;
@@ -107,9 +124,20 @@ export class HarborScene extends Phaser.Scene {
     this.streamRest();
     this.bindInput();
     applyHarborCamera(this, this.player);
+    bindPixelSnap(this);
     this.scale.on("resize", this.onResize, this);
 
-    void loadAtmosphere(window.location.search).then((atmo) => {
+    const search = window.location.search;
+    const bootMood = weatherFromQuery(search) ?? moodFromClock(harborNow(search));
+    this.applyMood(bootMood);
+    const bootTide = tideFromQuery(search);
+    if (bootTide) {
+      this.tideLevel = levelFromOverride(bootTide);
+      this.tideTarget = this.tideLevel;
+      this.world.applyTide(this.tideLevel);
+    }
+
+    void loadAtmosphere(search).then((atmo) => {
       if (!this.sys.isActive()) {
         return;
       }
@@ -119,11 +147,14 @@ export class HarborScene extends Phaser.Scene {
       };
       this.applyMood(atmo.mood);
     });
-    void loadTideLevel(window.location.search).then((level) => {
+    void loadTideLevel(search).then((level) => {
       if (!this.sys.isActive()) {
         return;
       }
       this.tideTarget = level;
+      if (bootTide) {
+        this.tideLevel = level;
+      }
     });
 
     this.time.addEvent({
@@ -151,6 +182,32 @@ export class HarborScene extends Phaser.Scene {
         this.maybeOfferPostcard();
       });
     }
+
+    if (
+      playtestFlag(search, "berth") ||
+      playtestFlag(search, "boat") ||
+      playtestFlag(search, "underway")
+    ) {
+      this.player.setPosition(PLACES.dock.x + 20, WALKER_Y);
+      applyHarborCamera(this, this.player);
+    }
+    if (playtestFlag(search, "underway")) {
+      this.playtestCruise = -1;
+      this.time.delayedCall(140, () => {
+        this.board();
+        const hull = this.boat.sprite;
+        if (hull) {
+          hull.setPosition(PLACES.boat.x - 140, BOAT_DOCK_Y);
+          hull.setFlipX(false);
+          this.boat.vx = -80;
+          applyHarborCamera(this, hull);
+        }
+      });
+    } else if (playtestFlag(search, "boat")) {
+      this.time.delayedCall(120, () => {
+        this.board();
+      });
+    }
   }
 
   private onResize = (): void => {
@@ -172,13 +229,22 @@ export class HarborScene extends Phaser.Scene {
     this.steer(dt);
     this.maybeOfferPostcard();
     this.player.setDepth(this.player.y);
+    if (this.possession === "boat") {
+      this.player.setDepth(BOAT_DEPTH + 2);
+    }
+    if (this.boat.sprite) {
+      this.boat.sprite.x = Math.round(this.boat.sprite.x);
+      this.boat.sprite.y = Math.round(this.boat.sprite.y);
+    }
+    this.player.x = Math.round(this.player.x);
+    this.player.y = Math.round(this.player.y);
     this.boat.updateDepth();
-    this.boat.updateWake(this.possession);
+    this.boat.updateWake(this.possession, dt);
     this.boat.syncNav(this.possession === "boat");
     this.critters.update(dt);
     const sky = this.syncSky();
     this.world.updateFlag(this.wind);
-    this.ferry.update(dt, this.mood, sky.isDark);
+    this.ferry.update(dt, this.mood, sky.isDark, this.world.surfaceY);
     this.night.updateBeam(dt, sky.isDark);
     this.night.updateFarShore(sky.isDark);
     this.night.updatePlayerLantern(
@@ -190,6 +256,9 @@ export class HarborScene extends Phaser.Scene {
     );
     this.world.twinkleSky(dt, sky.isDark, this.time.now);
     this.refreshPrompt();
+    const follow =
+      this.possession === "boat" && this.boat.sprite ? this.boat.sprite : this.player;
+    syncHarborFollowOffset(this, follow);
     snapHarborCamera(this);
   }
 
@@ -333,7 +402,10 @@ export class HarborScene extends Phaser.Scene {
         return;
       }
       const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-      this.walkTarget = { x: world.x, y: WALKER_Y };
+      this.walkTarget = {
+        x: Phaser.Math.Clamp(world.x, WALKER_MIN_X, WORLD_WIDTH - 24),
+        y: WALKER_Y,
+      };
     });
 
     focusHost();
@@ -384,6 +456,9 @@ export class HarborScene extends Phaser.Scene {
     if (x === 0 && this.stickX !== 0) {
       x = this.stickX;
     }
+    if (x === 0 && this.playtestCruise !== 0 && this.possession === "boat") {
+      x = this.playtestCruise;
+    }
     const keyed = x !== 0 || y !== 0;
     if (keyed) {
       this.walkTarget = null;
@@ -408,7 +483,12 @@ export class HarborScene extends Phaser.Scene {
       this.boat.steer(dt, wish);
       const seat = this.boat.passengerSeat();
       if (seat) {
+        this.player.setVisible(true);
+        this.player.setScale(seat.scale);
         this.player.setPosition(seat.x, seat.y);
+        this.player.setFlipX(seat.flipX);
+        this.player.setDepth(BOAT_DEPTH + 2);
+        this.player.play("player-idle", true);
       }
       return;
     }
@@ -419,7 +499,11 @@ export class HarborScene extends Phaser.Scene {
       this.player.play("player-use", true);
       return;
     }
-    this.player.x = Phaser.Math.Clamp(this.player.x + wish.x * speed * dt, 24, WORLD_WIDTH - 24);
+    this.player.x = Phaser.Math.Clamp(
+      this.player.x + wish.x * speed * dt,
+      WALKER_MIN_X,
+      WORLD_WIDTH - 24,
+    );
     this.player.y = WALKER_Y;
     if (wish.x !== 0) {
       this.player.setFlipX(wish.x < 0);
@@ -434,7 +518,7 @@ export class HarborScene extends Phaser.Scene {
   private zones(): Zone[] {
     return [
       { id: "cafe", x: PLACES.coffee.x + 28, y: WALKER_Y, w: 56, h: 48, mode: "walker" },
-      { id: "board", x: PLACES.dock.x + 8, y: WALKER_Y, w: 90, h: 48, mode: "walker" },
+      { id: "board", x: PLACES.dock.x + 12, y: WALKER_Y, w: 88, h: 48, mode: "walker" },
       { id: "dismount", x: PLACES.boat.x, y: BOAT_DOCK_Y, w: 90, h: 64, mode: "boat" },
       { id: "github", x: PLACES.signGithub.x, y: WALKER_Y, w: 40, h: 48, mode: "walker" },
       { id: "x", x: PLACES.signX.x, y: WALKER_Y, w: 40, h: 48, mode: "walker" },
@@ -556,7 +640,15 @@ export class HarborScene extends Phaser.Scene {
       return;
     }
     this.possession = "boat";
-    this.player.setVisible(false);
+    this.player.setVisible(true);
+    const seat = this.boat.passengerSeat();
+    if (seat) {
+      this.player.setScale(seat.scale);
+      this.player.setPosition(seat.x, seat.y);
+      this.player.setFlipX(seat.flipX);
+      this.player.setDepth(BOAT_DEPTH + 2);
+      this.player.play("player-idle", true);
+    }
     this.walkTarget = null;
     applyHarborCamera(this, this.boat.sprite);
   }
@@ -564,7 +656,9 @@ export class HarborScene extends Phaser.Scene {
   private dismount(): void {
     this.possession = "walker";
     this.player.setVisible(true);
-    this.player.setPosition(PLACES.dock.x + 36, WALKER_Y);
+    this.player.setScale(1);
+    this.player.setPosition(PLACES.dock.x + 20, WALKER_Y);
+    this.player.setDepth(WALKER_Y);
     this.boat.dismount();
     applyHarborCamera(this, this.player);
   }
@@ -601,7 +695,11 @@ export class HarborScene extends Phaser.Scene {
       this.lastSkyCss = css;
       this.cameras.main.setBackgroundColor(sky.skyColor);
       this.lights.setAmbientColor(sky.ambientColor);
-      EventBus.emit("harbor-weather", this.mood, { skyCss: css, isDark: sky.isDark });
+      EventBus.emit("harbor-weather", this.mood, {
+        skyCss: css,
+        isDark: sky.isDark,
+        hudCream: hudUsesCream(sky.skyColor, sky.isDark, this.mood),
+      });
     }
     return sky;
   }
@@ -624,7 +722,12 @@ export class HarborScene extends Phaser.Scene {
     EventBus.emit("harbor-weather", mood, {
       skyCss: colorToCss(sky.skyColor),
       isDark: sky.isDark,
+      hudCream: hudUsesCream(sky.skyColor, sky.isDark, mood),
     });
     this.critters.ensure(mood);
   }
+}
+
+function playtestFlag(search: string, key: string): boolean {
+  return new URLSearchParams(search).get(key) === "1";
 }

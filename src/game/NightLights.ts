@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { Possession } from "./interact";
-import { SCROLL } from "./layers";
+import { DEPTH, SCROLL } from "./layers";
+import { setPixelHome } from "./camera";
 import {
   BOAT_BOW_Y,
   BOAT_STERN_Y,
@@ -62,6 +63,7 @@ export class NightLights {
       windowW: number;
       windowH: number;
       lampOx: number;
+      lampOy: number;
     }[] = [
       {
         x: PLACES.coffee.x,
@@ -71,6 +73,7 @@ export class NightLights {
         windowW: 36,
         windowH: 18,
         lampOx: 8,
+        lampOy: 14,
       },
       {
         x: PLACES.shackA.x,
@@ -80,6 +83,7 @@ export class NightLights {
         windowW: 14,
         windowH: 12,
         lampOx: 6,
+        lampOy: 14,
       },
       {
         x: PLACES.shackB.x,
@@ -89,6 +93,7 @@ export class NightLights {
         windowW: 12,
         windowH: 12,
         lampOx: 4,
+        lampOy: 14,
       },
     ];
 
@@ -96,7 +101,7 @@ export class NightLights {
       const warm = this.scene.lights.addLight(fix.x + 4, fix.y - 36, 110, 0xffb060, 0);
       this.nightLights.push(warm);
 
-      const street = this.scene.lights.addLight(fix.x + fix.lampOx, fix.y + 10, 70, 0xffe2a8, 0);
+      const street = this.scene.lights.addLight(fix.x + fix.lampOx, fix.y + fix.lampOy, 70, 0xffe2a8, 0);
       this.nightLights.push(street);
 
       if (this.scene.textures.exists("glow-window")) {
@@ -110,10 +115,10 @@ export class NightLights {
         this.nightGlows.push(glow);
       }
       if (this.scene.textures.exists("glow-street")) {
-        const lamp = this.scene.add.image(fix.x + fix.lampOx, fix.y + 2, "glow-street");
+        const lamp = this.scene.add.image(fix.x + fix.lampOx, fix.y + fix.lampOy, "glow-street");
         lamp.setOrigin(0.5, 1);
         lamp.setScrollFactor(SCROLL.land);
-        lamp.setDepth(fix.y + 2);
+        lamp.setDepth(fix.y + fix.lampOy);
         lamp.setBlendMode(Phaser.BlendModes.ADD);
         lamp.setLighting(false);
         lamp.setVisible(false);
@@ -147,10 +152,11 @@ export class NightLights {
         const glow = this.scene.add.image(win.x, win.y, "glow-window");
         glow.setDisplaySize(win.w, win.h);
         glow.setScrollFactor(SCROLL.farShore);
-        glow.setDepth(11);
+        glow.setDepth(DEPTH.farCottage + 1);
         glow.setBlendMode(Phaser.BlendModes.ADD);
         glow.setLighting(false);
         glow.setVisible(false);
+        setPixelHome(glow);
         this.nightGlows.push(glow);
       }
     }
@@ -161,8 +167,8 @@ export class NightLights {
     const cam = this.scene.cameras.main;
     const sf = SCROLL.farShore;
     for (const far of this.farLights) {
-      far.light.x = far.x + cam.scrollX * (1 - sf);
-      far.light.y = far.y + cam.scrollY * (1 - sf);
+      far.light.x = Math.round(far.x + cam.scrollX * (1 - sf));
+      far.light.y = Math.round(far.y + cam.scrollY * (1 - sf));
       far.light.setIntensity(on ? 0.55 : 0);
       far.light.setVisible(on);
     }
@@ -278,6 +284,7 @@ export class NightLights {
 
   syncBoatNav(boat: Phaser.GameObjects.Image | undefined, boarded: boolean): void {
     if (!boat || !boarded) {
+      this.setBoatNavVisible(false);
       return;
     }
     this.ensureBoatNavLights(boat);
@@ -285,16 +292,16 @@ export class NightLights {
     const bowColor = facingRight ? 0x44ff88 : 0xff3355;
     const bowLight = this.boatNavLights[0];
     if (bowLight) {
-      bowLight.x = boat.x + boatBowOffsetX(facingRight);
-      bowLight.y = boat.y + BOAT_BOW_Y;
+      bowLight.x = Math.round(boat.x + boatBowOffsetX(facingRight));
+      bowLight.y = Math.round(boat.y + BOAT_BOW_Y);
       bowLight.setColor(bowColor);
       bowLight.setIntensity(1.8);
       bowLight.setVisible(true);
     }
     const sternLight = this.boatNavLights[1];
     if (sternLight) {
-      sternLight.x = boat.x + boatSternOffsetX(facingRight);
-      sternLight.y = boat.y + BOAT_STERN_Y;
+      sternLight.x = Math.round(boat.x + boatSternOffsetX(facingRight));
+      sternLight.y = Math.round(boat.y + BOAT_STERN_Y);
       sternLight.setColor(0xfff5e0);
       sternLight.setIntensity(1.4);
       sternLight.setVisible(true);
@@ -337,8 +344,8 @@ export class NightLights {
     const sf = SCROLL.farShore;
     const cam = this.scene.cameras.main;
     return {
-      x: sx - 13 + cam.scrollX * (1 - sf),
-      y: sy - 72 + cam.scrollY * (1 - sf),
+      x: Math.round(sx - 13 + cam.scrollX * (1 - sf)),
+      y: Math.round(sy - 72 + cam.scrollY * (1 - sf)),
     };
   }
 }

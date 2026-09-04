@@ -1,12 +1,12 @@
 import Phaser from "phaser";
-import { applyHudCamera } from "../camera";
+import { applyHudCamera, bindPixelSnap } from "../camera";
 import { EventBus } from "../EventBus";
 import { HarborPostcard } from "../HarborPostcard";
 import { promptText, type InteractId } from "../interact";
 import { markPostcardShown, postcardForced } from "../postcard";
 import { TEX } from "../textures";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
-import { nyClock, type WeatherMood } from "../weather";
+import { harborNow, moodFromClock, nyClock, weatherFromQuery, type WeatherMood } from "../weather";
 
 /** Chip height tuned for 7px bitmap glyphs + padding. */
 const CHIP_H = 16;
@@ -18,11 +18,13 @@ export class HudScene extends Phaser.Scene {
   private viewW = 480;
   private viewH = 270;
   private chip!: Phaser.GameObjects.NineSlice;
+  private chipHit!: Phaser.GameObjects.Zone;
   private chipText!: Phaser.GameObjects.BitmapText;
   private glyph!: Phaser.GameObjects.Image;
   private clockText!: Phaser.GameObjects.BitmapText;
   private mood: WeatherMood = "clearDay";
   private isDark = false;
+  private hudCream = false;
   private promptId: InteractId | null = null;
   private chromeVisible = true;
   private postcard!: HarborPostcard;
@@ -35,7 +37,7 @@ export class HudScene extends Phaser.Scene {
   private stickHit?: Phaser.GameObjects.Zone;
   private stickCx = 0;
   private stickCy = 0;
-  private stickRadius = 36;
+  private stickRadius = 30;
   private stickPointerId: number | null = null;
   private stickX = 0;
 
@@ -48,7 +50,9 @@ export class HudScene extends Phaser.Scene {
     if (hudCam) {
       hudCam.transparent = true;
       hudCam.setBackgroundColor("rgba(0,0,0,0)");
+      hudCam.roundPixels = true;
     }
+    bindPixelSnap(this);
 
     const fontTex = this.textures.get("hud-font");
     if (fontTex && fontTex.key !== "__MISSING") {
@@ -63,6 +67,15 @@ export class HudScene extends Phaser.Scene {
     this.chip.on("pointerdown", () => {
       EventBus.emit("harbor-interact");
     });
+    this.chipHit = this.add
+      .zone(0, 0, 120, 24)
+      .setOrigin(0.5, 1)
+      .setScrollFactor(0)
+      .setDepth(22)
+      .setInteractive({ useHandCursor: true });
+    this.chipHit.on("pointerdown", () => {
+      EventBus.emit("harbor-interact");
+    });
 
     this.chipText = this.add
       .bitmapText(0, 0, "hud-font", "", FONT_SIZE)
@@ -71,13 +84,19 @@ export class HudScene extends Phaser.Scene {
       .setDepth(21)
       .setTint(INK);
 
-    this.glyph = this.add.image(0, 0, TEX.glyphClear).setOrigin(1, 0).setScrollFactor(0).setDepth(20);
+    const bootMood =
+      weatherFromQuery(window.location.search) ?? moodFromClock(harborNow(window.location.search));
+    this.mood = bootMood;
+    this.isDark = bootMood === "night";
+    this.hudCream = bootMood === "night" || bootMood === "rain" || bootMood === "fog";
+
+    this.glyph = this.add.image(0, 0, glyphKey(bootMood)).setOrigin(1, 0).setScrollFactor(0).setDepth(20);
     this.clockText = this.add
       .bitmapText(0, 0, "hud-font", nyClock(), FONT_SIZE)
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(20)
-      .setTint(CREAM);
+      .setTint(this.hudCream || this.isDark ? CREAM : INK);
 
     this.cameraIcon = this.add
       .image(0, 0, TEX.camera)
@@ -187,38 +206,37 @@ export class HudScene extends Phaser.Scene {
     }
     const cx = this.stickCx;
     const cy = this.stickCy;
-    const chevronX = 28;
+    const chevronX = Math.round(this.stickRadius * 0.78);
+    const wing = Math.max(5, Math.round(this.stickRadius * 0.2));
+    const knobR = Math.max(5, Math.round(this.stickRadius * 0.2));
     this.stickBase.clear();
 
-    // Left chevron ‹
     this.stickBase.fillStyle(0xfffcf0, 0.85);
     this.stickBase.fillTriangle(
-      cx - chevronX - 6,
+      cx - chevronX - 5,
       cy,
-      cx - chevronX + 4,
-      cy - 8,
-      cx - chevronX + 4,
-      cy + 8,
+      cx - chevronX + 3,
+      cy - wing,
+      cx - chevronX + 3,
+      cy + wing,
     );
-    // Right chevron ›
     this.stickBase.fillTriangle(
-      cx + chevronX + 6,
+      cx + chevronX + 5,
       cy,
-      cx + chevronX - 4,
-      cy - 8,
-      cx + chevronX - 4,
-      cy + 8,
+      cx + chevronX - 3,
+      cy - wing,
+      cx + chevronX - 3,
+      cy + wing,
     );
-    // Track line (subtle)
     this.stickBase.lineStyle(1, 0xfffcf0, 0.35);
-    this.stickBase.lineBetween(cx - chevronX + 8, cy, cx + chevronX - 8, cy);
+    this.stickBase.lineBetween(cx - chevronX + 7, cy, cx + chevronX - 7, cy);
 
-    const knobX = cx + axisX * (this.stickRadius - 10);
+    const knobX = cx + axisX * (this.stickRadius - 8);
     this.stickKnob.clear();
     this.stickKnob.fillStyle(0xfffcf0, 0.9);
-    this.stickKnob.fillCircle(knobX, cy, 7);
+    this.stickKnob.fillCircle(knobX, cy, knobR);
     this.stickKnob.lineStyle(1, 0x100f0f, 0.7);
-    this.stickKnob.strokeCircle(knobX, cy, 7);
+    this.stickKnob.strokeCircle(knobX, cy, knobR);
   }
 
   private onResize = (): void => {
@@ -276,6 +294,8 @@ export class HudScene extends Phaser.Scene {
       this.chip.setVisible(false);
       this.chipText.setVisible(false);
       this.chip.disableInteractive();
+      this.chipHit.disableInteractive();
+      this.chipHit.setVisible(false);
     }
   }
 
@@ -286,7 +306,7 @@ export class HudScene extends Phaser.Scene {
 
   private onWeather = (...args: unknown[]): void => {
     const mood = args[0];
-    const extra = args[1] as { isDark?: boolean } | undefined;
+    const extra = args[1] as { isDark?: boolean; hudCream?: boolean } | undefined;
     if (
       mood === "clearDay" ||
       mood === "overcast" ||
@@ -296,6 +316,10 @@ export class HudScene extends Phaser.Scene {
     ) {
       this.mood = mood;
       this.isDark = typeof extra?.isDark === "boolean" ? extra.isDark : mood === "night";
+      this.hudCream =
+        typeof extra?.hudCream === "boolean"
+          ? extra.hudCream
+          : this.isDark || mood === "rain" || mood === "fog" || mood === "night";
       this.glyph.setTexture(glyphKey(mood));
       this.layout();
     }
@@ -310,6 +334,8 @@ export class HudScene extends Phaser.Scene {
       this.chip.setVisible(false);
       this.chipText.setVisible(false);
       this.chip.disableInteractive();
+      this.chipHit.disableInteractive();
+      this.chipHit.setVisible(false);
       return;
     }
     const text = promptText(id);
@@ -317,8 +343,11 @@ export class HudScene extends Phaser.Scene {
     this.chipText.setVisible(true);
     const width = Math.max(80, Math.ceil(this.chipText.width) + 16);
     this.chip.setSize(width, CHIP_H);
+    this.chipHit.setSize(width + 8, 22);
     this.chip.setVisible(true);
+    this.chipHit.setVisible(true);
     this.chip.setInteractive({ useHandCursor: true });
+    this.chipHit.setInteractive({ useHandCursor: true });
     this.layout();
   }
 
@@ -329,7 +358,8 @@ export class HudScene extends Phaser.Scene {
     this.postcard.setView(this.viewW, this.viewH);
     const cx = Math.floor(this.viewW / 2);
 
-    // Stick centered at bottom; chip sits above it when stick is shown.
+    // Stick dead-center, raised off the bottom edge. Chip sits above it
+    // so the prompt never covers the handle.
     if (this.stickEnabled && this.stickHit) {
       this.stickCx = cx;
       this.stickCy = this.viewH - 36;
@@ -337,15 +367,16 @@ export class HudScene extends Phaser.Scene {
       this.drawStick(this.stickX);
       this.chip.setPosition(cx, this.viewH - 52);
       this.chipText.setPosition(cx, this.viewH - 56);
+      this.chipHit.setPosition(cx, this.viewH - 50);
     } else {
       this.chip.setPosition(cx, this.viewH - 8);
       this.chipText.setPosition(cx, this.viewH - 12);
+      this.chipHit.setPosition(cx, this.viewH - 6);
     }
 
-    const clockCream = this.isDark || this.mood === "rain";
-    this.clockText.setTint(clockCream ? CREAM : INK);
-    this.clockText.setPosition(this.viewW - 6, 6);
-    this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
+    this.clockText.setTint(this.hudCream || this.isDark || this.mood === "rain" ? CREAM : INK);
+    this.clockText.setPosition(Math.round(this.viewW - 10), 6);
+    this.glyph.setPosition(Math.round(this.viewW - 12 - this.clockText.width), 6);
     this.cameraIcon.setPosition(6, 6);
     this.cameraHit.setPosition(4, 4);
   }

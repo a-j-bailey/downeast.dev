@@ -11,25 +11,35 @@ export function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
-/** Logical framebuffer size. Height always 270; width shrinks on tall phones. */
-export function computeHarborView(
-  parentW: number,
-  parentH: number,
-): { viewW: number; viewH: number; tall: boolean } {
+export type HarborView = {
+  viewW: number;
+  viewH: number;
+  tall: boolean;
+  /** CSS scale (may be fractional). Framebuffer stays viewW×viewH. */
+  zoom: number;
+};
+
+/**
+ * Logical framebuffer. Height always 270; tall phones shrink width to the
+ * parent aspect (clamped ≥200) so the docked boat and street stay in frame.
+ * Do not derive width from an integer CSS zoom — that crops and looks larger.
+ */
+export function computeHarborView(parentW: number, parentH: number): HarborView {
   const w = Math.max(1, parentW);
   const h = Math.max(1, parentH);
   const tall = parentIsTall(w, h);
   if (tall) {
     const viewW = clamp(Math.round(VIEW_HEIGHT * (w / h)), 200, VIEW_WIDTH);
-    return { viewW, viewH: VIEW_HEIGHT, tall: true };
+    return { viewW, viewH: VIEW_HEIGHT, tall: true, zoom: h / VIEW_HEIGHT };
   }
-  return { viewW: VIEW_WIDTH, viewH: VIEW_HEIGHT, tall: false };
+  const fit = Math.min(w / VIEW_WIDTH, h / VIEW_HEIGHT);
+  return { viewW: VIEW_WIDTH, viewH: VIEW_HEIGHT, tall: false, zoom: fit };
 }
 
 /**
  * Manual CSS layout for Phaser.Scale.NONE.
- * Tall: canvas fills parent exactly (no side crop of gameplay).
- * Wide: FIT letterbox of the fixed 480×270 framebuffer.
+ * Tall: canvas fills parent (same framing as production). Wide: FIT letterbox.
+ * Framebuffer stays 1:1; CSS may be fractional. `image-rendering: pixelated`.
  */
 export function layoutHarborCanvas(
   parent: HTMLElement,
@@ -44,7 +54,6 @@ export function layoutHarborCanvas(
   let cssW: number;
   let cssH: number;
   if (tall) {
-    // Stretch framebuffer to fill parent — aspect already matches via resize.
     cssW = parentW;
     cssH = parentH;
   } else {
@@ -63,4 +72,5 @@ export function layoutHarborCanvas(
   canvas.style.maxHeight = "none";
   canvas.style.margin = "0";
   canvas.style.imageRendering = "pixelated";
+  parent.style.overflow = "hidden";
 }

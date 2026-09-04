@@ -28,6 +28,7 @@ export const BOOT_IMAGES = [
   "cormorant-wings",
   "cormorant-idle",
   "boat",
+  "wake",
   "shack-a",
   "shack-b",
   "sign-github",
@@ -58,7 +59,6 @@ export const BOOT_IMAGES = [
 export const STREAM_IMAGES = [
   "seawall-stairs",
   "boat-underway",
-  "wake",
   "paddle",
   "trap",
   "trap-stack",
