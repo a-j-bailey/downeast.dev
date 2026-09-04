@@ -1,15 +1,21 @@
 import Phaser from "phaser";
 import { SCROLL } from "./layers";
-import { WATER_SURFACE_Y, WORLD_WIDTH } from "./layout";
+import { WORLD_WIDTH } from "./layout";
+import { tideSurfaceY } from "./tide";
 
 /** Occasional shark-fin crossing. */
 export class AmbientCritters {
   private scene: Phaser.Scene;
   private shark?: Phaser.GameObjects.Image;
   private sharkDir = 1;
+  private surfaceY = tideSurfaceY(0.5);
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
+  }
+
+  setSurfaceY(y: number): void {
+    this.surfaceY = y;
   }
 
   spawnShark(): void {
@@ -18,7 +24,7 @@ export class AmbientCritters {
     }
     this.sharkDir = Math.random() > 0.5 ? 1 : -1;
     const x = this.sharkDir > 0 ? 40 : WORLD_WIDTH - 40;
-    const y = WATER_SURFACE_Y + 20 + Math.random() * 18;
+    const y = this.surfaceY + 20 + Math.random() * 18;
     this.shark = this.scene.add.image(x, y, "shark-fin");
     this.shark.setOrigin(0.5, 1);
     this.shark.setScrollFactor(SCROLL.actors);

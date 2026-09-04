@@ -7,12 +7,11 @@ import {
   LAND_TOP_Y,
   PLACES,
   WALKER_Y,
-  WATER_BOTTOM_Y,
-  WATER_SURFACE_Y,
   WORLD_HEIGHT,
   WORLD_WIDTH,
 } from "./layout";
 import { TEX } from "./textures";
+import { tideShoreY, tideSurfaceY, tideWaterTop } from "./tide";
 import type { WeatherMood } from "./weather";
 
 /** Land, water, buildings, dock, traps, and sky props. */
@@ -20,6 +19,8 @@ export class HarborWorld {
   water?: Phaser.GameObjects.TileSprite;
   waterDeep?: Phaser.GameObjects.TileSprite;
   foam?: Phaser.GameObjects.TileSprite;
+  shoreFoam?: Phaser.GameObjects.TileSprite;
+  shoreWash?: Phaser.GameObjects.TileSprite;
   wavesLayer?: Phaser.GameObjects.TileSprite;
   lighthouse?: Phaser.GameObjects.Image;
   farShore?: Phaser.GameObjects.TileSprite;
@@ -27,6 +28,7 @@ export class HarborWorld {
   rain?: Phaser.GameObjects.Particles.ParticleEmitter;
   clouds: Phaser.GameObjects.Image[] = [];
   waterPhase = 0;
+  surfaceY = tideSurfaceY(0.5);
 
   private scene: Phaser.Scene;
   private placed = new Set<string>();
@@ -35,6 +37,8 @@ export class HarborWorld {
   private skySun?: Phaser.GameObjects.Image;
   private skyMoon?: Phaser.GameObjects.Image;
   private skyStars: Phaser.GameObjects.Image[] = [];
+  private deepFill?: Phaser.GameObjects.Rectangle;
+  private landFill?: Phaser.GameObjects.TileSprite | Phaser.GameObjects.Rectangle;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -52,34 +56,26 @@ export class HarborWorld {
     sky.setDepth(-100);
     sky.setName("sky");
 
-    const waterBandH = WATER_BOTTOM_Y - WATER_SURFACE_Y;
     const deepKey = this.scene.textures.exists("water-deep") ? "water-deep" : "water";
-    const deepH = Math.max(waterBandH, 56);
     this.waterDeep = this.scene.add.tileSprite(
       WORLD_WIDTH / 2,
-      WATER_SURFACE_Y + deepH / 2,
+      0,
       WORLD_WIDTH + 128,
-      deepH,
+      56,
       deepKey,
     );
     this.waterDeep.setScrollFactor(SCROLL.water);
     this.waterDeep.setDepth(18);
     this.waterDeep.setLighting(true);
 
-    const deepFill = this.scene.add.rectangle(
-      WORLD_WIDTH / 2,
-      WATER_SURFACE_Y + waterBandH / 2,
-      WORLD_WIDTH,
-      waterBandH + 4,
-      0x16344f,
-    );
-    deepFill.setScrollFactor(SCROLL.water);
-    deepFill.setDepth(17);
+    this.deepFill = this.scene.add.rectangle(WORLD_WIDTH / 2, 0, WORLD_WIDTH, 4, 0x16344f);
+    this.deepFill.setScrollFactor(SCROLL.water);
+    this.deepFill.setDepth(17);
 
     if (this.scene.textures.exists("waves-0")) {
       this.wavesLayer = this.scene.add.tileSprite(
         WORLD_WIDTH / 2,
-        WATER_SURFACE_Y + 10,
+        0,
         WORLD_WIDTH + 128,
         16,
         "waves-0",
@@ -92,7 +88,7 @@ export class HarborWorld {
     const surfaceKey = this.scene.textures.exists("water") ? "water" : deepKey;
     this.water = this.scene.add.tileSprite(
       WORLD_WIDTH / 2,
-      WATER_SURFACE_Y + 14,
+      0,
       WORLD_WIDTH + 128,
       32,
       surfaceKey,
@@ -106,7 +102,7 @@ export class HarborWorld {
       const foamH = Math.max(12, this.scene.textures.get("waves-foam").get().height);
       this.foam = this.scene.add.tileSprite(
         WORLD_WIDTH / 2,
-        WATER_SURFACE_Y + 4,
+        0,
         WORLD_WIDTH + 128,
         foamH,
         "waves-foam",
@@ -114,20 +110,49 @@ export class HarborWorld {
       this.foam.setScrollFactor(SCROLL.water);
       this.foam.setDepth(21);
       this.foam.setLighting(true);
+
+      this.shoreFoam = this.scene.add.tileSprite(
+        WORLD_WIDTH / 2,
+        0,
+        WORLD_WIDTH + 128,
+        foamH,
+        "waves-foam",
+      );
+      this.shoreFoam.setScrollFactor(SCROLL.land);
+      this.shoreFoam.setDepth(37);
+      this.shoreFoam.setLighting(true);
+
+      this.shoreWash = this.scene.add.tileSprite(
+        WORLD_WIDTH / 2,
+        0,
+        WORLD_WIDTH + 128,
+        8,
+        this.scene.textures.exists("water-deep") ? "water-deep" : "waves-foam",
+      );
+      this.shoreWash.setScrollFactor(SCROLL.land);
+      this.shoreWash.setDepth(36);
+      this.shoreWash.setLighting(true);
+      this.shoreWash.setVisible(false);
     }
 
-    const landH = WORLD_HEIGHT - LAND_TOP_Y + 8;
-    const landY = (LAND_TOP_Y + WORLD_HEIGHT) / 2;
     if (this.scene.textures.exists("road-stone")) {
-      const road = this.scene.add.tileSprite(WORLD_WIDTH / 2, landY, WORLD_WIDTH, landH, "road-stone");
-      road.setScrollFactor(SCROLL.land);
-      road.setDepth(30);
-      road.setLighting(true);
+      this.landFill = this.scene.add.tileSprite(
+        WORLD_WIDTH / 2,
+        0,
+        WORLD_WIDTH,
+        8,
+        "road-stone",
+      );
+      this.landFill.setScrollFactor(SCROLL.land);
+      this.landFill.setDepth(30);
+      this.landFill.setLighting(true);
     } else {
-      const land = this.scene.add.rectangle(WORLD_WIDTH / 2, landY, WORLD_WIDTH, landH, 0x5f7034);
-      land.setScrollFactor(SCROLL.land);
-      land.setDepth(30);
+      this.landFill = this.scene.add.rectangle(WORLD_WIDTH / 2, 0, WORLD_WIDTH, 8, 0x5f7034);
+      this.landFill.setScrollFactor(SCROLL.land);
+      this.landFill.setDepth(30);
     }
+
+    this.applyTide(0.5);
 
     if (this.scene.textures.exists("wharf-planks")) {
       const stripH = 28;
@@ -258,6 +283,53 @@ export class HarborWorld {
     });
   }
 
+  applyTide(level: number): void {
+    const surfaceY = tideSurfaceY(level);
+    const shoreY = tideShoreY(level);
+    const waterTop = tideWaterTop(surfaceY);
+    const waterBot = Math.max(shoreY, LAND_TOP_Y);
+    this.surfaceY = surfaceY;
+
+    const deepH = Math.max(56, waterBot - waterTop);
+    if (this.waterDeep) {
+      this.waterDeep.setSize(WORLD_WIDTH + 128, deepH);
+      this.waterDeep.setPosition(WORLD_WIDTH / 2, Math.round(waterTop + deepH / 2));
+    }
+    if (this.deepFill) {
+      const fillH = waterBot - waterTop + 4;
+      this.deepFill.setSize(WORLD_WIDTH, fillH);
+      this.deepFill.setPosition(WORLD_WIDTH / 2, Math.round(waterTop + fillH / 2));
+    }
+    if (this.wavesLayer) {
+      this.wavesLayer.setPosition(WORLD_WIDTH / 2, surfaceY + 10);
+    }
+    if (this.water) {
+      this.water.setPosition(WORLD_WIDTH / 2, surfaceY + 14);
+    }
+    if (this.foam) {
+      this.foam.setPosition(WORLD_WIDTH / 2, surfaceY + 4);
+    }
+    if (this.shoreFoam) {
+      this.shoreFoam.setPosition(WORLD_WIDTH / 2, shoreY);
+    }
+    if (this.shoreWash) {
+      const washH = Math.max(0, shoreY - LAND_TOP_Y);
+      this.shoreWash.setVisible(washH > 0);
+      if (washH > 0) {
+        const h = Math.max(8, washH + 2);
+        this.shoreWash.setSize(WORLD_WIDTH + 128, h);
+        this.shoreWash.setPosition(WORLD_WIDTH / 2, Math.round(LAND_TOP_Y + washH / 2));
+      }
+    }
+    if (this.landFill) {
+      const landTop = Math.min(LAND_TOP_Y, shoreY);
+      const landH = WORLD_HEIGHT - landTop + 8;
+      const landY = Math.round((landTop + WORLD_HEIGHT) / 2);
+      this.landFill.setSize(WORLD_WIDTH, landH);
+      this.landFill.setPosition(WORLD_WIDTH / 2, landY);
+    }
+  }
+
   scrollWater(dt: number): void {
     this.waterPhase += dt;
     const t = this.waterPhase;
@@ -299,6 +371,15 @@ export class HarborWorld {
       this.foam.tilePositionX = foamX;
       this.foam.tilePositionY = foamY;
       this.foam.setAlpha(0.35 + 0.4 * (0.5 + 0.5 * Math.sin(t * 1.9 + 0.6)));
+    }
+    if (this.shoreFoam) {
+      this.shoreFoam.tilePositionX = Math.sin(t * 1.6 + 2.1) * 2.4;
+      this.shoreFoam.tilePositionY = Math.sin(t * 1.9 + 0.4) * 0.5;
+      this.shoreFoam.setAlpha(0.22 + 0.28 * (0.5 + 0.5 * Math.sin(t * 1.7 + 1.1)));
+    }
+    if (this.shoreWash) {
+      this.shoreWash.tilePositionX = Math.sin(t * 0.9 + 0.4) * 1.2;
+      this.shoreWash.setAlpha(0.72 + 0.1 * Math.sin(t * 1.5));
     }
   }
 
