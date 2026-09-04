@@ -7,15 +7,19 @@ import { shouldShowVirtualStick } from "../touchControls";
 import { nyClock, type WeatherMood } from "../weather";
 
 const STICK_DEADZONE = 0.15;
-const CHIP_H = 24;
+/** Chip height tuned for 7px bitmap glyphs + padding. */
+const CHIP_H = 16;
+const FONT_SIZE = 7;
+const INK = 0x100f0f;
+const CREAM = 0xfffcf0;
 
 export class HudScene extends Phaser.Scene {
   private viewW = 480;
   private viewH = 270;
   private chip!: Phaser.GameObjects.NineSlice;
-  private chipText!: Phaser.GameObjects.Text;
+  private chipText!: Phaser.GameObjects.BitmapText;
   private glyph!: Phaser.GameObjects.Image;
-  private clockText!: Phaser.GameObjects.Text;
+  private clockText!: Phaser.GameObjects.BitmapText;
   private mood: WeatherMood = "clearDay";
 
   private stickEnabled = false;
@@ -24,7 +28,7 @@ export class HudScene extends Phaser.Scene {
   private stickHit?: Phaser.GameObjects.Zone;
   private stickCx = 0;
   private stickCy = 0;
-  private stickRadius = 28;
+  private stickRadius = 36;
   private stickPointerId: number | null = null;
   private stickX = 0;
 
@@ -38,6 +42,12 @@ export class HudScene extends Phaser.Scene {
       hudCam.transparent = true;
       hudCam.setBackgroundColor("rgba(0,0,0,0)");
     }
+
+    const fontTex = this.textures.get("hud-font");
+    if (fontTex && fontTex.key !== "__MISSING") {
+      fontTex.setFilter(Phaser.Textures.FilterMode.NEAREST);
+    }
+
     this.chip = this.add.nineslice(0, 0, TEX.chip, 0, 120, CHIP_H, 2, 2, 2, 2);
     this.chip.setOrigin(0.5, 1);
     this.chip.setScrollFactor(0);
@@ -48,35 +58,19 @@ export class HudScene extends Phaser.Scene {
     });
 
     this.chipText = this.add
-      .text(0, 0, "", {
-        fontFamily: "monospace",
-        fontSize: "14px",
-        fontStyle: "700",
-        color: "#100f0f",
-        resolution: 2,
-        stroke: "#fffcf0",
-        strokeThickness: 2,
-      })
+      .bitmapText(0, 0, "hud-font", "", FONT_SIZE)
       .setOrigin(0.5, 1)
       .setScrollFactor(0)
       .setDepth(21)
-      .setPadding(0, 2, 0, 2);
+      .setTint(INK);
 
     this.glyph = this.add.image(0, 0, TEX.glyphClear).setOrigin(1, 0).setScrollFactor(0).setDepth(20);
     this.clockText = this.add
-      .text(0, 0, nyClock(), {
-        fontFamily: "monospace",
-        fontSize: "14px",
-        fontStyle: "700",
-        color: "#fffcf0",
-        resolution: 2,
-        stroke: "#100f0f",
-        strokeThickness: 2,
-      })
+      .bitmapText(0, 0, "hud-font", nyClock(), FONT_SIZE)
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(20)
-      .setPadding(0, 2, 0, 2);
+      .setTint(CREAM);
 
     this.stickEnabled = shouldShowVirtualStick();
     if (this.stickEnabled) {
@@ -101,16 +95,18 @@ export class HudScene extends Phaser.Scene {
       loop: true,
       callback: () => {
         this.clockText.setText(nyClock());
+        this.layout();
       },
     });
   }
 
   private buildStick(): void {
     const r = this.stickRadius;
-    this.stickBase = this.add.graphics().setScrollFactor(0).setDepth(18).setAlpha(0.55);
-    this.stickKnob = this.add.graphics().setScrollFactor(0).setDepth(19).setAlpha(0.85);
+    this.stickBase = this.add.graphics().setScrollFactor(0).setDepth(18).setAlpha(0.5);
+    this.stickKnob = this.add.graphics().setScrollFactor(0).setDepth(19).setAlpha(0.75);
+    // Wide hit zone covering chevrons + handle travel.
     this.stickHit = this.add
-      .zone(0, 0, r * 2.6, r * 2.6)
+      .zone(0, 0, r * 2.4, 40)
       .setScrollFactor(0)
       .setDepth(18)
       .setInteractive();
@@ -137,7 +133,6 @@ export class HudScene extends Phaser.Scene {
 
   private updateStickFromPointer(pointer: Phaser.Input.Pointer): void {
     const dx = pointer.x - this.stickCx;
-    // Horizontal only — ignore vertical pull.
     const raw = Phaser.Math.Clamp(dx / this.stickRadius, -1, 1);
     const x = Math.abs(raw) < STICK_DEADZONE ? 0 : raw;
     this.stickX = x;
@@ -149,23 +144,45 @@ export class HudScene extends Phaser.Scene {
     EventBus.emit("harbor-stick", { x });
   }
 
+  /** Chevron + round handle: ‹  ●  › — horizontal only. */
   private drawStick(axisX: number): void {
     if (!this.stickBase || !this.stickKnob) {
       return;
     }
-    const r = this.stickRadius;
+    const cx = this.stickCx;
+    const cy = this.stickCy;
+    const chevronX = 28;
     this.stickBase.clear();
-    this.stickBase.fillStyle(0x100f0f, 0.45);
-    this.stickBase.fillCircle(this.stickCx, this.stickCy, r);
-    this.stickBase.lineStyle(2, 0xfffcf0, 0.7);
-    this.stickBase.strokeCircle(this.stickCx, this.stickCy, r);
 
-    const knobX = this.stickCx + axisX * (r - 8);
+    // Left chevron ‹
+    this.stickBase.fillStyle(0xfffcf0, 0.85);
+    this.stickBase.fillTriangle(
+      cx - chevronX - 6,
+      cy,
+      cx - chevronX + 4,
+      cy - 8,
+      cx - chevronX + 4,
+      cy + 8,
+    );
+    // Right chevron ›
+    this.stickBase.fillTriangle(
+      cx + chevronX + 6,
+      cy,
+      cx + chevronX - 4,
+      cy - 8,
+      cx + chevronX - 4,
+      cy + 8,
+    );
+    // Track line (subtle)
+    this.stickBase.lineStyle(1, 0xfffcf0, 0.35);
+    this.stickBase.lineBetween(cx - chevronX + 8, cy, cx + chevronX - 8, cy);
+
+    const knobX = cx + axisX * (this.stickRadius - 10);
     this.stickKnob.clear();
     this.stickKnob.fillStyle(0xfffcf0, 0.9);
-    this.stickKnob.fillCircle(knobX, this.stickCy, 10);
-    this.stickKnob.lineStyle(1, 0x100f0f, 0.8);
-    this.stickKnob.strokeCircle(knobX, this.stickCy, 10);
+    this.stickKnob.fillCircle(knobX, cy, 7);
+    this.stickKnob.lineStyle(1, 0x100f0f, 0.7);
+    this.stickKnob.strokeCircle(knobX, cy, 7);
   }
 
   private onResize = (): void => {
@@ -191,6 +208,7 @@ export class HudScene extends Phaser.Scene {
     ) {
       this.mood = mood;
       this.glyph.setTexture(glyphKey(mood));
+      this.layout();
     }
   };
 
@@ -204,7 +222,7 @@ export class HudScene extends Phaser.Scene {
     const text = promptText(id);
     this.chipText.setText(text);
     this.chipText.setVisible(true);
-    const width = Math.max(96, Math.ceil(this.chipText.width) + 20);
+    const width = Math.max(80, Math.ceil(this.chipText.width) + 16);
     this.chip.setSize(width, CHIP_H);
     this.chip.setVisible(true);
     this.chip.setInteractive({ useHandCursor: true });
@@ -216,23 +234,24 @@ export class HudScene extends Phaser.Scene {
     this.viewW = view.width;
     this.viewH = view.height;
     const cx = Math.floor(this.viewW / 2);
-    const by = this.viewH - 8;
-    this.chip.setPosition(cx, by);
-    this.chipText.setPosition(cx, by - 4);
-    this.clockText.setPosition(this.viewW - 6, 6);
-    this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
-    this.clockText.setColor(this.mood === "night" || this.mood === "rain" ? "#fffcf0" : "#100f0f");
-    this.clockText.setStroke(
-      this.mood === "night" || this.mood === "rain" ? "#100f0f" : "#fffcf0",
-      2,
-    );
 
+    // Stick centered at bottom; chip sits above it when stick is shown.
     if (this.stickEnabled && this.stickHit) {
-      this.stickCx = 44;
-      this.stickCy = this.viewH - 44;
+      this.stickCx = cx;
+      this.stickCy = this.viewH - 36;
       this.stickHit.setPosition(this.stickCx, this.stickCy);
       this.drawStick(this.stickX);
+      this.chip.setPosition(cx, this.viewH - 52);
+      this.chipText.setPosition(cx, this.viewH - 56);
+    } else {
+      this.chip.setPosition(cx, this.viewH - 8);
+      this.chipText.setPosition(cx, this.viewH - 12);
     }
+
+    const clockCream = this.mood === "night" || this.mood === "rain";
+    this.clockText.setTint(clockCream ? CREAM : INK);
+    this.clockText.setPosition(this.viewW - 6, 6);
+    this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
   }
 }
 

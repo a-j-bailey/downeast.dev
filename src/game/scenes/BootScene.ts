@@ -24,6 +24,7 @@ export class BootScene extends Phaser.Scene {
       this.scene.bringToTop("Hud");
     });
 
+    this.load.bitmapFont("hud-font", "/harbor/ui/hud-font.png", "/harbor/ui/hud-font.xml");
     for (const key of BOOT_IMAGES) {
       this.load.image(key, artUrl(key));
     }

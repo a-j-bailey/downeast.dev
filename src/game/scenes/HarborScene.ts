@@ -862,7 +862,8 @@ export class HarborScene extends Phaser.Scene {
       this.boat.x = Phaser.Math.Clamp(this.boat.x + this.boatVx * dt, 60, WORLD_WIDTH - 60);
       this.boat.y = BOAT_WATER_Y;
       if (Math.abs(this.boatVx) > 8) {
-        this.boat.setFlipX(this.boatVx > 0);
+        // Sprite faces right by default; flip when moving left.
+        this.boat.setFlipX(this.boatVx < 0);
       }
       const moving = Math.abs(this.boatVx) > 12;
       if (moving && this.textures.exists("boat-underway")) {
@@ -918,7 +919,8 @@ export class HarborScene extends Phaser.Scene {
     if (!moving) {
       return;
     }
-    const facingRight = this.boat.flipX;
+    // flipX true => bow left (unflipped sprite faces right).
+    const facingRight = !this.boat.flipX;
     const stern = facingRight ? -78 : 78;
     this.wake.setPosition(this.boat.x + stern, this.boat.y - 4);
     this.wake.setFlipX(!facingRight);
@@ -929,7 +931,7 @@ export class HarborScene extends Phaser.Scene {
     if (this.boatNavLights.length > 0 || !this.boat) {
       return;
     }
-    // Port (red), starboard (green), mast (white) — intensities toggled on board.
+    // [0] bow (color by facing), [1] unused, [2] stern white — intensities toggled on board.
     this.boatNavLights.push(this.lights.addLight(this.boat.x - 20, this.boat.y - 18, 42, 0xff3355, 0));
     this.boatNavLights.push(this.lights.addLight(this.boat.x + 20, this.boat.y - 18, 42, 0x44ff88, 0));
     this.boatNavLights.push(this.lights.addLight(this.boat.x, this.boat.y - 28, 36, 0xfff5e0, 0));
@@ -941,8 +943,9 @@ export class HarborScene extends Phaser.Scene {
       light.setIntensity(on ? 1.6 : 0);
       light.setVisible(on);
     }
+    // Overlay art unused — bow/stern lights are dynamic Phaser lights only.
     if (this.boatNavSprite) {
-      this.boatNavSprite.setVisible(on);
+      this.boatNavSprite.setVisible(false);
     }
   }
 
@@ -951,24 +954,32 @@ export class HarborScene extends Phaser.Scene {
       return;
     }
     this.ensureBoatNavLights();
-    const facingRight = this.boat.flipX;
-    const port = facingRight ? -22 : 22;
-    const starboard = facingRight ? 22 : -22;
+    // flipX true => facing left. Colored light on the bow; white on the stern.
+    const facingRight = !this.boat.flipX;
+    const bow = facingRight ? 56 : -56;
+    const stern = facingRight ? -56 : 56;
+    const bowColor = facingRight ? 0x44ff88 : 0xff3355; // green when right, red when left
+    // [0] bow color, [1] unused, [2] stern white
     if (this.boatNavLights[0]) {
-      this.boatNavLights[0].x = this.boat.x + port;
-      this.boatNavLights[0].y = this.boat.y - 18;
+      this.boatNavLights[0].x = this.boat.x + bow;
+      this.boatNavLights[0].y = this.boat.y - 16;
+      this.boatNavLights[0].setColor(bowColor);
+      this.boatNavLights[0].setIntensity(1.8);
+      this.boatNavLights[0].setVisible(true);
     }
     if (this.boatNavLights[1]) {
-      this.boatNavLights[1].x = this.boat.x + starboard;
-      this.boatNavLights[1].y = this.boat.y - 18;
+      this.boatNavLights[1].setIntensity(0);
+      this.boatNavLights[1].setVisible(false);
     }
     if (this.boatNavLights[2]) {
-      this.boatNavLights[2].x = this.boat.x;
-      this.boatNavLights[2].y = this.boat.y - 28;
+      this.boatNavLights[2].x = this.boat.x + stern;
+      this.boatNavLights[2].y = this.boat.y - 14;
+      this.boatNavLights[2].setColor(0xfff5e0);
+      this.boatNavLights[2].setIntensity(1.4);
+      this.boatNavLights[2].setVisible(true);
     }
     if (this.boatNavSprite) {
-      this.boatNavSprite.setPosition(this.boat.x, this.boat.y);
-      this.boatNavSprite.setFlipX(this.boat.flipX);
+      this.boatNavSprite.setVisible(false);
     }
   }
 
