@@ -26,7 +26,7 @@ export type FlagPose = {
 export const FLAG_FRAME_COUNT = 4;
 export const FLAG_KEYS = ["flag-0", "flag-1", "flag-2", "flag-3"] as const;
 
-/** Just left of shack-a, feet on the land / seawall line. */
+/** Left of the trap stack beside shack-a; feet on the land / seawall line. */
 export const FLAGPOLE_PLACE = PLACES.flagpole;
 
 const LIMP_KMH = 2.4;

@@ -159,6 +159,12 @@ export function colorToCss(color: number): string {
 
 type ColorStop = { alt: number; sky: number; ambient: number };
 
+/**
+ * Light2D multiplies sprite RGB by ambient. Midday must sit near cream-white
+ * or opaque art reads as overcast-night. Night / dusk / golden hour stay dim.
+ */
+export const DAY_AMBIENT = 0xe8e4d8;
+
 /** Solar-elevation ramp. Golden hour uses Flexoki cream / orange warmth. */
 const SOLAR_STOPS: ColorStop[] = [
   { alt: -18, sky: 0x0c1018, ambient: 0x1a2030 },
@@ -166,9 +172,9 @@ const SOLAR_STOPS: ColorStop[] = [
   { alt: -6, sky: 0x2a2448, ambient: 0x3a3858 },
   { alt: -0.8, sky: 0x6a3a58, ambient: 0x6a4860 },
   { alt: 2, sky: 0xd4a070, ambient: 0xc4a078 },
-  { alt: 6, sky: 0xe8c4a0, ambient: 0xc8b090 },
-  { alt: 14, sky: 0x7aa8c8, ambient: 0x98a8b8 },
-  { alt: 28, sky: 0x5b93c5, ambient: 0x8899aa },
+  { alt: 6, sky: 0xe8c4a0, ambient: 0xe0d4c0 },
+  { alt: 14, sky: 0x7aa8c8, ambient: 0xe4ddd0 },
+  { alt: 28, sky: 0x5b93c5, ambient: DAY_AMBIENT },
 ];
 
 function rampSolar(altitude: number): { sky: number; ambient: number } {
@@ -176,7 +182,7 @@ function rampSolar(altitude: number): { sky: number; ambient: number } {
   const first = stops[0];
   const last = stops[stops.length - 1];
   if (!first || !last) {
-    return { sky: 0x5b93c5, ambient: 0x8899aa };
+    return { sky: 0x5b93c5, ambient: DAY_AMBIENT };
   }
   if (altitude <= first.alt) {
     return { sky: first.sky, ambient: first.ambient };

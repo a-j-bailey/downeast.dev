@@ -22,7 +22,7 @@ import {
 } from "../layout";
 import { loadTideLevel, tideShoreY, tideSurfaceY } from "../tide";
 import { DEFAULT_WIND, type WindSample } from "../flag";
-import { colorToCss } from "../skyBodies";
+import { DAY_AMBIENT, colorToCss } from "../skyBodies";
 import {
   harborNow,
   loadAtmosphere,
@@ -78,7 +78,7 @@ export class HarborScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.roundPixels = true;
     this.lights.enable();
-    this.lights.setAmbientColor(0x8899aa);
+    this.lights.setAmbientColor(DAY_AMBIENT);
 
     this.world = new HarborWorld(this);
     this.night = new NightLights(this);

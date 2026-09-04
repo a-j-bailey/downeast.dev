@@ -97,7 +97,7 @@ export function skyCss(mood: WeatherMood): string {
 export function ambientColor(mood: WeatherMood): number {
   switch (mood) {
     case "clearDay":
-      return 0x8899aa;
+      return 0xe8e4d8;
     case "overcast":
       return 0x667788;
     case "rain":

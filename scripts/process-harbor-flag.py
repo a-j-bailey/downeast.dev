@@ -118,7 +118,8 @@ def main():
     x0, x1 = int(xs.min()), int(xs.max()) + 1
     y0, y1 = int(ys.min()), int(ys.max()) + 1
     pw = x1 - x0
-    y1b = min(y1, y0 + pw * 8)
+    # ~12× width at game scale so the pole reads above shack-a’s roof.
+    y1b = min(y1, y0 + pw * 12)
     pad = 6
     crop = pole[max(0, y0 - pad) : y1b + pad, max(0, x0 - pad) : x1 + pad]
     pole_im = proc(crop, 8)
