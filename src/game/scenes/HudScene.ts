@@ -5,7 +5,7 @@ import { HarborPostcard } from "../HarborPostcard";
 import { promptText, type InteractId } from "../interact";
 import { markPostcardShown, postcardForced } from "../postcard";
 import { readHarborMute } from "../soundBed";
-import { TEX } from "../textures";
+import { MUTE_CHIP, MUTE_HIT, MUTE_INSET, TEX } from "../textures";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
 import { harborNow, moodFromClock, nyClock, weatherFromQuery, type WeatherMood } from "../weather";
 
@@ -120,11 +120,7 @@ export class HudScene extends Phaser.Scene {
       .setOrigin(0, 0)
       .setScrollFactor(0)
       .setDepth(20)
-      .setInteractive({
-        useHandCursor: true,
-        hitArea: new Phaser.Geom.Rectangle(-4, -4, 20, 20),
-        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-      });
+      .setInteractive(muteHitConfig());
     this.muteIcon.on("pointerdown", () => {
       EventBus.emit("harbor-mute-toggle");
     });
@@ -291,7 +287,7 @@ export class HudScene extends Phaser.Scene {
     this.muteIcon.setVisible(show);
     if (show) {
       this.cameraHit.setInteractive({ useHandCursor: true });
-      this.muteIcon.setInteractive({ useHandCursor: true });
+      this.muteIcon.setInteractive(muteHitConfig());
     } else {
       this.cameraHit.disableInteractive();
       this.muteIcon.disableInteractive();
@@ -411,8 +407,8 @@ export class HudScene extends Phaser.Scene {
     this.glyph.setPosition(Math.round(this.viewW - 12 - this.clockText.width), 6);
     this.cameraIcon.setPosition(6, 6);
     this.cameraHit.setPosition(4, 4);
-    this.muteIcon.setTint(clockCream ? CREAM : INK);
-    this.muteIcon.setPosition(8, 6);
+    const inset = muteInset(this, this.viewW, this.viewH);
+    this.muteIcon.setPosition(inset.x, inset.y);
   }
 }
 
@@ -433,4 +429,37 @@ function glyphKey(mood: WeatherMood): string {
       return _exhaustive;
     }
   }
+}
+
+function cssSafeInset(side: "top" | "left"): number {
+  const key = side === "top" ? "--sat" : "--sal";
+  return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(key)) || 0;
+}
+
+function muteHitConfig(): {
+  useHandCursor: true;
+  hitArea: Phaser.Geom.Rectangle;
+  hitAreaCallback: typeof Phaser.Geom.Rectangle.Contains;
+} {
+  const offset = Math.floor((MUTE_CHIP - MUTE_HIT) / 2);
+  return {
+    useHandCursor: true,
+    hitArea: new Phaser.Geom.Rectangle(offset, offset, MUTE_HIT, MUTE_HIT),
+    hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+  };
+}
+
+function muteInset(
+  scene: Phaser.Scene,
+  viewW: number,
+  viewH: number,
+): { x: number; y: number } {
+  const canvas = scene.game.canvas;
+  const scaleX = Math.max(0.01, (canvas.clientWidth || viewW) / viewW);
+  const scaleY = Math.max(0.01, (canvas.clientHeight || viewH) / viewH);
+  const padX = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("left") / scaleX));
+  const padY = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("top") / scaleY));
+  // Postcard camera sits at (6, 6) with a 13px sprite; keep mute to its right.
+  const cameraRight = 6 + 13;
+  return { x: Math.max(padX, cameraRight + MUTE_INSET), y: padY };
 }

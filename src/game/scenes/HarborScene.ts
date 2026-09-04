@@ -377,8 +377,8 @@ export class HarborScene extends Phaser.Scene {
       if (this.postcardOpen || this.touchStick) {
         return;
       }
-      // Top HUD strip (mute). Do not walk there.
-      if (pointer.y < 22) {
+      // Mute chip + generous hit pad in the top HUD strip.
+      if (pointer.y < 56) {
         return;
       }
       const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
