@@ -578,13 +578,13 @@ export class HarborWorld {
       return;
     }
     const pose = flagPose(wind, this.waterPhase);
-    const key = flagTextureKey(pose.frame);
+    const key = flagTextureKey(pose);
     if (this.scene.textures.exists(key) && this.flag.texture.key !== key) {
       this.flag.setTexture(key);
     }
     this.flag.setFlipX(pose.flipX);
     this.flag.setOrigin(pose.flipX ? 1 : 0, 0);
-    this.flag.setAngle(pose.leanDeg);
+    this.flag.setAngle(0);
     const poleH = this.flagpole.displayHeight || this.flagpole.height;
     const hoistX = this.flagpole.x + (pose.flipX ? -2 : 2);
     const hoistY = this.flagpole.y - poleH + 10;
