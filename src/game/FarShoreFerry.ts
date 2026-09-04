@@ -5,7 +5,7 @@ import { WATER_SURFACE_Y, WORLD_WIDTH } from "./layout";
 import type { WeatherMood } from "./weather";
 
 /** One-way `?ferry=1` crossing. Real Bristol↔Prudence runs are 30 minutes. */
-export const FORCE_CROSSING_SEC = 240;
+export const FORCE_CROSSING_SEC = 90;
 const KEEL_Y = WATER_SURFACE_Y + 4;
 const MARGIN = 48;
 const DEPTH = 14;
