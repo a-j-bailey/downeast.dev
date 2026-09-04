@@ -20,6 +20,7 @@ export class HarborWorld {
   waterDeep?: Phaser.GameObjects.TileSprite;
   foam?: Phaser.GameObjects.TileSprite;
   shoreFoam?: Phaser.GameObjects.TileSprite;
+  shoreWash?: Phaser.GameObjects.TileSprite;
   wavesLayer?: Phaser.GameObjects.TileSprite;
   lighthouse?: Phaser.GameObjects.Image;
   farShore?: Phaser.GameObjects.TileSprite;
@@ -118,8 +119,20 @@ export class HarborWorld {
         "waves-foam",
       );
       this.shoreFoam.setScrollFactor(SCROLL.land);
-      this.shoreFoam.setDepth(36);
+      this.shoreFoam.setDepth(37);
       this.shoreFoam.setLighting(true);
+
+      this.shoreWash = this.scene.add.tileSprite(
+        WORLD_WIDTH / 2,
+        0,
+        WORLD_WIDTH + 128,
+        8,
+        this.scene.textures.exists("water-deep") ? "water-deep" : "waves-foam",
+      );
+      this.shoreWash.setScrollFactor(SCROLL.land);
+      this.shoreWash.setDepth(36);
+      this.shoreWash.setLighting(true);
+      this.shoreWash.setVisible(false);
     }
 
     if (this.scene.textures.exists("road-stone")) {
@@ -274,7 +287,7 @@ export class HarborWorld {
     const surfaceY = tideSurfaceY(level);
     const shoreY = tideShoreY(level);
     const waterTop = tideWaterTop(surfaceY);
-    const waterBot = Math.max(shoreY, waterTop + 48);
+    const waterBot = Math.max(shoreY, LAND_TOP_Y);
     this.surfaceY = surfaceY;
 
     const deepH = Math.max(56, waterBot - waterTop);
@@ -299,9 +312,19 @@ export class HarborWorld {
     if (this.shoreFoam) {
       this.shoreFoam.setPosition(WORLD_WIDTH / 2, shoreY);
     }
+    if (this.shoreWash) {
+      const washH = Math.max(0, shoreY - LAND_TOP_Y);
+      this.shoreWash.setVisible(washH > 0);
+      if (washH > 0) {
+        const h = Math.max(8, washH + 2);
+        this.shoreWash.setSize(WORLD_WIDTH + 128, h);
+        this.shoreWash.setPosition(WORLD_WIDTH / 2, Math.round(LAND_TOP_Y + washH / 2));
+      }
+    }
     if (this.landFill) {
-      const landH = WORLD_HEIGHT - shoreY + 8;
-      const landY = Math.round((shoreY + WORLD_HEIGHT) / 2);
+      const landTop = Math.min(LAND_TOP_Y, shoreY);
+      const landH = WORLD_HEIGHT - landTop + 8;
+      const landY = Math.round((landTop + WORLD_HEIGHT) / 2);
       this.landFill.setSize(WORLD_WIDTH, landH);
       this.landFill.setPosition(WORLD_WIDTH / 2, landY);
     }
@@ -353,6 +376,10 @@ export class HarborWorld {
       this.shoreFoam.tilePositionX = Math.sin(t * 1.6 + 2.1) * 2.4;
       this.shoreFoam.tilePositionY = Math.sin(t * 1.9 + 0.4) * 0.5;
       this.shoreFoam.setAlpha(0.22 + 0.28 * (0.5 + 0.5 * Math.sin(t * 1.7 + 1.1)));
+    }
+    if (this.shoreWash) {
+      this.shoreWash.tilePositionX = Math.sin(t * 0.9 + 0.4) * 1.2;
+      this.shoreWash.setAlpha(0.72 + 0.1 * Math.sin(t * 1.5));
     }
   }
 
