@@ -1,5 +1,6 @@
 /**
- * American flag at the seaward end of the wood dock.
+ * American flag next to the leftmost village shack (Zoning Radar),
+ * on the land side of the seawall — not on the pier.
  *
  * Wind: Open-Meteo `wind_speed_10m` (km/h) and `wind_direction_10m`
  * (meteorological, degrees FROM). Direction's east-west component chooses
@@ -25,11 +26,8 @@ export type FlagPose = {
 export const FLAG_FRAME_COUNT = 4;
 export const FLAG_KEYS = ["flag-0", "flag-1", "flag-2", "flag-3"] as const;
 
-/** Left / open-water end of the wood finger-dock. Feet sit on the deck. */
-export const FLAGPOLE_PLACE = {
-  x: PLACES.dock.x - 56,
-  y: PLACES.dock.y - 24,
-} as const;
+/** Just left of shack-a, feet on the land / seawall line. */
+export const FLAGPOLE_PLACE = PLACES.flagpole;
 
 const LIMP_KMH = 2.4;
 

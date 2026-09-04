@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { SCROLL } from "./layers";
 import {
   DOCK_DEPTH,
+  FLAGPOLE_DEPTH,
   HORIZON_Y,
   LAND_BOTTOM_Y,
   LAND_TOP_Y,
@@ -574,7 +575,7 @@ export class HarborWorld {
         "flagpole",
         FLAGPOLE_PLACE.x,
         FLAGPOLE_PLACE.y,
-        { depth: DOCK_DEPTH + 5 },
+        { depth: FLAGPOLE_DEPTH },
       );
     }
     const flagKey = FLAG_KEYS.find((key) => this.scene.textures.exists(key));
@@ -583,7 +584,7 @@ export class HarborWorld {
       this.flag.setName("harbor-flag");
       this.flag.setOrigin(0, 0);
       this.flag.setScrollFactor(SCROLL.land);
-      this.flag.setDepth(DOCK_DEPTH + 6);
+      this.flag.setDepth(FLAGPOLE_DEPTH + 1);
       this.flag.setLighting(true);
       this.placed.add("harbor-flag");
     }
@@ -608,7 +609,7 @@ export class HarborWorld {
     const hoistX = this.flagpole.x + (pose.flipX ? -2 : 2);
     const hoistY = this.flagpole.y - poleH + 10;
     this.flag.setPosition(hoistX, hoistY);
-    this.flag.setDepth(DOCK_DEPTH + 6);
+    this.flag.setDepth(FLAGPOLE_DEPTH + 1);
   }
 
   private placeClouds(): void {
