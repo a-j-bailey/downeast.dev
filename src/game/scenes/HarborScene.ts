@@ -29,12 +29,20 @@ import {
   WALKER_Y,
   WORLD_WIDTH,
 } from "../layout";
-import { loadTideLevel, tideShoreY, tideSurfaceY } from "../tide";
+import {
+  levelFromOverride,
+  loadTideLevel,
+  tideFromQuery,
+  tideShoreY,
+  tideSurfaceY,
+} from "../tide";
 import { DEFAULT_WIND, type WindSample } from "../flag";
 import { DAY_AMBIENT, colorToCss, hudUsesCream } from "../skyBodies";
 import {
   harborNow,
   loadAtmosphere,
+  moodFromClock,
+  weatherFromQuery,
   type WeatherMood,
 } from "../weather";
 import {
@@ -119,7 +127,17 @@ export class HarborScene extends Phaser.Scene {
     bindPixelSnap(this);
     this.scale.on("resize", this.onResize, this);
 
-    void loadAtmosphere(window.location.search).then((atmo) => {
+    const search = window.location.search;
+    const bootMood = weatherFromQuery(search) ?? moodFromClock(harborNow(search));
+    this.applyMood(bootMood);
+    const bootTide = tideFromQuery(search);
+    if (bootTide) {
+      this.tideLevel = levelFromOverride(bootTide);
+      this.tideTarget = this.tideLevel;
+      this.world.applyTide(this.tideLevel);
+    }
+
+    void loadAtmosphere(search).then((atmo) => {
       if (!this.sys.isActive()) {
         return;
       }
@@ -129,11 +147,14 @@ export class HarborScene extends Phaser.Scene {
       };
       this.applyMood(atmo.mood);
     });
-    void loadTideLevel(window.location.search).then((level) => {
+    void loadTideLevel(search).then((level) => {
       if (!this.sys.isActive()) {
         return;
       }
       this.tideTarget = level;
+      if (bootTide) {
+        this.tideLevel = level;
+      }
     });
 
     this.time.addEvent({
@@ -162,7 +183,6 @@ export class HarborScene extends Phaser.Scene {
       });
     }
 
-    const search = window.location.search;
     if (
       playtestFlag(search, "berth") ||
       playtestFlag(search, "boat") ||

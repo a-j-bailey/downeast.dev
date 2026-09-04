@@ -9,7 +9,7 @@ import type { WeatherMood } from "./weather";
 export const FORCE_CROSSING_SEC = 90;
 const LAYER = SCROLL.farShore;
 const CABIN_OY = -11;
-const HULL_TINT = 0xf2eee4;
+const HULL_TINT = 0xfffcf0;
 
 /** Distant Prudence Island ferry on the far-shore water lane. */
 export class FarShoreFerry {
@@ -41,7 +41,7 @@ export class FarShoreFerry {
 
     if (this.scene.textures.exists("glow-window")) {
       this.cabinGlow = this.scene.add.image(this.sprite.x, this.sprite.y + CABIN_OY, "glow-window");
-      this.cabinGlow.setDisplaySize(6, 4);
+      this.cabinGlow.setDisplaySize(8, 5);
       this.cabinGlow.setScrollFactor(LAYER);
       this.cabinGlow.setDepth(DEPTH.ferry + 1);
       this.cabinGlow.setBlendMode(Phaser.BlendModes.ADD);
@@ -124,7 +124,7 @@ export class FarShoreFerry {
       const cam = this.scene.cameras.main;
       this.cabinLight.x = Math.round(cabinX + cam.scrollX * (1 - LAYER));
       this.cabinLight.y = Math.round(cabinY + cam.scrollY * (1 - LAYER));
-      this.cabinLight.setIntensity(on ? 1.2 : 0);
+      this.cabinLight.setIntensity(on ? 1.7 : 0);
       this.cabinLight.setVisible(on);
     }
   }

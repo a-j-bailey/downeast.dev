@@ -230,7 +230,7 @@ function mixWeather(
         ambient: lerpColor(solar.ambient, 0x889099, 0.55),
       };
     case "night":
-      return { sky: 0x0a0e16, ambient: 0x243044 };
+      return { sky: 0x0a0e16, ambient: 0x1a2436 };
     default: {
       const _exhaustive: never = mood;
       return _exhaustive;

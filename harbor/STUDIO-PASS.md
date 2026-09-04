@@ -28,7 +28,7 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 | 1 | Wordmark is visually hidden (sr-only `h1` kept). Pixel sky is clear. |
 | 2 | Tall phones match production framing: `viewW = 270 × parentAspect` (≥200), canvas **fills parent**. Landscape FIT letterbox. `image-rendering: pixelated`. No integer-zoom crop. |
 | 3 | Cream HUD clock when sky luminance is low, plus night / rain / fog / `isDark`. Clock inset `viewW-10`. |
-| 4 | Forced night uses a fixed navy sky + dark ambient (`0x0a0e16` / `0x243044`). Windows and lamps stay accents. |
+| 4 | Forced night uses a fixed navy sky + dark ambient (`0x0a0e16` / `0x1a2436`). Windows and lamps stay accents. |
 | 5 | Tide half-range 12px (24px high vs low). |
 | 6 | Ferry in the visible lane (`48`…`WORLD_WIDTH-48`), in front of water, unlit + cream tint, cabin glow at night. |
 | 7 | More postcard margin; Keep walking is a solid ink chip with cream type. Force delay 400ms. |
@@ -46,7 +46,23 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 | 19 | Virtual stick lower-left and ~17% smaller; chip does not sit on it. |
 | 20 | Berth camera looks seaward 18px so a 200-wide phone shows water past the bow. |
 
-## Playtest notes
+## QA re-verify (production critique 1–8)
+
+The eight-item GROK_BOT pass was against **production main**, which did not include this branch. Re-checked here:
+
+| # | Verdict |
+| --- | --- |
+| 1 HTML title | Wordmark is sr-only (`clip` + `clip-path` + transparent type). Pixel cloud is the logo. |
+| 2 Soft scale | Tall phones still **fill** the parent (Adam). CSS size is integer px; `image-rendering: pixelated`. Non-uniform stretch is the fill tradeoff — integer zoom crops the boat. |
+| 3 Clock | Cream on night / rain / fog / dusk (sky lum < 152). Hud boots cream when the clock or `?weather=` says dark, so it does not flash ink. |
+| 4 Night | Forced night is navy sky `0x0a0e16` + ambient `0x1a2436` on create (not after fetch). |
+| 5 Tide | Half-range 12px (24px high vs low). `?tide=` snaps immediately instead of easing from mid. |
+| 6 Ferry | Visible lane, cream hull tint, larger cabin glow at night. `?ferry=1` |
+| 7 Postcard | Keep walking is a solid ink chip; slightly taller hit. `?card=1` |
+| 8 Touch | Stick on touch / coarse / ≤720 / tall / `?stick=1`. Chip + 22px hit zone. |
+
+Spawn #27 and flag #28 are already on this branch (merge-base `e1918e3`). No rebase.
+
 
 - Spawn between flagpole and shack-a is already on `main` (#27).
 - Flag limp / half / full-out is already on `main` (#28) — left alone.

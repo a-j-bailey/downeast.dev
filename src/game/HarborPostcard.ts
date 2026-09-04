@@ -14,7 +14,7 @@ const FONT_SIZE = 7;
 const OUTER = 2;
 const PAD = 6;
 const GAP = 5;
-const BTN_H = 16;
+const BTN_H = 18;
 const DEPTH = 50;
 const LINE1 = "GREETINGS FROM";
 const LINE2 = "DOWNEAST.DEV";
@@ -215,7 +215,7 @@ export class HarborPostcard {
     this.shareHit.setPosition(box.shareX, box.btnY);
     this.shareHit.setSize(box.btnW, BTN_H);
     this.laterHit.setPosition(box.laterX, box.btnY);
-    this.laterHit.setSize(box.btnW, BTN_H);
+    this.laterHit.setSize(box.btnW, BTN_H + 4);
     this.shareText.setPosition(box.shareX + 5, box.btnY + 3);
     this.laterText.setPosition(box.laterX + 5, box.btnY + 4);
 

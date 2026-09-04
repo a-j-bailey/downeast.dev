@@ -6,7 +6,7 @@ import { promptText, type InteractId } from "../interact";
 import { markPostcardShown, postcardForced } from "../postcard";
 import { TEX } from "../textures";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
-import { nyClock, type WeatherMood } from "../weather";
+import { harborNow, moodFromClock, nyClock, weatherFromQuery, type WeatherMood } from "../weather";
 
 /** Chip height tuned for 7px bitmap glyphs + padding. */
 const CHIP_H = 16;
@@ -84,13 +84,19 @@ export class HudScene extends Phaser.Scene {
       .setDepth(21)
       .setTint(INK);
 
-    this.glyph = this.add.image(0, 0, TEX.glyphClear).setOrigin(1, 0).setScrollFactor(0).setDepth(20);
+    const bootMood =
+      weatherFromQuery(window.location.search) ?? moodFromClock(harborNow(window.location.search));
+    this.mood = bootMood;
+    this.isDark = bootMood === "night";
+    this.hudCream = bootMood === "night" || bootMood === "rain" || bootMood === "fog";
+
+    this.glyph = this.add.image(0, 0, glyphKey(bootMood)).setOrigin(1, 0).setScrollFactor(0).setDepth(20);
     this.clockText = this.add
       .bitmapText(0, 0, "hud-font", nyClock(), FONT_SIZE)
       .setOrigin(1, 0)
       .setScrollFactor(0)
       .setDepth(20)
-      .setTint(CREAM);
+      .setTint(this.hudCream || this.isDark ? CREAM : INK);
 
     this.cameraIcon = this.add
       .image(0, 0, TEX.camera)
