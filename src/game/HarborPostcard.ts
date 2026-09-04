@@ -193,14 +193,9 @@ export class HarborPostcard {
     this.grain.setSize(box.w - OUTER * 2, box.h - OUTER * 2);
 
     if (this.photo) {
-      const scale = box.photoScale;
-      const texW = Math.round(box.photoW / scale);
-      const texH = Math.round(box.photoH / scale);
-      const srcW = this.photo.frame.width;
-      const srcH = this.photo.frame.height;
-      this.photo.setCrop(box.cropX, box.cropY, texW, texH);
-      this.photo.setDisplaySize(srcW * scale, srcH * scale);
-      this.photo.setPosition(box.photoX - box.cropX * scale, box.photoY - box.cropY * scale);
+      this.photo.setCrop(box.cropX, box.cropY, box.photoW, box.photoH);
+      this.photo.setDisplaySize(box.photoW, box.photoH);
+      this.photo.setPosition(box.photoX - box.cropX, box.photoY - box.cropY);
     }
 
     if (box.splitX > 0) {
@@ -241,7 +236,6 @@ export class HarborPostcard {
     photoY: number;
     photoW: number;
     photoH: number;
-    photoScale: number;
     cropX: number;
     cropY: number;
     writeX: number;
@@ -270,15 +264,17 @@ export class HarborPostcard {
     const stampH = this.stamp?.height ?? 24;
     const sideBySide = this.viewW >= 400;
     const writeCol = Math.max(captionW, buttonsW, stampW + 4);
+
+    let photoW = nativeW;
+    let photoH = nativeH;
     const maxCardW = this.viewW - 8;
     const maxCardH = this.viewH - 8;
 
     if (sideBySide) {
-      const maxPhotoW = Math.max(96, maxCardW - (OUTER * 2 + PAD + GAP + writeCol + PAD));
-      const maxPhotoH = Math.max(64, maxCardH - (OUTER * 2 + PAD * 2));
-      const fit = integerFit(nativeW, nativeH, maxPhotoW, maxPhotoH);
-      const photoW = fit.photoW;
-      const photoH = fit.photoH;
+      const wantW = OUTER * 2 + PAD + photoW + GAP + writeCol + PAD;
+      if (wantW > maxCardW) {
+        photoW = Math.max(96, maxCardW - (OUTER * 2 + PAD + GAP + writeCol + PAD));
+      }
       const writeH = stampH + GAP + FONT_SIZE * 2 + 4 + 20 + GAP + BTN_H;
       const bodyH = Math.max(photoH, writeH);
       const cardW = OUTER * 2 + PAD + photoW + GAP + writeCol + PAD;
@@ -288,6 +284,8 @@ export class HarborPostcard {
       const photoX = x + OUTER + PAD;
       const photoY = y + OUTER + PAD;
       const writeX = photoX + photoW + GAP + 4;
+      const cropX = Math.floor((nativeW - photoW) / 2);
+      const cropY = Math.floor((nativeH - photoH) / 2);
       const captionY = photoY + stampH + GAP;
       return {
         x,
@@ -298,9 +296,8 @@ export class HarborPostcard {
         photoY,
         photoW,
         photoH,
-        photoScale: fit.scale,
-        cropX: fit.cropX,
-        cropY: fit.cropY,
+        cropX,
+        cropY,
         writeX,
         writeW: writeCol,
         splitX: photoX + photoW + Math.floor(GAP / 2) + 1,
@@ -317,14 +314,8 @@ export class HarborPostcard {
 
     const chromeW = OUTER * 2 + PAD * 2;
     const chromeH = OUTER * 2 + PAD * 2 + FONT_SIZE * 2 + 4 + GAP + BTN_H + GAP;
-    const fit = integerFit(
-      nativeW,
-      nativeH,
-      Math.max(96, maxCardW - chromeW),
-      Math.max(64, maxCardH - chromeH),
-    );
-    const photoW = fit.photoW;
-    const photoH = fit.photoH;
+    photoW = Math.min(nativeW, Math.max(96, maxCardW - chromeW));
+    photoH = Math.min(nativeH, Math.max(64, maxCardH - chromeH));
     const innerW = Math.max(photoW, captionW, buttonsW, stampW);
     const cardW = innerW + chromeW;
     const cardH = photoH + chromeH;
@@ -335,6 +326,8 @@ export class HarborPostcard {
     const writeX = x + OUTER + PAD;
     const captionY = photoY + photoH + GAP;
     const btnY = captionY + FONT_SIZE * 2 + 4 + GAP;
+    const cropX = Math.floor((nativeW - photoW) / 2);
+    const cropY = Math.floor((nativeH - photoH) / 2);
     return {
       x,
       y,
@@ -344,9 +337,8 @@ export class HarborPostcard {
       photoY,
       photoW,
       photoH,
-      photoScale: fit.scale,
-      cropX: fit.cropX,
-      cropY: fit.cropY,
+      cropX,
+      cropY,
       writeX,
       writeW: innerW,
       splitX: 0,
@@ -406,29 +398,6 @@ export class HarborPostcard {
     this.shareText = undefined;
     this.laterText = undefined;
   }
-}
-
-function integerFit(
-  nativeW: number,
-  nativeH: number,
-  maxW: number,
-  maxH: number,
-): { scale: number; photoW: number; photoH: number; cropX: number; cropY: number } {
-  let scale = 1;
-  while (scale > 0.25 && (nativeW * scale > maxW || nativeH * scale > maxH)) {
-    scale /= 2;
-  }
-  const photoW = Math.floor(Math.min(nativeW * scale, maxW));
-  const photoH = Math.floor(Math.min(nativeH * scale, maxH));
-  const cropW = Math.round(photoW / scale);
-  const cropH = Math.round(photoH / scale);
-  return {
-    scale,
-    photoW,
-    photoH,
-    cropX: Math.max(0, Math.floor((nativeW - cropW) / 2)),
-    cropY: Math.max(0, Math.floor((nativeH - cropH) / 2)),
-  };
 }
 
 function dashHLine(g: Phaser.GameObjects.Graphics, x: number, y: number, width: number): void {

@@ -21,9 +21,11 @@ SPRITES = DST
 
 CREAM = np.array([254, 250, 240], dtype=np.int16)
 
-# 16:9 SNES-ish postcard. Integer 0.5 display is 192×108 on the HUD.
-HARBOR_W = 384
-HARBOR_H = 216
+# 16:9 SNES-ish compose. Runtime PNG is a 2× nearest of this (192×108).
+COMPOSE_W = 384
+COMPOSE_H = 216
+HARBOR_W = 192
+HARBOR_H = 108
 HORIZON = 96
 LAND_Y = 164
 SOURCE_W = 1536
@@ -81,7 +83,7 @@ def paint_sky(dst: np.ndarray) -> None:
 
 
 def compose_harbor() -> np.ndarray:
-    dst = np.zeros((HARBOR_H, HARBOR_W, 4), dtype=np.uint8)
+    dst = np.zeros((COMPOSE_H, COMPOSE_W, 4), dtype=np.uint8)
     dst[:, :, 3] = 255
     paint_sky(dst)
 
@@ -103,17 +105,17 @@ def compose_harbor() -> np.ndarray:
     sun = load_sprite("sun.png")
     cloud = load_sprite("cloud.png")
 
-    fill_tile(dst, far_shore, 0, HORIZON - far_shore.shape[0], HARBOR_W, far_shore.shape[0])
-    fill_tile(dst, water_deep, 0, HORIZON, HARBOR_W, LAND_Y - HORIZON)
-    fill_tile(dst, water, 0, HORIZON, HARBOR_W, water.shape[0])
-    fill_tile(dst, foam, 0, HORIZON, HARBOR_W, foam.shape[0])
-    fill_tile(dst, road, 0, LAND_Y, HARBOR_W, HARBOR_H - LAND_Y)
-    fill_tile(dst, planks, 0, LAND_Y, HARBOR_W, 28)
+    fill_tile(dst, far_shore, 0, HORIZON - far_shore.shape[0], COMPOSE_W, far_shore.shape[0])
+    fill_tile(dst, water_deep, 0, HORIZON, COMPOSE_W, LAND_Y - HORIZON)
+    fill_tile(dst, water, 0, HORIZON, COMPOSE_W, water.shape[0])
+    fill_tile(dst, foam, 0, HORIZON, COMPOSE_W, foam.shape[0])
+    fill_tile(dst, road, 0, LAND_Y, COMPOSE_W, COMPOSE_H - LAND_Y)
+    fill_tile(dst, planks, 0, LAND_Y, COMPOSE_W, 28)
 
     wall_y = LAND_Y - 16
     wall_w = seawall.shape[1]
     x = 120
-    while x < HARBOR_W:
+    while x < COMPOSE_W:
         blit(dst, seawall, x, wall_y)
         x += wall_w - 1
 
@@ -125,7 +127,7 @@ def compose_harbor() -> np.ndarray:
 
     blit(dst, dock, 12, LAND_Y - 8)
     blit(dst, pier, 2, LAND_Y - 4)
-    blit(dst, boat, 6, HARBOR_H - boat.shape[0] - 2)
+    blit(dst, boat, 6, COMPOSE_H - boat.shape[0] - 2)
 
     blit(dst, sun, 36, HORIZON - 22)
     blit(dst, cloud, 88, 14)
@@ -191,9 +193,9 @@ def save(name: str, a: np.ndarray) -> None:
 
 
 def write_source_sheet(harbor: np.ndarray) -> None:
-    """4× nearest of the compose, padded to the 1536×1024 sheet size."""
+    """4× nearest of the 384 compose, padded to the 1536×1024 sheet size."""
     SRC.mkdir(parents=True, exist_ok=True)
-    scaled = Image.fromarray(harbor, "RGBA").resize((HARBOR_W * 4, HARBOR_H * 4), Image.Resampling.NEAREST)
+    scaled = Image.fromarray(harbor, "RGBA").resize((COMPOSE_W * 4, COMPOSE_H * 4), Image.Resampling.NEAREST)
     sheet = Image.new("RGBA", (SOURCE_W, SOURCE_H), (254, 250, 240, 255))
     sheet.paste(scaled, (0, 0))
     sheet.save(SRC / "postcard-harbor.png", "PNG")
@@ -201,9 +203,12 @@ def write_source_sheet(harbor: np.ndarray) -> None:
 
 
 def main() -> None:
-    harbor = compose_harbor()
-    save("postcard-harbor.png", harbor)
-    write_source_sheet(harbor)
+    compose = compose_harbor()
+    runtime = np.asarray(
+        Image.fromarray(compose, "RGBA").resize((HARBOR_W, HARBOR_H), Image.Resampling.NEAREST),
+    )
+    save("postcard-harbor.png", runtime)
+    write_source_sheet(compose)
 
     stamp = np.asarray(Image.open(SRC / "postcard-stamp.png").convert("RGBA"))
     stamp = flood_knockout(stamp)

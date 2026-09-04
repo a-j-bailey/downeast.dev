@@ -41,6 +41,6 @@ If you need a new prop: generate a sheet, drop it in `source/sheets/`, slice and
 
 ## Postcard
 
-`postcard-harbor.png` is a 384×216 souvenir compose of the existing processed sprites (boat, dock, shacks, cafe, lighthouse, water tiles, seawall). Sky is hard color bands, same idea as the in-game sky rectangle. Do **not** cream-key it (the sky must stay) and do **not** majority-vote a painterly sheet — that crush is what made the first card grainy.
+`postcard-harbor.png` is a 192×108 souvenir (2× nearest of a 384×216 compose of the existing processed sprites: boat, dock, shacks, cafe, lighthouse, water tiles, seawall). Sky is hard color bands, same idea as the in-game sky rectangle. Do **not** cream-key it (the sky must stay) and do **not** majority-vote a painterly sheet — that crush is what made the first card grainy.
 
 `scripts/process-postcard-art.py` writes the processed PNG and a 4× nearest source sheet. Stamp still comes from its generated sheet. HUD chrome (frame, buttons, grain) stays in `HarborPostcard.ts`.
