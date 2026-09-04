@@ -56,6 +56,8 @@ html.harbor-play #root {
   margin: 0;
   overflow: hidden;
   background: var(--harbor-sky, #5b93c5);
+  --sat: env(safe-area-inset-top, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
 
 body {

@@ -3,7 +3,7 @@ import { applyHudCamera } from "../camera";
 import { EventBus } from "../EventBus";
 import { promptText, type InteractId } from "../interact";
 import { readHarborMute } from "../soundBed";
-import { TEX } from "../textures";
+import { MUTE_CHIP, MUTE_HIT, MUTE_INSET, TEX } from "../textures";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
 import { nyClock, type WeatherMood } from "../weather";
 
@@ -83,7 +83,12 @@ export class HudScene extends Phaser.Scene {
       .setDepth(20)
       .setInteractive({
         useHandCursor: true,
-        hitArea: new Phaser.Geom.Rectangle(-4, -4, 20, 20),
+        hitArea: new Phaser.Geom.Rectangle(
+          Math.floor((MUTE_CHIP - MUTE_HIT) / 2),
+          Math.floor((MUTE_CHIP - MUTE_HIT) / 2),
+          MUTE_HIT,
+          MUTE_HIT,
+        ),
         hitAreaCallback: Phaser.Geom.Rectangle.Contains,
       });
     this.muteIcon.on("pointerdown", () => {
@@ -280,8 +285,8 @@ export class HudScene extends Phaser.Scene {
     this.clockText.setTint(clockCream ? CREAM : INK);
     this.clockText.setPosition(this.viewW - 6, 6);
     this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
-    this.muteIcon.setTint(clockCream ? CREAM : INK);
-    this.muteIcon.setPosition(8, 6);
+    const inset = muteInset(this, this.viewW, this.viewH);
+    this.muteIcon.setPosition(inset.x, inset.y);
   }
 }
 
@@ -302,4 +307,22 @@ function glyphKey(mood: WeatherMood): string {
       return _exhaustive;
     }
   }
+}
+
+function cssSafeInset(side: "top" | "left"): number {
+  const key = side === "top" ? "--sat" : "--sal";
+  return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(key)) || 0;
+}
+
+function muteInset(
+  scene: Phaser.Scene,
+  viewW: number,
+  viewH: number,
+): { x: number; y: number } {
+  const canvas = scene.game.canvas;
+  const scaleX = Math.max(0.01, (canvas.clientWidth || viewW) / viewW);
+  const scaleY = Math.max(0.01, (canvas.clientHeight || viewH) / viewH);
+  const padX = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("left") / scaleX));
+  const padY = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("top") / scaleY));
+  return { x: padX, y: padY };
 }
