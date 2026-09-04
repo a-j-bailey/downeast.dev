@@ -69,14 +69,12 @@ export class FarShoreFerry {
     if (!this.sprite) {
       return;
     }
-    const cam = this.scene.cameras.main;
-    const viewW = cam.width || 480;
     const p = Phaser.Math.Clamp(progress, 0, 1);
     const right = bowFacesRight(from);
-    const screenSpan = Math.max(120, viewW - MARGIN * 2);
-    const screenX = right ? MARGIN + screenSpan * p : MARGIN + screenSpan * (1 - p);
-    const worldX = Math.round(screenX + cam.scrollX * LAYER);
-    this.sprite.setPosition(worldX, KEEL_Y);
+    const x0 = MARGIN;
+    const x1 = WORLD_WIDTH - MARGIN;
+    const worldX = right ? x0 + (x1 - x0) * p : x1 - (x1 - x0) * p;
+    this.sprite.setPosition(Math.round(worldX), KEEL_Y);
     this.sprite.setFlipX(!right);
     this.sprite.setDepth(DEPTH);
   }
