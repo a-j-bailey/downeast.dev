@@ -35,6 +35,8 @@ export const PLACES = {
   shackB: { x: 338, y: LAND_TOP_Y },
   coffee: { x: 448, y: LAND_TOP_Y },
   lighthouse: { x: 390, y: 118 },
+  farCottageA: { x: 208, y: HORIZON_Y },
+  farCottageB: { x: 508, y: HORIZON_Y },
   signGithub: { x: 560, y: LAND_TOP_Y },
   signX: { x: 608, y: LAND_TOP_Y },
   // Kayak is the Weather Otter interact; paddle is dressing only.

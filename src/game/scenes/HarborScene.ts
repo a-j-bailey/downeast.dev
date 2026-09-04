@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { STREAM_IMAGES, artUrl } from "../assets";
 import { AmbientCritters } from "../AmbientCritters";
 import { BoatController } from "../BoatController";
+import { FarShoreFerry } from "../FarShoreFerry";
 import { HarborWorld } from "../buildWorld";
 import { applyHarborCamera, harborViewSize, snapHarborCamera } from "../camera";
 import { EventBus } from "../EventBus";
@@ -52,6 +53,7 @@ export class HarborScene extends Phaser.Scene {
   private boat!: BoatController;
   private night!: NightLights;
   private critters!: AmbientCritters;
+  private ferry!: FarShoreFerry;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd?: Keys;
   private possession: Possession = "walker";
@@ -84,6 +86,7 @@ export class HarborScene extends Phaser.Scene {
     this.night = new NightLights(this);
     this.boat = new BoatController(this, this.night);
     this.critters = new AmbientCritters(this);
+    this.ferry = new FarShoreFerry(this, window.location.search);
 
     this.makeAnims();
     this.world.buildBase();
@@ -155,6 +158,7 @@ export class HarborScene extends Phaser.Scene {
     this.critters.update(dt);
     const sky = this.syncSky();
     this.world.updateFlag(this.wind);
+    this.ferry.update(dt, this.mood);
     this.night.updateBeam(dt, sky.isDark);
     this.night.updatePlayerLantern(
       this.player,
@@ -262,6 +266,7 @@ export class HarborScene extends Phaser.Scene {
   private placeReadyProps(): void {
     this.world.placeReadyProps();
     this.night.setLighthouse(this.world.lighthouse);
+    this.ferry.place();
     this.boat.place();
     this.night.ensureDecor(this.skyIsDark);
     this.syncSky();
