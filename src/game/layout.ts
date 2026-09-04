@@ -108,9 +108,9 @@ export function boatSternOffsetX(facingRight: boolean): number {
   return facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
 }
 
-/** Cockpit from hull origin (0.5, 1). Unflipped cabin sits slightly bow-ward. */
-export const BOAT_SEAT_X = 8;
-export const BOAT_SEAT_Y = -22;
+/** Cockpit from hull origin (0.5, 1). Unflipped cabin sits slightly bow-ward of center. */
+export const BOAT_SEAT_X = 14;
+export const BOAT_SEAT_Y = -20;
 export const BOAT_PASSENGER_SCALE = 0.5;
 export const WAKE_SPEED = 10;
 

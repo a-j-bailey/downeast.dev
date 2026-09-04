@@ -4,7 +4,13 @@ import { AmbientCritters } from "../AmbientCritters";
 import { BoatController } from "../BoatController";
 import { FarShoreFerry } from "../FarShoreFerry";
 import { HarborWorld } from "../buildWorld";
-import { applyHarborCamera, bindPixelSnap, harborViewSize, snapHarborCamera } from "../camera";
+import {
+  applyHarborCamera,
+  bindPixelSnap,
+  harborViewSize,
+  snapHarborCamera,
+  syncHarborFollowOffset,
+} from "../camera";
 import { EventBus } from "../EventBus";
 import { NightLights } from "../NightLights";
 import { SCROLL } from "../layers";
@@ -213,6 +219,9 @@ export class HarborScene extends Phaser.Scene {
     );
     this.world.twinkleSky(dt, sky.isDark, this.time.now);
     this.refreshPrompt();
+    const follow =
+      this.possession === "boat" && this.boat.sprite ? this.boat.sprite : this.player;
+    syncHarborFollowOffset(this, follow);
     snapHarborCamera(this);
   }
 

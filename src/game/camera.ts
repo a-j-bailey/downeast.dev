@@ -1,4 +1,5 @@
 import type Phaser from "phaser";
+import { PLACES, SEAWALL_LEFT_X } from "./layout";
 import {
   VIEW_HEIGHT,
   VIEW_WIDTH,
@@ -45,14 +46,36 @@ export function applyHarborCamera(
   cam.setBounds(WORLD_MIN_X, 0, WORLD_SPAN, WORLD_HEIGHT);
   cam.setSize(view.width, view.height);
   if (follow) {
-    // Keep roughly the top third as sky for the wordmark.
-    const skyPad = Math.round(VIEW_HEIGHT / 3 - 24);
     // Hard follow on X (lerp 1) so scroll stays integer — smooth 0.12 lerp
     // made buildings/signs shimmer while walking.
     cam.startFollow(follow, true, 1, 1);
-    cam.setFollowOffset(0, -skyPad);
     cam.setDeadzone(Math.round(view.width / 5), Math.round(VIEW_HEIGHT / 8));
+    syncHarborFollowOffset(scene, follow);
   }
+}
+
+function followWorldX(follow: Phaser.GameObjects.GameObject): number | undefined {
+  const x = (follow as { x?: unknown }).x;
+  return typeof x === "number" ? x : undefined;
+}
+
+/**
+ * At the finger-dock, bias the camera seaward so a 200-wide phone view
+ * shows water past the bow instead of cropping the stem.
+ */
+export function syncHarborFollowOffset(
+  scene: Phaser.Scene,
+  follow?: Phaser.GameObjects.GameObject,
+): void {
+  const cam = mainCamera(scene);
+  if (!cam || !follow) {
+    return;
+  }
+  const skyPad = Math.round(VIEW_HEIGHT / 3 - 24);
+  const fx = followWorldX(follow);
+  const atBerth =
+    typeof fx === "number" && fx < SEAWALL_LEFT_X + 40 && fx > PLACES.boat.x - 80;
+  cam.setFollowOffset(atBerth ? 18 : 0, -skyPad);
 }
 
 /** Snap camera scroll to whole pixels after follow — kills prop shimmer. */

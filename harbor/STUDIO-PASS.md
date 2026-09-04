@@ -43,7 +43,8 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 | 16 | `roundPixels` on game + cameras. Snap scroll/sprites on Scene `prerender` (after follow). Parallax layers use integer `home + scroll*(1-sf)`. |
 | 17 | Wake sprite off the stern while the hull has speed; hidden at berth. |
 | 18 | Boarded player is visible in the cockpit (scaled, flipped with facing). |
-| 19 | Virtual stick lower and ~17% smaller. |
+| 19 | Virtual stick lower-left and ~17% smaller; chip does not sit on it. |
+| 20 | Berth camera looks seaward 18px so a 200-wide phone shows water past the bow. |
 
 ## Playtest notes
 
@@ -55,7 +56,7 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 - Berth: dock `x=36`, boat `x=44` (was 96/98). Seawall still at 166. Light dock is behind the walker. Whole 171px hull fits a 200-wide phone view with water past the bow.
 - Wake: `wake.png` off the stern while underway; hidden when stopped/berthed.
 - Boarded walker sits in the cockpit at 0.5 scale (navy sweater), hidden lantern; restored on disembark.
-- Stick: radius 30, `viewH-16` (was 36 / `viewH-36`).
+- Stick: radius 30 (~17% smaller than 36), lower-left (`viewH-10`, `x = radius+10`) so it sits over water instead of the cabin. Interact chip stays bottom-center (shifts right of the stick on a 200-wide phone).
 - `?berth=1` stands on the light dock. `?boat=1` boards at the berth.
 
 
