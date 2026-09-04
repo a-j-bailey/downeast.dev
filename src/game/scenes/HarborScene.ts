@@ -438,10 +438,43 @@ export class HarborScene extends Phaser.Scene {
       return;
     }
 
-    const fixtures: { x: number; y: number; windowOx: number; windowOy: number; lampOx: number }[] = [
-      { x: PLACES.coffee.x, y: PLACES.coffee.y, windowOx: -18, windowOy: -48, lampOx: 8 },
-      { x: PLACES.shackA.x, y: PLACES.shackA.y, windowOx: -10, windowOy: -42, lampOx: 6 },
-      { x: PLACES.shackB.x, y: PLACES.shackB.y, windowOx: -8, windowOy: -40, lampOx: 4 },
+    const fixtures: {
+      x: number;
+      y: number;
+      windowOx: number;
+      windowOy: number;
+      windowW: number;
+      windowH: number;
+      lampOx: number;
+    }[] = [
+      // Offsets from origin (0.5, 1) using window bboxes in the processed PNGs.
+      {
+        x: PLACES.coffee.x,
+        y: PLACES.coffee.y,
+        windowOx: -22,
+        windowOy: -30,
+        windowW: 36,
+        windowH: 18,
+        lampOx: 8,
+      },
+      {
+        x: PLACES.shackA.x,
+        y: PLACES.shackA.y,
+        windowOx: 13,
+        windowOy: -34,
+        windowW: 14,
+        windowH: 12,
+        lampOx: 6,
+      },
+      {
+        x: PLACES.shackB.x,
+        y: PLACES.shackB.y,
+        windowOx: 10,
+        windowOy: -33,
+        windowW: 12,
+        windowH: 12,
+        lampOx: 4,
+      },
     ];
 
     for (const fix of fixtures) {
@@ -453,6 +486,7 @@ export class HarborScene extends Phaser.Scene {
 
       if (this.textures.exists("glow-window")) {
         const glow = this.add.image(fix.x + fix.windowOx, fix.y + fix.windowOy, "glow-window");
+        glow.setDisplaySize(fix.windowW, fix.windowH);
         glow.setScrollFactor(SCROLL.land);
         glow.setDepth(fix.y - 7);
         glow.setBlendMode(Phaser.BlendModes.ADD);
