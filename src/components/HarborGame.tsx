@@ -12,8 +12,8 @@ function isMood(value: unknown): value is WeatherMood {
   );
 }
 
-function applySky(mood: WeatherMood): void {
-  document.documentElement.style.setProperty("--harbor-sky", skyCss(mood));
+function applySky(mood: WeatherMood, css?: string): void {
+  document.documentElement.style.setProperty("--harbor-sky", css ?? skyCss(mood));
 }
 
 export function HarborGame() {
@@ -42,8 +42,9 @@ export function HarborGame() {
 
     const onWeather = (...args: unknown[]): void => {
       const mood = args[0];
+      const extra = args[1] as { skyCss?: string } | undefined;
       if (isMood(mood)) {
-        applySky(mood);
+        applySky(mood, extra?.skyCss);
       }
     };
 

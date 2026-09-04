@@ -13,6 +13,21 @@ import {
 import { TEX } from "./textures";
 import { tideShoreY, tideSurfaceY, tideWaterTop } from "./tide";
 import type { WeatherMood } from "./weather";
+import {
+  FLAGPOLE_PLACE,
+  FLAG_KEYS,
+  flagPose,
+  flagTextureKey,
+  type WindSample,
+} from "./flag";
+import { skyState, type SkyBodyState } from "./skyBodies";
+import {
+  BUOY_BOB_AMP,
+  FENDER_BOB_AMP,
+  bobSeedFromX,
+  bobberY,
+  type WaterBobber,
+} from "./waterMotion";
 
 /** Land, water, buildings, dock, traps, and sky props. */
 export class HarborWorld {
@@ -29,6 +44,7 @@ export class HarborWorld {
   clouds: Phaser.GameObjects.Image[] = [];
   waterPhase = 0;
   surfaceY = tideSurfaceY(0.5);
+  skyIsDark = false;
 
   private scene: Phaser.Scene;
   private placed = new Set<string>();
@@ -39,6 +55,9 @@ export class HarborWorld {
   private skyStars: Phaser.GameObjects.Image[] = [];
   private deepFill?: Phaser.GameObjects.Rectangle;
   private landFill?: Phaser.GameObjects.TileSprite | Phaser.GameObjects.Rectangle;
+  private waterBobbers: WaterBobber[] = [];
+  private flagpole?: Phaser.GameObjects.Image;
+  private flag?: Phaser.GameObjects.Image;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -244,41 +263,46 @@ export class HarborWorld {
     this.placeDock();
     this.placeTraps();
     this.placeFenders();
+    this.placeFlag();
     this.placeClouds();
     this.placeSkyDressing();
   }
 
-  applySkyDressing(mood: WeatherMood): void {
-    const night = mood === "night";
-    const clear = mood === "clearDay";
-    const dimDay = mood === "overcast" || mood === "rain" || mood === "fog";
+  updateSkyBodies(now: Date, viewW: number, mood: WeatherMood): SkyBodyState {
+    this.placeSkyDressing();
+    const sky = skyState(now, viewW, mood);
+    this.skyIsDark = sky.isDark;
 
     if (this.skySun) {
-      this.skySun.setVisible(clear || dimDay);
-      if (clear) {
-        this.skySun.setAlpha(1);
-      } else if (dimDay) {
-        this.skySun.setAlpha(mood === "fog" ? 0.18 : 0.32);
-      }
+      this.skySun.setPosition(sky.sunPose.x, sky.sunPose.y);
+      this.skySun.setVisible(sky.sunPose.visible);
+      this.skySun.setAlpha(sky.sunPose.alpha);
     }
     if (this.skyMoon) {
-      this.skyMoon.setVisible(night);
-      this.skyMoon.setAlpha(night ? 0.95 : 0);
+      this.skyMoon.setPosition(sky.moonPose.x, sky.moonPose.y);
+      this.skyMoon.setVisible(sky.moonPose.visible);
+      this.skyMoon.setAlpha(sky.moonPose.alpha);
     }
     for (const star of this.skyStars) {
-      star.setVisible(night);
-      if (night) {
-        star.setAlpha(0.55 + Math.random() * 0.4);
-      }
+      star.setVisible(sky.starsVisible);
     }
+
+    const skyRect = this.scene.children.getByName("sky") as Phaser.GameObjects.Rectangle | null;
+    if (skyRect) {
+      skyRect.setFillStyle(sky.skyColor, 1);
+    }
+    return sky;
   }
 
-  twinkleSky(_dt: number, mood: WeatherMood, now: number): void {
-    if (mood !== "night" || this.skyStars.length === 0) {
+  twinkleSky(_dt: number, dark: boolean, now: number): void {
+    if (!dark || this.skyStars.length === 0) {
       return;
     }
     const t = now / 1000;
     this.skyStars.forEach((star, i) => {
+      if (!star.visible) {
+        return;
+      }
       star.setAlpha(0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * (1.3 + i * 0.17) + i)));
     });
   }
@@ -402,11 +426,7 @@ export class HarborWorld {
     }
   }
 
-  applyWeather(mood: WeatherMood, sky: number): void {
-    const skyRect = this.scene.children.getByName("sky") as Phaser.GameObjects.Rectangle | null;
-    if (skyRect) {
-      skyRect.setFillStyle(sky, 1);
-    }
+  applyWeather(mood: WeatherMood): void {
     if (this.fogVeil) {
       this.fogVeil.setVisible(mood === "fog");
     }
@@ -424,7 +444,6 @@ export class HarborWorld {
       }
     }
     this.placeSkyDressing();
-    this.applySkyDressing(mood);
   }
 
   private placeBuilding(
@@ -518,6 +537,7 @@ export class HarborWorld {
       this.onceImage(spot.id, "fender", spot.x, spot.y, {
         depth: DOCK_DEPTH + 2,
       });
+      this.registerBob(spot.id, spot.y, bobSeedFromX(spot.x), FENDER_BOB_AMP);
     }
   }
 
@@ -525,7 +545,70 @@ export class HarborWorld {
     this.onceImage("trap-0", "trap", 198, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
     this.onceImage("trap-stack", "trap-stack", 214, LAND_TOP_Y + 8, { depth: LAND_TOP_Y + 8 });
     this.onceImage("trap-buoy", "trap-buoy", 760, LAND_TOP_Y + 4, { depth: LAND_TOP_Y + 4 });
+    this.registerBob("trap-buoy", LAND_TOP_Y + 4, bobSeedFromX(760), BUOY_BOB_AMP);
     this.onceImage("trap-1", "trap", 900, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
+  }
+
+  private registerBob(id: string, restY: number, seed: number, amp: number): void {
+    if (this.waterBobbers.some((b) => b.id === id)) {
+      return;
+    }
+    this.waterBobbers.push({ id, restY, seed, amp });
+  }
+
+  applyWaterBobs(): void {
+    for (const bobber of this.waterBobbers) {
+      const img = this.scene.children.getByName(bobber.id) as Phaser.GameObjects.Image | null;
+      if (!img) {
+        continue;
+      }
+      img.y = bobberY(bobber, this.waterPhase);
+      img.setDepth(bobber.restY);
+    }
+  }
+
+  private placeFlag(): void {
+    if (!this.flagpole && this.scene.textures.exists("flagpole")) {
+      this.flagpole = this.onceImage(
+        "flagpole",
+        "flagpole",
+        FLAGPOLE_PLACE.x,
+        FLAGPOLE_PLACE.y,
+        { depth: DOCK_DEPTH + 5 },
+      );
+    }
+    const flagKey = FLAG_KEYS.find((key) => this.scene.textures.exists(key));
+    if (!this.flag && flagKey) {
+      this.flag = this.scene.add.image(FLAGPOLE_PLACE.x, FLAGPOLE_PLACE.y, flagKey);
+      this.flag.setName("harbor-flag");
+      this.flag.setOrigin(0, 0);
+      this.flag.setScrollFactor(SCROLL.land);
+      this.flag.setDepth(DOCK_DEPTH + 6);
+      this.flag.setLighting(true);
+      this.placed.add("harbor-flag");
+    }
+  }
+
+  updateFlag(wind: WindSample): void {
+    if (!this.flagpole) {
+      this.placeFlag();
+    }
+    if (!this.flag || !this.flagpole) {
+      return;
+    }
+    const pose = flagPose(wind, this.waterPhase);
+    const key = flagTextureKey(pose.frame);
+    if (this.scene.textures.exists(key) && this.flag.texture.key !== key) {
+      this.flag.setTexture(key);
+    }
+    this.flag.setFlipX(pose.flipX);
+    this.flag.setOrigin(pose.flipX ? 1 : 0, 0);
+    this.flag.setAngle(pose.leanDeg);
+    const poleH = this.flagpole.displayHeight || this.flagpole.height;
+    const hoistX = this.flagpole.x + (pose.flipX ? -2 : 2);
+    const hoistY = this.flagpole.y - poleH + 10;
+    this.flag.setPosition(hoistX, hoistY);
+    this.flag.setDepth(DOCK_DEPTH + 6);
   }
 
   private placeClouds(): void {
