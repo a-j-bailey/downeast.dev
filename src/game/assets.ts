@@ -30,6 +30,8 @@ export const BOOT_IMAGES = [
   "cloud",
   "glow-window",
   "glow-street",
+  "lantern",
+  "lantern-glow",
 ] as const;
 
 export const STREAM_IMAGES = [

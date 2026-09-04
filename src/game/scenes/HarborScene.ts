@@ -78,6 +78,12 @@ export class HarborScene extends Phaser.Scene {
   private entering = false;
   private shark?: Phaser.GameObjects.Image;
   private sharkDir = 1;
+  private waterPhase = 0;
+  private waveFrame = 0;
+  private waveFrameAcc = 0;
+  private playerLantern?: Phaser.GameObjects.Image;
+  private playerLanternGlow?: Phaser.GameObjects.Image;
+  private playerLanternLight?: Phaser.GameObjects.Light;
   private nightLights: Phaser.GameObjects.Light[] = [];
   private nightGlows: Phaser.GameObjects.Image[] = [];
   private boatNavLights: Phaser.GameObjects.Light[] = [];
@@ -143,6 +149,7 @@ export class HarborScene extends Phaser.Scene {
     this.syncBoatNav();
     this.updateShark(dt);
     this.updateBeam(dt);
+    this.updatePlayerLantern(dt);
     this.refreshPrompt();
     snapHarborCamera(this);
   }
@@ -323,8 +330,8 @@ export class HarborScene extends Phaser.Scene {
     this.layoutRain();
 
     this.beam = this.lights.addConeLight(
-      PLACES.lighthouse.x - 28,
-      PLACES.lighthouse.y - 78,
+      PLACES.lighthouse.x - 13,
+      PLACES.lighthouse.y - 72,
       280,
       0xffcc88,
       0,
@@ -341,6 +348,84 @@ export class HarborScene extends Phaser.Scene {
     this.player.setDepth(WALK_Y);
     this.player.setLighting(true);
     this.player.play("player-idle");
+    this.buildPlayerLantern();
+  }
+
+  private buildPlayerLantern(): void {
+    if (!this.textures.exists("lantern") || this.playerLantern) {
+      return;
+    }
+    this.playerLantern = this.add.image(this.player.x, this.player.y, "lantern");
+    this.playerLantern.setOrigin(0.5, 1);
+    this.playerLantern.setScrollFactor(SCROLL.actors);
+    this.playerLantern.setDepth(this.player.y + 1);
+    this.playerLantern.setLighting(false);
+    this.playerLantern.setVisible(false);
+
+    if (this.textures.exists("lantern-glow")) {
+      this.playerLanternGlow = this.add.image(this.player.x, this.player.y, "lantern-glow");
+      this.playerLanternGlow.setOrigin(0.5, 0.5);
+      this.playerLanternGlow.setScrollFactor(SCROLL.actors);
+      this.playerLanternGlow.setDepth(this.player.y + 0.5);
+      this.playerLanternGlow.setBlendMode(Phaser.BlendModes.ADD);
+      this.playerLanternGlow.setLighting(false);
+      this.playerLanternGlow.setAlpha(0.55);
+      this.playerLanternGlow.setVisible(false);
+    }
+
+    this.playerLanternLight = this.lights.addLight(
+      this.player.x,
+      this.player.y - 18,
+      90,
+      0xffc070,
+      0,
+    );
+  }
+
+  private updatePlayerLantern(_dt: number): void {
+    if (!this.playerLantern) {
+      this.buildPlayerLantern();
+    }
+    if (!this.playerLantern) {
+      return;
+    }
+
+    const night = this.mood === "night";
+    const show =
+      night &&
+      this.player.visible &&
+      this.possession === "walker" &&
+      !this.entering;
+
+    const facing = this.player.flipX ? -1 : 1;
+    // Hold in front of the character near hand height (origin 0.5,1).
+    const handX = this.player.x + facing * 8;
+    let handY = this.player.y - 18;
+    // Slight bob while walking.
+    if (show && this.player.anims.currentAnim?.key === "player-walk") {
+      handY += Math.sin(this.time.now / 90) * 1.2;
+    }
+
+    this.playerLantern.setPosition(handX, handY);
+    this.playerLantern.setFlipX(this.player.flipX);
+    this.playerLantern.setDepth(this.player.y + 1);
+    this.playerLantern.setVisible(show);
+
+    if (this.playerLanternGlow) {
+      this.playerLanternGlow.setPosition(handX, handY - 6);
+      this.playerLanternGlow.setDepth(this.player.y + 0.5);
+      this.playerLanternGlow.setVisible(show);
+      if (show) {
+        this.playerLanternGlow.setAlpha(0.45 + 0.12 * Math.sin(this.time.now / 140));
+      }
+    }
+
+    if (this.playerLanternLight) {
+      this.playerLanternLight.x = handX;
+      this.playerLanternLight.y = handY - 6;
+      this.playerLanternLight.setIntensity(show ? 1.35 : 0);
+      this.playerLanternLight.setVisible(show);
+    }
   }
 
   private streamRest(): void {
@@ -888,17 +973,51 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private scrollWater(dt: number): void {
+    // Ripple / shimmer instead of constant lateral flow.
+    this.waterPhase += dt;
+    const t = this.waterPhase;
+    const deepX = Math.sin(t * 0.7) * 1.5 + Math.sin(t * 1.9) * 0.6;
+    const deepY = Math.sin(t * 1.1) * 0.8;
+    const surfX = Math.sin(t * 1.3 + 0.8) * 2.2 + Math.sin(t * 2.4) * 0.7;
+    const surfY = Math.sin(t * 1.6 + 0.4) * 1.1;
+    const foamX = Math.sin(t * 1.8 + 1.2) * 2.8;
+    const foamY = Math.sin(t * 2.1) * 0.6;
+
     if (this.waterDeep) {
-      this.waterDeep.tilePositionX += 8 * dt;
+      this.waterDeep.tilePositionX = deepX;
+      this.waterDeep.tilePositionY = deepY;
     }
     if (this.water) {
-      this.water.tilePositionX += 12 * dt;
+      this.water.tilePositionX = surfX;
+      this.water.tilePositionY = surfY;
+      // Soft shimmer on the surface band.
+      this.water.setAlpha(
+        this.textures.exists("water-deep")
+          ? 0.45 + 0.12 * (0.5 + 0.5 * Math.sin(t * 2.2))
+          : 0.88 + 0.08 * Math.sin(t * 2.0),
+      );
     }
     if (this.wavesLayer) {
-      this.wavesLayer.tilePositionX += 18 * dt;
+      this.wavesLayer.tilePositionX = Math.sin(t * 1.5 + 0.3) * 2.0;
+      this.wavesLayer.tilePositionY = Math.sin(t * 1.7) * 0.9;
+      this.wavesLayer.setAlpha(0.55 + 0.25 * (0.5 + 0.5 * Math.sin(t * 1.4)));
+      // Cycle wave crest frames when available (slow shimmer).
+      this.waveFrameAcc += dt;
+      if (this.waveFrameAcc >= 0.28) {
+        this.waveFrameAcc = 0;
+        const keys = ["waves-0", "waves-1", "waves-2"].filter((k) =>
+          this.textures.exists(k),
+        );
+        if (keys.length > 1) {
+          this.waveFrame = (this.waveFrame + 1) % keys.length;
+          this.wavesLayer.setTexture(keys[this.waveFrame]!);
+        }
+      }
     }
     if (this.foam) {
-      this.foam.tilePositionX += 22 * dt;
+      this.foam.tilePositionX = foamX;
+      this.foam.tilePositionY = foamY;
+      this.foam.setAlpha(0.35 + 0.4 * (0.5 + 0.5 * Math.sin(t * 1.9 + 0.6)));
     }
   }
 
@@ -958,8 +1077,8 @@ export class HarborScene extends Phaser.Scene {
     const sf = SCROLL.farShore;
     const cam = this.cameras.main;
     return {
-      x: sx - 28 + cam.scrollX * (1 - sf),
-      y: sy - 78 + cam.scrollY * (1 - sf),
+      x: sx - 13 + cam.scrollX * (1 - sf),
+      y: sy - 72 + cam.scrollY * (1 - sf),
     };
   }
 
@@ -1105,6 +1224,7 @@ export class HarborScene extends Phaser.Scene {
     }
     this.ensureNightDecor();
     this.setNightDecorVisible(mood === "night");
+    this.updatePlayerLantern(0);
     EventBus.emit("harbor-weather", mood);
   }
 
