@@ -39,8 +39,11 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 | 12 | Facing from helm (`wish.x > 0` ⇒ flipX). Lights recomputed every boat frame at stem / flagpole tip. Hull stays `boat.png`. |
 | 13 | Open water to `WORLD_MIN_X = -720`. Board → left into the bay; right still stops at the berth. |
 | 14 | Shark `flipX` when swimming **right** (art faces left). |
-| 15 | Road-stone + dark planks start at `SEAWALL_LEFT_X`. Left of that: dock sprite + water. Walker min X is the dock. |
+| 15 | Road-stone + dark planks start at `SEAWALL_LEFT_X`. Dock+boat sit seaward (`dock.x=36`, `boat.x=44`). Walker path on the light dock. |
 | 16 | `roundPixels` on game + cameras. Snap scroll/sprites on Scene `prerender` (after follow). Parallax layers use integer `home + scroll*(1-sf)`. |
+| 17 | Wake sprite off the stern while the hull has speed; hidden at berth. |
+| 18 | Boarded player is visible in the cockpit (scaled, flipped with facing). |
+| 19 | Virtual stick lower and ~17% smaller. |
 
 ## Playtest notes
 
@@ -49,7 +52,12 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 - Mute / ambient bed is still PR 22; not pulled.
 - Nav: unflipped hull faces left; bow red facing left, green facing right; white stern on the flagpole tip.
 - Phone check: `390×844` → view `200×270` filled to parent (same as production main). Docked boat stays in frame.
-- `?weather=night` `?tide=low` `?tide=high` `?ferry=1` `?card=1` `?stick=1`
+- Berth: dock `x=36`, boat `x=44` (was 96/98). Seawall still at 166. Light dock is behind the walker. Whole 171px hull fits a 200-wide phone view with water past the bow.
+- Wake: `wake.png` off the stern while underway; hidden when stopped/berthed.
+- Boarded walker sits in the cockpit at 0.5 scale (navy sweater), hidden lantern; restored on disembark.
+- Stick: radius 30, `viewH-16` (was 36 / `viewH-36`).
+- `?berth=1` stands on the light dock. `?boat=1` boards at the berth.
+
 
 ## Remaining backlog
 

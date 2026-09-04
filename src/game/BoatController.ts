@@ -8,7 +8,11 @@ import {
   BOAT_OPEN_MAX_Y,
   BOAT_OPEN_MIN_X,
   BOAT_OPEN_MIN_Y,
+  BOAT_PASSENGER_SCALE,
+  BOAT_SEAT_X,
+  BOAT_SEAT_Y,
   PLACES,
+  WAKE_SPEED,
   boatFacingRight,
   boatSternOffsetX,
 } from "./layout";
@@ -21,7 +25,7 @@ export class BoatController {
 
   private scene: Phaser.Scene;
   private night: NightLights;
-  private wake?: Phaser.GameObjects.TileSprite;
+  private wake?: Phaser.GameObjects.Image;
 
   constructor(scene: Phaser.Scene, night: NightLights) {
     this.scene = scene;
@@ -29,26 +33,16 @@ export class BoatController {
   }
 
   place(): void {
-    if (this.sprite || !this.scene.textures.exists("boat")) {
-      return;
+    if (!this.sprite && this.scene.textures.exists("boat")) {
+      this.sprite = this.scene.add.image(PLACES.boat.x, PLACES.boat.y, "boat");
+      this.sprite.setName("boat");
+      this.sprite.setOrigin(0.5, 1);
+      this.sprite.setScrollFactor(SCROLL.actors);
+      this.sprite.setDepth(BOAT_DEPTH);
+      this.sprite.setLighting(true);
+      this.sprite.setFlipX(false);
     }
-    this.sprite = this.scene.add.image(PLACES.boat.x, PLACES.boat.y, "boat");
-    this.sprite.setName("boat");
-    this.sprite.setOrigin(0.5, 1);
-    this.sprite.setScrollFactor(SCROLL.actors);
-    this.sprite.setDepth(BOAT_DEPTH);
-    this.sprite.setLighting(true);
-    // Unflipped art faces seaward (left).
-    this.sprite.setFlipX(false);
-
-    if (this.scene.textures.exists("wake") && !this.wake) {
-      this.wake = this.scene.add.tileSprite(PLACES.boat.x - 70, PLACES.boat.y - 4, 96, 16, "wake");
-      this.wake.setOrigin(0.5, 1);
-      this.wake.setScrollFactor(SCROLL.actors);
-      this.wake.setDepth(BOAT_DEPTH - 1);
-      this.wake.setVisible(false);
-      this.wake.setLighting(true);
-    }
+    this.ensureWake();
   }
 
   steer(dt: number, wish: { x: number; y: number }): void {
@@ -85,18 +79,22 @@ export class BoatController {
   }
 
   updateWake(possession: Possession, dt: number): void {
+    this.ensureWake();
     if (!this.wake || !this.sprite) {
       return;
     }
-    const moving = possession === "boat" && Math.abs(this.vx) > 14;
+    const speed = Math.hypot(this.vx, this.vy);
+    const moving = possession === "boat" && speed > WAKE_SPEED;
     this.wake.setVisible(moving);
     if (!moving) {
       return;
     }
     const facingRight = boatFacingRight(this.sprite);
-    this.wake.setPosition(this.sprite.x + boatSternOffsetX(facingRight), this.sprite.y - 4);
-    this.wake.setFlipX(!facingRight);
-    this.wake.tilePositionX += (facingRight ? 40 : -40) * dt;
+    const behind = facingRight ? -1 : 1;
+    const sternX = this.sprite.x + boatSternOffsetX(facingRight) + behind * 40;
+    this.wake.setPosition(Math.round(sternX), Math.round(this.sprite.y - 4));
+    this.wake.setFlipX(facingRight);
+    this.wake.setAlpha(0.68 + 0.24 * Math.sin(this.scene.time.now / 150 + dt * 3));
   }
 
   syncNav(boarded: boolean): void {
@@ -113,6 +111,9 @@ export class BoatController {
     this.sprite.setFlipX(false);
     if (this.scene.textures.exists("boat")) {
       this.sprite.setTexture("boat");
+    }
+    if (this.wake) {
+      this.wake.setVisible(false);
     }
     this.night.setBoatNavVisible(true, this.sprite);
     this.night.syncBoatNav(this.sprite, true);
@@ -135,11 +136,19 @@ export class BoatController {
     this.night.setBoatNavVisible(false);
   }
 
-  passengerSeat(): { x: number; y: number } | null {
+  passengerSeat(): { x: number; y: number; flipX: boolean; scale: number } | null {
     if (!this.sprite) {
       return null;
     }
-    return { x: this.sprite.x, y: this.sprite.y - 8 };
+    const facingRight = boatFacingRight(this.sprite);
+    const seatX = facingRight ? BOAT_SEAT_X : -BOAT_SEAT_X;
+    return {
+      x: Math.round(this.sprite.x + seatX),
+      y: Math.round(this.sprite.y + BOAT_SEAT_Y),
+      // Player art faces right; boat flipX means hull faces right.
+      flipX: !facingRight,
+      scale: BOAT_PASSENGER_SCALE,
+    };
   }
 
   /** Art faces left; flipX means the hull faces right — match helm / velocity. */
@@ -154,5 +163,19 @@ export class BoatController {
     if (Math.abs(this.vx) > 6) {
       this.sprite.setFlipX(this.vx > 0);
     }
+  }
+
+  private ensureWake(): void {
+    if (this.wake || !this.scene.textures.exists("wake")) {
+      return;
+    }
+    this.wake = this.scene.add.image(PLACES.boat.x, PLACES.boat.y - 6, "wake");
+    this.wake.setName("boat-wake");
+    this.wake.setOrigin(0.5, 1);
+    this.wake.setScrollFactor(SCROLL.actors);
+    this.wake.setDepth(BOAT_DEPTH - 1);
+    this.wake.setLighting(false);
+    this.wake.setScale(0.55);
+    this.wake.setVisible(false);
   }
 }

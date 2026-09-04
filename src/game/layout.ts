@@ -24,10 +24,10 @@ export const BOAT_OPEN_MAX_Y = BOAT_DOCK_Y;
 export const BOAT_OPEN_MIN_X = WORLD_MIN_X + 64;
 
 export const PLACES = {
-  // Wood finger-dock midground; boat docks in front at bottom edge.
-  dock: { x: 96, y: BOAT_DOCK_Y - 18 },
-  // Foreground of the wood dock; hull near bottom of screen.
-  boat: { x: 98, y: BOAT_DOCK_Y },
+  // Light finger-dock seaward of the seawall; boat berths on its left.
+  dock: { x: 36, y: BOAT_DOCK_Y - 18 },
+  // Hull in the water just left of the dock; whole 171px sprite fits a 200-wide phone view.
+  boat: { x: 44, y: BOAT_DOCK_Y },
   shackA: { x: 248, y: LAND_TOP_Y },
   // Land side of the seawall, left of the trap pile beside shack-a.
   flagpole: { x: 164, y: LAND_TOP_Y },
@@ -58,19 +58,19 @@ export const SPAWN = {
 /** Underway cannot pass the dock toward town. */
 export const BOAT_DOCK_MAX_X = PLACES.boat.x;
 
-/** First seawall tile center (seaward / left terminus). */
+/** First seawall tile center — locked to town, not the floating dock. */
 export const SEAWALL_TILE_W = 142;
-export const SEAWALL_ORIGIN_X = Math.max(Math.round(SEAWALL_TILE_W / 2), PLACES.dock.x + 70);
-/** Left edge of the stone seawall — street/planks stop here. */
+export const SEAWALL_ORIGIN_X = 166;
+/** Left edge of the stone seawall — dark street/planks stop here. */
 export const SEAWALL_LEFT_X = Math.round(SEAWALL_ORIGIN_X - SEAWALL_TILE_W / 2);
 export const LAND_RIGHT_X = WORLD_MAX_X + 128;
 export const LAND_BAND_W = LAND_RIGHT_X - SEAWALL_LEFT_X;
 export const LAND_BAND_X = SEAWALL_LEFT_X + LAND_BAND_W / 2;
-/** Walker stays on dock + town; open water is boat-only. */
-export const WALKER_MIN_X = Math.round(PLACES.dock.x - 60);
+/** Walker stays on the light dock + town; open water is boat-only. */
+export const WALKER_MIN_X = Math.round(PLACES.dock.x - 52);
 
-/** Boat in front of wood dock midground. */
-export const DOCK_DEPTH = BOAT_DOCK_Y - 10;
+/** Dock behind the walker so feet read on the light deck. */
+export const DOCK_DEPTH = WALKER_Y - 16;
 export const BOAT_DEPTH = BOAT_DOCK_Y + 20;
 /** Flagpole on the village street, left of the lobster traps. */
 export const FLAGPOLE_DEPTH = LAND_TOP_Y + 10;
@@ -107,6 +107,12 @@ export function boatBowOffsetX(facingRight: boolean): number {
 export function boatSternOffsetX(facingRight: boolean): number {
   return facingRight ? -BOAT_STERN_X : BOAT_STERN_X;
 }
+
+/** Cockpit from hull origin (0.5, 1). Unflipped cabin sits slightly bow-ward. */
+export const BOAT_SEAT_X = 8;
+export const BOAT_SEAT_Y = -22;
+export const BOAT_PASSENGER_SCALE = 0.5;
+export const WAKE_SPEED = 10;
 
 export {
   VIEW_HEIGHT,

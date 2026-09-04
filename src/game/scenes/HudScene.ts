@@ -37,7 +37,7 @@ export class HudScene extends Phaser.Scene {
   private stickHit?: Phaser.GameObjects.Zone;
   private stickCx = 0;
   private stickCy = 0;
-  private stickRadius = 36;
+  private stickRadius = 30;
   private stickPointerId: number | null = null;
   private stickX = 0;
 
@@ -200,38 +200,37 @@ export class HudScene extends Phaser.Scene {
     }
     const cx = this.stickCx;
     const cy = this.stickCy;
-    const chevronX = 28;
+    const chevronX = Math.round(this.stickRadius * 0.78);
+    const wing = Math.max(5, Math.round(this.stickRadius * 0.2));
+    const knobR = Math.max(5, Math.round(this.stickRadius * 0.2));
     this.stickBase.clear();
 
-    // Left chevron ‹
     this.stickBase.fillStyle(0xfffcf0, 0.85);
     this.stickBase.fillTriangle(
-      cx - chevronX - 6,
+      cx - chevronX - 5,
       cy,
-      cx - chevronX + 4,
-      cy - 8,
-      cx - chevronX + 4,
-      cy + 8,
+      cx - chevronX + 3,
+      cy - wing,
+      cx - chevronX + 3,
+      cy + wing,
     );
-    // Right chevron ›
     this.stickBase.fillTriangle(
-      cx + chevronX + 6,
+      cx + chevronX + 5,
       cy,
-      cx + chevronX - 4,
-      cy - 8,
-      cx + chevronX - 4,
-      cy + 8,
+      cx + chevronX - 3,
+      cy - wing,
+      cx + chevronX - 3,
+      cy + wing,
     );
-    // Track line (subtle)
     this.stickBase.lineStyle(1, 0xfffcf0, 0.35);
-    this.stickBase.lineBetween(cx - chevronX + 8, cy, cx + chevronX - 8, cy);
+    this.stickBase.lineBetween(cx - chevronX + 7, cy, cx + chevronX - 7, cy);
 
-    const knobX = cx + axisX * (this.stickRadius - 10);
+    const knobX = cx + axisX * (this.stickRadius - 8);
     this.stickKnob.clear();
     this.stickKnob.fillStyle(0xfffcf0, 0.9);
-    this.stickKnob.fillCircle(knobX, cy, 7);
+    this.stickKnob.fillCircle(knobX, cy, knobR);
     this.stickKnob.lineStyle(1, 0x100f0f, 0.7);
-    this.stickKnob.strokeCircle(knobX, cy, 7);
+    this.stickKnob.strokeCircle(knobX, cy, knobR);
   }
 
   private onResize = (): void => {
@@ -356,12 +355,12 @@ export class HudScene extends Phaser.Scene {
     // Stick centered at bottom; chip sits above it when stick is shown.
     if (this.stickEnabled && this.stickHit) {
       this.stickCx = cx;
-      this.stickCy = this.viewH - 36;
+      this.stickCy = this.viewH - 16;
       this.stickHit.setPosition(this.stickCx, this.stickCy);
       this.drawStick(this.stickX);
-      this.chip.setPosition(cx, this.viewH - 52);
-      this.chipText.setPosition(cx, this.viewH - 56);
-      this.chipHit.setPosition(cx, this.viewH - 50);
+      this.chip.setPosition(cx, this.viewH - 34);
+      this.chipText.setPosition(cx, this.viewH - 38);
+      this.chipHit.setPosition(cx, this.viewH - 32);
     } else {
       this.chip.setPosition(cx, this.viewH - 8);
       this.chipText.setPosition(cx, this.viewH - 12);

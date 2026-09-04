@@ -15,6 +15,7 @@ import {
   type Possession,
 } from "../interact";
 import {
+  BOAT_DEPTH,
   BOAT_DOCK_Y,
   PLACES,
   SPAWN,
@@ -153,6 +154,17 @@ export class HarborScene extends Phaser.Scene {
         this.maybeOfferPostcard();
       });
     }
+
+    const search = window.location.search;
+    if (playtestFlag(search, "berth") || playtestFlag(search, "boat")) {
+      this.player.setPosition(PLACES.dock.x + 20, WALKER_Y);
+      applyHarborCamera(this, this.player);
+    }
+    if (playtestFlag(search, "boat")) {
+      this.time.delayedCall(120, () => {
+        this.board();
+      });
+    }
   }
 
   private onResize = (): void => {
@@ -174,6 +186,9 @@ export class HarborScene extends Phaser.Scene {
     this.steer(dt);
     this.maybeOfferPostcard();
     this.player.setDepth(this.player.y);
+    if (this.possession === "boat") {
+      this.player.setDepth(BOAT_DEPTH + 2);
+    }
     if (this.boat.sprite) {
       this.boat.sprite.x = Math.round(this.boat.sprite.x);
       this.boat.sprite.y = Math.round(this.boat.sprite.y);
@@ -419,7 +434,12 @@ export class HarborScene extends Phaser.Scene {
       this.boat.steer(dt, wish);
       const seat = this.boat.passengerSeat();
       if (seat) {
+        this.player.setVisible(true);
+        this.player.setScale(seat.scale);
         this.player.setPosition(seat.x, seat.y);
+        this.player.setFlipX(seat.flipX);
+        this.player.setDepth(BOAT_DEPTH + 2);
+        this.player.play("player-idle", true);
       }
       return;
     }
@@ -449,7 +469,7 @@ export class HarborScene extends Phaser.Scene {
   private zones(): Zone[] {
     return [
       { id: "cafe", x: PLACES.coffee.x + 28, y: WALKER_Y, w: 56, h: 48, mode: "walker" },
-      { id: "board", x: PLACES.dock.x + 8, y: WALKER_Y, w: 90, h: 48, mode: "walker" },
+      { id: "board", x: PLACES.dock.x + 12, y: WALKER_Y, w: 88, h: 48, mode: "walker" },
       { id: "dismount", x: PLACES.boat.x, y: BOAT_DOCK_Y, w: 90, h: 64, mode: "boat" },
       { id: "github", x: PLACES.signGithub.x, y: WALKER_Y, w: 40, h: 48, mode: "walker" },
       { id: "x", x: PLACES.signX.x, y: WALKER_Y, w: 40, h: 48, mode: "walker" },
@@ -571,7 +591,15 @@ export class HarborScene extends Phaser.Scene {
       return;
     }
     this.possession = "boat";
-    this.player.setVisible(false);
+    this.player.setVisible(true);
+    const seat = this.boat.passengerSeat();
+    if (seat) {
+      this.player.setScale(seat.scale);
+      this.player.setPosition(seat.x, seat.y);
+      this.player.setFlipX(seat.flipX);
+      this.player.setDepth(BOAT_DEPTH + 2);
+      this.player.play("player-idle", true);
+    }
     this.walkTarget = null;
     applyHarborCamera(this, this.boat.sprite);
   }
@@ -579,7 +607,9 @@ export class HarborScene extends Phaser.Scene {
   private dismount(): void {
     this.possession = "walker";
     this.player.setVisible(true);
-    this.player.setPosition(PLACES.dock.x + 36, WALKER_Y);
+    this.player.setScale(1);
+    this.player.setPosition(PLACES.dock.x + 20, WALKER_Y);
+    this.player.setDepth(WALKER_Y);
     this.boat.dismount();
     applyHarborCamera(this, this.player);
   }
@@ -647,4 +677,8 @@ export class HarborScene extends Phaser.Scene {
     });
     this.critters.ensure(mood);
   }
+}
+
+function playtestFlag(search: string, key: string): boolean {
+  return new URLSearchParams(search).get(key) === "1";
 }
