@@ -57,7 +57,7 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 - Wake: `wake.png` off the stern while underway; hidden when stopped/berthed.
 - Boarded walker sits in the cockpit at 0.5 scale (navy sweater), hidden lantern; restored on disembark.
 - Stick: radius 30 (~17% smaller than 36), lower-left (`viewH-10`, `x = radius+10`) so it sits over water instead of the cabin. Interact chip stays bottom-center (shifts right of the stick on a 200-wide phone).
-- `?berth=1` stands on the light dock. `?boat=1` boards at the berth.
+- `?berth=1` stands on the light dock. `?boat=1` boards at the berth. `?underway=1` boards and slides left with a wake.
 
 
 ## Remaining backlog

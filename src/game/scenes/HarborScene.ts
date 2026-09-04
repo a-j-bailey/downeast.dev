@@ -162,11 +162,26 @@ export class HarborScene extends Phaser.Scene {
     }
 
     const search = window.location.search;
-    if (playtestFlag(search, "berth") || playtestFlag(search, "boat")) {
+    if (
+      playtestFlag(search, "berth") ||
+      playtestFlag(search, "boat") ||
+      playtestFlag(search, "underway")
+    ) {
       this.player.setPosition(PLACES.dock.x + 20, WALKER_Y);
       applyHarborCamera(this, this.player);
     }
-    if (playtestFlag(search, "boat")) {
+    if (playtestFlag(search, "underway")) {
+      this.time.delayedCall(140, () => {
+        this.board();
+        const hull = this.boat.sprite;
+        if (hull) {
+          hull.setPosition(PLACES.boat.x - 140, BOAT_DOCK_Y);
+          hull.setFlipX(false);
+          this.boat.vx = -80;
+          applyHarborCamera(this, hull);
+        }
+      });
+    } else if (playtestFlag(search, "boat")) {
       this.time.delayedCall(120, () => {
         this.board();
       });
