@@ -47,6 +47,17 @@ html {
   background: var(--bg);
 }
 
+html.harbor-play,
+html.harbor-play body,
+html.harbor-play #root {
+  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+  background: var(--harbor-sky, #5b93c5);
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -172,47 +183,53 @@ img {
   padding: 0.35rem 0 3rem;
 }
 
-.home {
-  padding-top: 0.15rem;
-}
-
-.hero {
-  margin: 0 0 1.6rem;
-}
-
-.hero img {
-  display: block;
+.harbor-page {
+  position: relative;
   width: 100%;
-  height: auto;
-  object-fit: contain;
+  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--harbor-sky, #5b93c5);
 }
 
-.wordmark {
+.harbor-root {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  outline: none;
+  background: var(--harbor-sky, #5b93c5);
+}
+
+.harbor-root canvas {
+  display: block;
+  /* Manual layout via scaleMode.layoutHarborCanvas (Scale.NONE). */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.harbor-wordmark {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  z-index: 2;
   margin: 0;
+  transform: translateX(-50%);
+  color: #fffcf0;
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 9vw, 3.75rem);
+  font-size: clamp(1.85rem, 6vw, 3.25rem);
   font-weight: 500;
   font-variation-settings: "opsz" 144;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
-}
-
-.name {
-  margin: 1.2rem 0 0;
-  color: var(--tx);
-  font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3.6vw, 1.8rem);
-  font-weight: 500;
-  font-variation-settings: "opsz" 72;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.lede {
-  margin: 1.15rem 0 0;
-  max-width: 28rem;
-  color: var(--tx);
-  font-size: 1.0625rem;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow:
+    1px 0 0 #100f0f,
+    -1px 0 0 #100f0f,
+    0 1px 0 #100f0f,
+    0 -1px 0 #100f0f;
 }
 
 .page-title {
@@ -310,14 +327,6 @@ img {
 
   .site-header {
     padding-top: 1.75rem;
-  }
-
-  .home {
-    padding-top: 0.35rem;
-  }
-
-  .hero {
-    margin-bottom: 2rem;
   }
 
   .site-main {

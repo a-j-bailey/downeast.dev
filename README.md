@@ -1,8 +1,10 @@
 # downeast.dev
 
-Personal site for [Adam Bailey](https://github.com/a-j-bailey). Ink on paper. The drawing is the thing people remember.
+Personal site for [Adam Bailey](https://github.com/a-j-bailey). The homepage is a Phaser 4 side-view harbor. `/projects` and `/thoughts` stay as pages.
 
 This is a static Vite + React SPA. It deploys as a Cloudflare Worker named `downeast-dev` that serves `dist/` as static assets with SPA fallback. There is no Worker script.
+
+Phaser is loaded only after mount (dynamic import). Do not import `phaser` from a Worker-evaluated module. Game art lives in `public/harbor/processed/` — see `harbor/ART.md`.
 
 ## Develop
 
