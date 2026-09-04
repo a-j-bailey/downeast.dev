@@ -3,7 +3,6 @@ import { SCROLL } from "./layers";
 import {
   DOCK_DEPTH,
   HORIZON_Y,
-  LAND_BOTTOM_Y,
   LAND_TOP_Y,
   PLACES,
   WALKER_Y,
@@ -490,19 +489,7 @@ export class HarborWorld {
       deck.setDepth(DOCK_DEPTH);
       deck.setLighting(true);
       this.placed.add("dock-planks");
-      if (this.scene.textures.exists("pier")) {
-        this.onceImage("dock-post-0", "pier", PLACES.dock.x - 36, PLACES.dock.y, {
-          depth: DOCK_DEPTH + 1,
-        });
-        this.onceImage("dock-post-1", "pier", PLACES.dock.x + 20, PLACES.dock.y, {
-          depth: DOCK_DEPTH + 1,
-        });
-      }
     }
-    this.onceImage("pier-town", "pier", 430, LAND_BOTTOM_Y, {
-      scrollFactor: SCROLL.foreground,
-      depth: 902,
-    });
   }
 
   private placeFenders(): void {
