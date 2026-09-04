@@ -52,7 +52,7 @@ Playtest of production `https://downeast.dev` plus this branch. Scope is Adam’
 - Flag limp / half / full-out is already on `main` (#28) — left alone.
 - Mute / ambient bed is still PR 22; not pulled.
 - Nav: unflipped hull faces left; bow red facing left, green facing right; white stern on the flagpole tip.
-- Phone check: `390×844` → view `200×270` filled to parent (same as production main). Docked boat stays in frame.
+- Phone check: `390×844` → view `200×270` filled to parent (same as production main). Docked boat stays in frame. Underway hard-follows the hull so the bow doesn’t clip.
 - Berth: dock `x=36`, boat `x=44` (was 96/98). Seawall still at 166. Light dock is behind the walker. Whole 171px hull fits a 200-wide phone view with water past the bow.
 - Wake: `wake.png` off the stern while underway; hidden when stopped/berthed.
 - Boarded walker sits in the cockpit at 0.5 scale (navy sweater), hidden lantern; restored on disembark.
