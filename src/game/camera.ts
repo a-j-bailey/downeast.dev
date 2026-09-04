@@ -75,6 +75,14 @@ export function syncHarborFollowOffset(
   const fx = followWorldX(follow);
   const atBerth =
     typeof fx === "number" && fx < SEAWALL_LEFT_X + 40 && fx > PLACES.boat.x - 80;
+  const isBoat = follow.name === "boat";
+  const view = harborViewSize(scene);
+  // 171px hull in a 200-wide phone view cannot afford a 40px deadzone
+  // or the bow clips while cruising.
+  cam.setDeadzone(
+    isBoat ? 0 : Math.round(view.width / 5),
+    Math.round(VIEW_HEIGHT / 8),
+  );
   cam.setFollowOffset(atBerth ? 18 : 0, -skyPad);
 }
 
