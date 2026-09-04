@@ -252,6 +252,9 @@ const SUN_DISK = -0.83;
 /** Civil twilight — stars after this. */
 const STAR_ALT = -6;
 
+/** Integer scale on the 16×16 sun sprite. Nearest-neighbor via pixelArt. */
+export const SUN_SCALE = 2;
+
 /**
  * Project alt/az onto the sky layer (scrollFactor 0). Azimuth 90° (east)
  * is the left horizon; 270° (west) is the right. Altitude 0 sits just

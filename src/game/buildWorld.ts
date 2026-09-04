@@ -21,7 +21,7 @@ import {
   flagTextureKey,
   type WindSample,
 } from "./flag";
-import { skyState, type SkyBodyState } from "./skyBodies";
+import { SUN_SCALE, skyState, type SkyBodyState } from "./skyBodies";
 
 /** Land, water, buildings, dock, traps, and sky props. */
 export class HarborWorld {
@@ -609,6 +609,7 @@ export class HarborWorld {
       this.skySun.setDepth(-40);
       this.skySun.setLighting(false);
       this.skySun.setOrigin(0.5, 0.5);
+      this.skySun.setScale(SUN_SCALE);
     }
     if (!this.skyMoon && this.scene.textures.exists("moon")) {
       this.skyMoon = this.scene.add.image(118, 24, "moon");
