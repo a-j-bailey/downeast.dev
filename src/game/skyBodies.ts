@@ -256,7 +256,11 @@ export function projectSky(
   viewW: number,
 ): { x: number; y: number } {
   const u = Math.max(0, Math.min(1, (body.azimuth - 90) / 180));
-  const x = Math.round(HORIZON_PAD + u * (viewW - HORIZON_PAD * 2));
+  // Pull noon left of the DOM wordmark; dawn/dusk stay on the horizons.
+  const noonBias = -0.16 * Math.sin(u * Math.PI);
+  const x = Math.round(
+    HORIZON_PAD + (u + noonBias) * (viewW - HORIZON_PAD * 2),
+  );
   const rise = Math.sin(Math.max(0, body.altitude) * DEG);
   const y = Math.round(HORIZON_Y - 8 - (HORIZON_Y - 8 - ZENITH_Y) * rise);
   return { x, y };
