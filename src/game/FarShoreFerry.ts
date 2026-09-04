@@ -5,9 +5,10 @@ import { WATER_SURFACE_Y, WORLD_WIDTH } from "./layout";
 import type { WeatherMood } from "./weather";
 
 const FORCE_CROSSING_SEC = 24;
-const KEEL_Y = WATER_SURFACE_Y + 6;
+const KEEL_Y = WATER_SURFACE_Y + 4;
 const MARGIN = 48;
-const DEPTH = 22;
+const DEPTH = 14;
+const LAYER = SCROLL.farShore;
 
 /** Distant Prudence Island ferry on the far-shore water lane. */
 export class FarShoreFerry {
@@ -28,7 +29,7 @@ export class FarShoreFerry {
     this.sprite = this.scene.add.image(WORLD_WIDTH / 2, KEEL_Y, "prudence-ferry");
     this.sprite.setName("prudence-ferry");
     this.sprite.setOrigin(0.5, 1);
-    this.sprite.setScrollFactor(SCROLL.water);
+    this.sprite.setScrollFactor(LAYER);
     this.sprite.setDepth(DEPTH);
     this.sprite.setLighting(true);
     this.sprite.setVisible(false);
@@ -74,7 +75,7 @@ export class FarShoreFerry {
     const right = bowFacesRight(from);
     const screenSpan = Math.max(120, viewW - MARGIN * 2);
     const screenX = right ? MARGIN + screenSpan * p : MARGIN + screenSpan * (1 - p);
-    const worldX = Math.round(screenX + cam.scrollX * SCROLL.water);
+    const worldX = Math.round(screenX + cam.scrollX * LAYER);
     this.sprite.setPosition(worldX, KEEL_Y);
     this.sprite.setFlipX(!right);
     this.sprite.setDepth(DEPTH);
