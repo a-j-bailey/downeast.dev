@@ -91,12 +91,12 @@ export class BoatController {
     }
     const facingRight = boatFacingRight(this.sprite);
     const behind = facingRight ? -1 : 1;
-    const trail = Math.max(28, Math.round(this.wake.displayWidth * 0.38));
+    const trail = Math.max(36, Math.round(this.wake.displayWidth * 0.42));
     const bob = Math.round(Math.sin(this.scene.time.now / 140) * 2);
     const sternX = this.sprite.x + boatSternOffsetX(facingRight) + behind * (trail + bob);
-    this.wake.setPosition(Math.round(sternX), Math.round(this.sprite.y - 2));
+    this.wake.setPosition(Math.round(sternX), Math.round(this.sprite.y - 8));
     this.wake.setFlipX(facingRight);
-    this.wake.setAlpha(0.72 + 0.2 * Math.sin(this.scene.time.now / 160 + dt * 3));
+    this.wake.setAlpha(0.85 + 0.12 * Math.sin(this.scene.time.now / 160 + dt * 3));
   }
 
   syncNav(boarded: boolean): void {
@@ -173,11 +173,11 @@ export class BoatController {
     }
     this.wake = this.scene.add.image(PLACES.boat.x, PLACES.boat.y - 6, "wake");
     this.wake.setName("boat-wake");
-    this.wake.setOrigin(0.5, 1);
+    this.wake.setOrigin(0.5, 0);
     this.wake.setScrollFactor(SCROLL.actors);
     this.wake.setDepth(BOAT_DEPTH - 1);
     this.wake.setLighting(false);
-    this.wake.setScale(0.62);
+    this.wake.setScale(0.7);
     this.wake.setVisible(false);
   }
 }

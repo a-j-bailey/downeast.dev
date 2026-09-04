@@ -74,6 +74,7 @@ export class HarborScene extends Phaser.Scene {
   private walkTarget: { x: number; y: number } | null = null;
   private stickX = 0;
   private touchStick = false;
+  private playtestCruise = 0;
   private mood: WeatherMood = "clearDay";
   private tideLevel = 0.5;
   private tideTarget = 0.5;
@@ -171,6 +172,7 @@ export class HarborScene extends Phaser.Scene {
       applyHarborCamera(this, this.player);
     }
     if (playtestFlag(search, "underway")) {
+      this.playtestCruise = -1;
       this.time.delayedCall(140, () => {
         this.board();
         const hull = this.boat.sprite;
@@ -433,6 +435,9 @@ export class HarborScene extends Phaser.Scene {
     }
     if (x === 0 && this.stickX !== 0) {
       x = this.stickX;
+    }
+    if (x === 0 && this.playtestCruise !== 0 && this.possession === "boat") {
+      x = this.playtestCruise;
     }
     const keyed = x !== 0 || y !== 0;
     if (keyed) {
