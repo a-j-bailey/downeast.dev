@@ -2,7 +2,8 @@ import Phaser from "phaser";
 import { applyHudCamera } from "../camera";
 import { EventBus } from "../EventBus";
 import { promptText, type InteractId } from "../interact";
-import { TEX } from "../textures";
+import { readHarborMute } from "../soundBed";
+import { MUTE_CHIP, MUTE_HIT, MUTE_INSET, TEX } from "../textures";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
 import { nyClock, type WeatherMood } from "../weather";
 
@@ -19,6 +20,8 @@ export class HudScene extends Phaser.Scene {
   private chipText!: Phaser.GameObjects.BitmapText;
   private glyph!: Phaser.GameObjects.Image;
   private clockText!: Phaser.GameObjects.BitmapText;
+  private muteIcon!: Phaser.GameObjects.Image;
+  private muted = false;
   private mood: WeatherMood = "clearDay";
   private isDark = false;
 
@@ -72,6 +75,26 @@ export class HudScene extends Phaser.Scene {
       .setDepth(20)
       .setTint(CREAM);
 
+    this.muted = readHarborMute();
+    this.muteIcon = this.add
+      .image(0, 0, this.muted ? TEX.glyphMuteOff : TEX.glyphMuteOn)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(20)
+      .setInteractive({
+        useHandCursor: true,
+        hitArea: new Phaser.Geom.Rectangle(
+          Math.floor((MUTE_CHIP - MUTE_HIT) / 2),
+          Math.floor((MUTE_CHIP - MUTE_HIT) / 2),
+          MUTE_HIT,
+          MUTE_HIT,
+        ),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+      });
+    this.muteIcon.on("pointerdown", () => {
+      EventBus.emit("harbor-mute-toggle");
+    });
+
     this.stickEnabled = shouldShowVirtualStick();
     if (this.stickEnabled) {
       this.buildStick();
@@ -83,9 +106,12 @@ export class HudScene extends Phaser.Scene {
     this.scale.on("resize", this.onResize, this);
     EventBus.on("harbor-prompt", this.onPrompt);
     EventBus.on("harbor-weather", this.onWeather);
+    EventBus.on("harbor-mute-state", this.onMuteState);
+    EventBus.emit("harbor-mute-query");
     this.events.once("shutdown", () => {
       EventBus.off("harbor-prompt", this.onPrompt);
       EventBus.off("harbor-weather", this.onWeather);
+      EventBus.off("harbor-mute-state", this.onMuteState);
       this.scale.off("resize", this.onResize, this);
       this.emitStick(0);
     });
@@ -214,6 +240,11 @@ export class HudScene extends Phaser.Scene {
     }
   };
 
+  private onMuteState = (...args: unknown[]): void => {
+    this.muted = args[0] === true;
+    this.muteIcon.setTexture(this.muted ? TEX.glyphMuteOff : TEX.glyphMuteOn);
+  };
+
   private setPrompt(id: InteractId | null): void {
     if (!id) {
       this.chip.setVisible(false);
@@ -254,6 +285,8 @@ export class HudScene extends Phaser.Scene {
     this.clockText.setTint(clockCream ? CREAM : INK);
     this.clockText.setPosition(this.viewW - 6, 6);
     this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);
+    const inset = muteInset(this, this.viewW, this.viewH);
+    this.muteIcon.setPosition(inset.x, inset.y);
   }
 }
 
@@ -274,4 +307,22 @@ function glyphKey(mood: WeatherMood): string {
       return _exhaustive;
     }
   }
+}
+
+function cssSafeInset(side: "top" | "left"): number {
+  const key = side === "top" ? "--sat" : "--sal";
+  return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(key)) || 0;
+}
+
+function muteInset(
+  scene: Phaser.Scene,
+  viewW: number,
+  viewH: number,
+): { x: number; y: number } {
+  const canvas = scene.game.canvas;
+  const scaleX = Math.max(0.01, (canvas.clientWidth || viewW) / viewW);
+  const scaleY = Math.max(0.01, (canvas.clientHeight || viewH) / viewH);
+  const padX = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("left") / scaleX));
+  const padY = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("top") / scaleY));
+  return { x: padX, y: padY };
 }
