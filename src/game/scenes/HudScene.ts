@@ -358,27 +358,16 @@ export class HudScene extends Phaser.Scene {
     this.postcard.setView(this.viewW, this.viewH);
     const cx = Math.floor(this.viewW / 2);
 
-    // Stick bottom-left so it sits over water, not the hull/dock. Chip stays
-    // bottom-center (or just right of the stick on a 200-wide phone).
+    // Stick dead-center, raised off the bottom edge. Chip sits above it
+    // so the prompt never covers the handle.
     if (this.stickEnabled && this.stickHit) {
-      const r = this.stickRadius;
-      this.stickCx = r + 10;
-      this.stickCy = this.viewH - 10;
+      this.stickCx = cx;
+      this.stickCy = this.viewH - 36;
       this.stickHit.setPosition(this.stickCx, this.stickCy);
       this.drawStick(this.stickX);
-
-      let chipX = cx;
-      let chipY = this.viewH - 8;
-      if (this.chip.visible) {
-        const stickRight = this.stickCx + r + 8;
-        const chipW = this.chip.width || 80;
-        if (chipX - chipW / 2 < stickRight) {
-          chipX = Math.min(this.viewW - chipW / 2 - 8, stickRight + chipW / 2);
-        }
-      }
-      this.chip.setPosition(chipX, chipY);
-      this.chipText.setPosition(chipX, chipY - 4);
-      this.chipHit.setPosition(chipX, chipY + 2);
+      this.chip.setPosition(cx, this.viewH - 52);
+      this.chipText.setPosition(cx, this.viewH - 56);
+      this.chipHit.setPosition(cx, this.viewH - 50);
     } else {
       this.chip.setPosition(cx, this.viewH - 8);
       this.chipText.setPosition(cx, this.viewH - 12);
