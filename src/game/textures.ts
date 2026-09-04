@@ -94,9 +94,9 @@ export function ensureUiTextures(scene: Phaser.Scene): void {
     g.fillRect(2, 1, 1, 5);
     g.fillRect(3, 0, 1, 7);
     g.fillRect(4, 1, 1, 1);
-    g.fillRect(5, 2, 1, 1);
-    g.fillRect(6, 3, 1, 1);
-    g.fillRect(5, 4, 1, 1);
+    g.fillRect(6, 1, 1, 1);
+    g.fillRect(5, 3, 1, 1);
     g.fillRect(4, 5, 1, 1);
+    g.fillRect(6, 5, 1, 1);
   });
 }
