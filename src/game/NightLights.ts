@@ -9,7 +9,6 @@ import {
   boatFacingRight,
   boatSternOffsetX,
 } from "./layout";
-import type { WeatherMood } from "./weather";
 
 /**
  * Window/street lamps, hand lantern, lighthouse beam, boat bow/stern lights.
@@ -48,9 +47,9 @@ export class NightLights {
     this.lighthouse = lighthouse;
   }
 
-  ensureDecor(mood: WeatherMood): void {
+  ensureDecor(dark: boolean): void {
     if (this.nightLights.length > 0) {
-      this.setDecorVisible(mood === "night");
+      this.setDecorVisible(dark);
       return;
     }
 
@@ -128,7 +127,7 @@ export class NightLights {
       this.scene.lights.addLight(PLACES.signX.x, PLACES.signX.y - 12, 48, 0xfff2d0, 0),
     );
 
-    this.setDecorVisible(mood === "night");
+    this.setDecorVisible(dark);
   }
 
   setDecorVisible(on: boolean): void {
@@ -173,7 +172,7 @@ export class NightLights {
 
   updatePlayerLantern(
     player: Phaser.GameObjects.Sprite,
-    mood: WeatherMood,
+    dark: boolean,
     possession: Possession,
     entering: boolean,
     now: number,
@@ -185,7 +184,7 @@ export class NightLights {
       return;
     }
 
-    const night = mood === "night";
+    const night = dark;
     const show = night && player.visible && possession === "walker" && !entering;
 
     const facing = player.flipX ? -1 : 1;
@@ -217,7 +216,7 @@ export class NightLights {
     }
   }
 
-  updateBeam(dt: number, mood: WeatherMood): void {
+  updateBeam(dt: number, dark: boolean): void {
     if (!this.beam) {
       return;
     }
@@ -226,7 +225,7 @@ export class NightLights {
     this.beam.x = lantern.x;
     this.beam.y = lantern.y;
     this.beam.setConeRotation(this.beamAngle);
-    const on = mood === "night";
+    const on = dark;
     this.beam.setIntensity(on ? 2.6 : 0);
     this.beam.setVisible(on);
   }

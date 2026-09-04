@@ -21,10 +21,11 @@ import {
   WORLD_WIDTH,
 } from "../layout";
 import { loadTideLevel, tideShoreY, tideSurfaceY } from "../tide";
+import { DEFAULT_WIND, type WindSample } from "../flag";
+import { DAY_AMBIENT, colorToCss } from "../skyBodies";
 import {
-  ambientColor,
-  loadWeatherMood,
-  skyColor,
+  harborNow,
+  loadAtmosphere,
   type WeatherMood,
 } from "../weather";
 
@@ -66,6 +67,9 @@ export class HarborScene extends Phaser.Scene {
   private entering = false;
   private onStreamFile?: () => void;
   private onStreamComplete?: () => void;
+  private wind: WindSample = DEFAULT_WIND;
+  private skyIsDark = false;
+  private lastSkyCss = "";
 
   constructor() {
     super({ key: "Harbor" });
@@ -74,7 +78,7 @@ export class HarborScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.roundPixels = true;
     this.lights.enable();
-    this.lights.setAmbientColor(0x8899aa);
+    this.lights.setAmbientColor(DAY_AMBIENT);
 
     this.world = new HarborWorld(this);
     this.night = new NightLights(this);
@@ -92,11 +96,15 @@ export class HarborScene extends Phaser.Scene {
     applyHarborCamera(this, this.player);
     this.scale.on("resize", this.onResize, this);
 
-    void loadWeatherMood(window.location.search).then((mood) => {
+    void loadAtmosphere(window.location.search).then((atmo) => {
       if (!this.sys.isActive()) {
         return;
       }
-      this.applyMood(mood);
+      this.wind = {
+        speedKmh: atmo.windSpeedKmh,
+        directionDeg: atmo.windDirDeg,
+      };
+      this.applyMood(atmo.mood);
     });
     void loadTideLevel(window.location.search).then((level) => {
       if (!this.sys.isActive()) {
@@ -145,15 +153,17 @@ export class HarborScene extends Phaser.Scene {
     this.boat.updateWake(this.possession);
     this.boat.syncNav(this.possession === "boat");
     this.critters.update(dt);
-    this.night.updateBeam(dt, this.mood);
+    const sky = this.syncSky();
+    this.world.updateFlag(this.wind);
+    this.night.updateBeam(dt, sky.isDark);
     this.night.updatePlayerLantern(
       this.player,
-      this.mood,
+      sky.isDark,
       this.possession,
       this.entering,
       this.time.now,
     );
-    this.world.twinkleSky(dt, this.mood, this.time.now);
+    this.world.twinkleSky(dt, sky.isDark, this.time.now);
     this.refreshPrompt();
     snapHarborCamera(this);
   }
@@ -253,8 +263,8 @@ export class HarborScene extends Phaser.Scene {
     this.world.placeReadyProps();
     this.night.setLighthouse(this.world.lighthouse);
     this.boat.place();
-    this.night.ensureDecor(this.mood);
-    this.world.applySkyDressing(this.mood);
+    this.night.ensureDecor(this.skyIsDark);
+    this.syncSky();
     this.critters.ensure(this.mood);
   }
 
@@ -507,22 +517,46 @@ export class HarborScene extends Phaser.Scene {
     this.critters.setSurfaceY(surfaceY);
   }
 
+  private syncSky(): ReturnType<HarborWorld["updateSkyBodies"]> {
+    const { width } = harborViewSize(this);
+    const sky = this.world.updateSkyBodies(
+      harborNow(window.location.search),
+      width,
+      this.mood,
+    );
+    if (this.skyIsDark !== sky.isDark) {
+      this.skyIsDark = sky.isDark;
+      this.night.setDecorVisible(sky.isDark);
+    }
+    const css = colorToCss(sky.skyColor);
+    if (css !== this.lastSkyCss) {
+      this.lastSkyCss = css;
+      this.cameras.main.setBackgroundColor(sky.skyColor);
+      this.lights.setAmbientColor(sky.ambientColor);
+      EventBus.emit("harbor-weather", this.mood, { skyCss: css, isDark: sky.isDark });
+    }
+    return sky;
+  }
+
   private applyMood(mood: WeatherMood): void {
     this.mood = mood;
-    const sky = skyColor(mood);
-    this.cameras.main.setBackgroundColor(sky);
-    this.lights.setAmbientColor(ambientColor(mood));
-    this.world.applyWeather(mood, sky);
-    this.night.ensureDecor(mood);
-    this.night.setDecorVisible(mood === "night");
+    this.lastSkyCss = "";
+    const sky = this.syncSky();
+    this.skyIsDark = sky.isDark;
+    this.world.applyWeather(mood);
+    this.night.ensureDecor(sky.isDark);
+    this.night.setDecorVisible(sky.isDark);
     this.night.updatePlayerLantern(
       this.player,
-      mood,
+      sky.isDark,
       this.possession,
       this.entering,
       this.time.now,
     );
-    EventBus.emit("harbor-weather", mood);
+    EventBus.emit("harbor-weather", mood, {
+      skyCss: colorToCss(sky.skyColor),
+      isDark: sky.isDark,
+    });
     this.critters.ensure(mood);
   }
 }

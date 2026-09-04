@@ -34,5 +34,8 @@ Do not invent replacement art in code while "waiting" for a sheet.
 | `kayak-lighthouse-shark-waves.png` | Kayak, lighthouse, shark, waves |
 | `harbor-key-art.png` | Key / contact sheet |
 | `cormorant.png` | Perch, wing-dry, preen idle |
+| `flag-flagpole.png` | Flagpole + American flag flap frames |
+| `flagpole.png` | Isolated flagpole (tall wood + gold ball) |
+| `flag-frames.png` | Four-frame flag strip (limp → strong wind) |
 
 If a processed slice already exists, use it. Do not regenerate to "match a vibe."

@@ -20,6 +20,7 @@ export class HudScene extends Phaser.Scene {
   private glyph!: Phaser.GameObjects.Image;
   private clockText!: Phaser.GameObjects.BitmapText;
   private mood: WeatherMood = "clearDay";
+  private isDark = false;
 
   private stickEnabled = false;
   private stickBase?: Phaser.GameObjects.Graphics;
@@ -198,6 +199,7 @@ export class HudScene extends Phaser.Scene {
 
   private onWeather = (...args: unknown[]): void => {
     const mood = args[0];
+    const extra = args[1] as { isDark?: boolean } | undefined;
     if (
       mood === "clearDay" ||
       mood === "overcast" ||
@@ -206,6 +208,7 @@ export class HudScene extends Phaser.Scene {
       mood === "night"
     ) {
       this.mood = mood;
+      this.isDark = typeof extra?.isDark === "boolean" ? extra.isDark : mood === "night";
       this.glyph.setTexture(glyphKey(mood));
       this.layout();
     }
@@ -247,7 +250,7 @@ export class HudScene extends Phaser.Scene {
       this.chipText.setPosition(cx, this.viewH - 12);
     }
 
-    const clockCream = this.mood === "night" || this.mood === "rain";
+    const clockCream = this.isDark || this.mood === "rain";
     this.clockText.setTint(clockCream ? CREAM : INK);
     this.clockText.setPosition(this.viewW - 6, 6);
     this.glyph.setPosition(this.viewW - 8 - this.clockText.width, 6);

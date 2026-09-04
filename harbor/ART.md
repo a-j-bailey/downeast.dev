@@ -16,6 +16,8 @@ this.load.image('coffee-shop', '/harbor/processed/coffee-shop.png')
 
 Processed means: game-scale, cream keyed, 1px fringe eroded, alpha-bled. **Use these.** Do not redraw, recolor, upscale, or run them through a filter.
 
+Flag sprites (`flagpole.png`, `flag-0.png` … `flag-3.png`) are ingested by `scripts/process-harbor-flag.py`, which flood-fills cream from the sheet *edges* so stripe whites near `#fefaf0` are not keyed out.
+
 Locked files:
 
 - `cafe-interior.png` — cafe Interior scene. Do not restyle. Keep processed game-scale (not the 1536×1024 source sheet).

@@ -30,6 +30,8 @@ export const PLACES = {
   // Foreground of the wood dock; hull near bottom of screen.
   boat: { x: 98, y: BOAT_DOCK_Y },
   shackA: { x: 248, y: LAND_TOP_Y },
+  // Land side of the seawall, left of the trap pile beside shack-a.
+  flagpole: { x: 164, y: LAND_TOP_Y },
   shackB: { x: 338, y: LAND_TOP_Y },
   coffee: { x: 448, y: LAND_TOP_Y },
   lighthouse: { x: 390, y: 118 },
@@ -46,6 +48,8 @@ export const BOAT_DOCK_MAX_X = PLACES.boat.x;
 /** Boat in front of wood dock midground. */
 export const DOCK_DEPTH = BOAT_DOCK_Y - 10;
 export const BOAT_DEPTH = BOAT_DOCK_Y + 20;
+/** Flagpole on the village street, left of the lobster traps. */
+export const FLAGPOLE_DEPTH = LAND_TOP_Y + 10;
 
 /**
  * Cormorant feet on the wood dock deck above the seaward (leftmost) pylon.

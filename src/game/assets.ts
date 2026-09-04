@@ -39,6 +39,11 @@ export const BOOT_IMAGES = [
   "glow-street",
   "lantern",
   "lantern-glow",
+  "flagpole",
+  "flag-0",
+  "flag-1",
+  "flag-2",
+  "flag-3",
 ] as const;
 
 export const STREAM_IMAGES = [
