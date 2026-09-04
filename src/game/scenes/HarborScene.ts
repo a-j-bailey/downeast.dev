@@ -44,11 +44,17 @@ type Keys = {
   e: Phaser.Input.Keyboard.Key;
 };
 
+const WALK_Y = SPAWN.y;
+const BOAT_WATER_Y = PLACES.boat.y;
+
 export class HarborScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Sprite;
   private boat?: Phaser.GameObjects.Image;
   private wake?: Phaser.GameObjects.TileSprite;
   private water?: Phaser.GameObjects.TileSprite;
+  private waterDeep?: Phaser.GameObjects.TileSprite;
+  private foam?: Phaser.GameObjects.TileSprite;
+  private wavesLayer?: Phaser.GameObjects.TileSprite;
   private lighthouse?: Phaser.GameObjects.Image;
   private farShore?: Phaser.GameObjects.TileSprite;
   private fogVeil?: Phaser.GameObjects.Rectangle;
@@ -60,7 +66,6 @@ export class HarborScene extends Phaser.Scene {
   private possession: Possession = "walker";
   private walkTarget: { x: number; y: number } | null = null;
   private boatVx = 0;
-  private boatVy = 0;
   private beamAngle = 0;
   private mood: WeatherMood = "clearDay";
   private placed = new Set<string>();
@@ -69,6 +74,10 @@ export class HarborScene extends Phaser.Scene {
   private entering = false;
   private shark?: Phaser.GameObjects.Image;
   private sharkDir = 1;
+  private nightLights: Phaser.GameObjects.Light[] = [];
+  private nightGlows: Phaser.GameObjects.Image[] = [];
+  private boatNavLights: Phaser.GameObjects.Light[] = [];
+  private boatNavSprite?: Phaser.GameObjects.Image;
 
   constructor() {
     super({ key: "Harbor" });
@@ -124,36 +133,51 @@ export class HarborScene extends Phaser.Scene {
     this.steer(dt);
     this.updateDepth();
     this.updateWake();
+    this.syncBoatNav();
     this.updateShark(dt);
     this.updateBeam(dt);
     this.refreshPrompt();
   }
 
+  private idleTextureKey(): string {
+    return this.textures.exists("player-idle-stand") ? "player-idle-stand" : "player-idle";
+  }
+
   private makeAnims(): void {
     if (this.anims.exists("player-walk")) {
-      return;
+      this.anims.remove("player-walk");
+    }
+    if (this.anims.exists("player-idle")) {
+      this.anims.remove("player-idle");
+    }
+
+    const walkFrames: Phaser.Types.Animations.AnimationFrame[] = [];
+    const contacts = ["player-walk-0", "player-walk-1", "player-walk-2", "player-walk-3"];
+    const hasPass = this.textures.exists("player-walk-pass");
+    for (const key of contacts) {
+      walkFrames.push({ key });
+      if (hasPass) {
+        walkFrames.push({ key: "player-walk-pass" });
+      }
     }
     this.anims.create({
       key: "player-walk",
-      frames: [
-        { key: "player-walk-0" },
-        { key: "player-walk-1" },
-        { key: "player-walk-2" },
-        { key: "player-walk-3" },
-      ],
-      frameRate: 8,
+      frames: walkFrames,
+      frameRate: hasPass ? 10 : 8,
       repeat: -1,
     });
     this.anims.create({
       key: "player-idle",
-      frames: [{ key: "player-idle" }],
+      frames: [{ key: this.idleTextureKey() }],
       frameRate: 1,
     });
-    this.anims.create({
-      key: "player-use",
-      frames: [{ key: "player-use" }],
-      frameRate: 1,
-    });
+    if (!this.anims.exists("player-use")) {
+      this.anims.create({
+        key: "player-use",
+        frames: [{ key: "player-use" }],
+        frameRate: 1,
+      });
+    }
   }
 
   private buildBase(): void {
@@ -162,39 +186,102 @@ export class HarborScene extends Phaser.Scene {
     sky.setDepth(-100);
     sky.setName("sky");
 
-    const deep = this.add.rectangle(
+    const waterBandH = WATER_BOTTOM_Y - WATER_SURFACE_Y;
+    const deepKey = this.textures.exists("water-deep") ? "water-deep" : "water";
+    const deepH = this.textures.exists("water-deep") ? 60 : 32;
+    this.waterDeep = this.add.tileSprite(
       WORLD_WIDTH / 2,
-      (WATER_SURFACE_Y + WATER_BOTTOM_Y) / 2 + 8,
-      WORLD_WIDTH,
-      WATER_BOTTOM_Y - WATER_SURFACE_Y,
-      0x16344f,
+      WATER_SURFACE_Y + deepH / 2 + 4,
+      WORLD_WIDTH + 128,
+      deepH,
+      deepKey,
     );
-    deep.setScrollFactor(SCROLL.water);
-    deep.setDepth(18);
+    this.waterDeep.setScrollFactor(SCROLL.water);
+    this.waterDeep.setDepth(18);
+    this.waterDeep.setLighting(true);
 
+    // Fallback solid under deep band when tile is thinner than the water span.
+    if (deepH < waterBandH - 4) {
+      const deepFill = this.add.rectangle(
+        WORLD_WIDTH / 2,
+        (WATER_SURFACE_Y + WATER_BOTTOM_Y) / 2 + 8,
+        WORLD_WIDTH,
+        waterBandH,
+        0x16344f,
+      );
+      deepFill.setScrollFactor(SCROLL.water);
+      deepFill.setDepth(17);
+    }
+
+    if (this.textures.exists("waves-0")) {
+      this.wavesLayer = this.add.tileSprite(
+        WORLD_WIDTH / 2,
+        WATER_SURFACE_Y + 14,
+        WORLD_WIDTH + 128,
+        16,
+        "waves-0",
+      );
+      this.wavesLayer.setScrollFactor(SCROLL.water);
+      this.wavesLayer.setDepth(19);
+      this.wavesLayer.setLighting(true);
+    }
+
+    const surfaceKey = this.textures.exists("water") ? "water" : deepKey;
     this.water = this.add.tileSprite(
       WORLD_WIDTH / 2,
       WATER_SURFACE_Y + 16,
       WORLD_WIDTH + 128,
       32,
-      "water",
+      surfaceKey,
     );
     this.water.setScrollFactor(SCROLL.water);
     this.water.setDepth(20);
+    this.water.setLighting(true);
+    this.water.setAlpha(this.textures.exists("water-deep") ? 0.55 : 1);
 
-    const land = this.add.rectangle(
-      WORLD_WIDTH / 2,
-      (LAND_TOP_Y + WORLD_HEIGHT) / 2,
-      WORLD_WIDTH,
-      WORLD_HEIGHT - LAND_TOP_Y + 8,
-      0x5f7034,
-    );
-    land.setScrollFactor(SCROLL.land);
-    land.setDepth(30);
+    if (this.textures.exists("waves-foam")) {
+      this.foam = this.add.tileSprite(
+        WORLD_WIDTH / 2,
+        WATER_SURFACE_Y + 6,
+        WORLD_WIDTH + 128,
+        12,
+        "waves-foam",
+      );
+      this.foam.setScrollFactor(SCROLL.water);
+      this.foam.setDepth(21);
+      this.foam.setLighting(true);
+    }
 
-    const dirt = this.add.rectangle(WORLD_WIDTH / 2, LAND_TOP_Y + 4, WORLD_WIDTH, 10, 0x6b542e);
-    dirt.setScrollFactor(SCROLL.land);
-    dirt.setDepth(31);
+    const landH = WORLD_HEIGHT - LAND_TOP_Y + 8;
+    const landY = (LAND_TOP_Y + WORLD_HEIGHT) / 2;
+    if (this.textures.exists("road-stone")) {
+      const road = this.add.tileSprite(WORLD_WIDTH / 2, landY, WORLD_WIDTH, landH, "road-stone");
+      road.setScrollFactor(SCROLL.land);
+      road.setDepth(30);
+      road.setLighting(true);
+    } else {
+      const land = this.add.rectangle(WORLD_WIDTH / 2, landY, WORLD_WIDTH, landH, 0x5f7034);
+      land.setScrollFactor(SCROLL.land);
+      land.setDepth(30);
+    }
+
+    if (this.textures.exists("wharf-planks")) {
+      const stripH = 28;
+      const strip = this.add.tileSprite(
+        WORLD_WIDTH / 2,
+        WALK_Y - 6,
+        WORLD_WIDTH,
+        stripH,
+        "wharf-planks",
+      );
+      strip.setScrollFactor(SCROLL.land);
+      strip.setDepth(32);
+      strip.setLighting(true);
+    } else {
+      const dirt = this.add.rectangle(WORLD_WIDTH / 2, LAND_TOP_Y + 4, WORLD_WIDTH, 10, 0x6b542e);
+      dirt.setScrollFactor(SCROLL.land);
+      dirt.setDepth(31);
+    }
 
     this.fogVeil = this.add.rectangle(0, 0, 800, 400, 0xb8bec4, 0.4);
     this.fogVeil.setOrigin(0, 0);
@@ -229,10 +316,10 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private buildPlayer(): void {
-    this.player = this.add.sprite(SPAWN.x, SPAWN.y, "player-idle");
+    this.player = this.add.sprite(SPAWN.x, WALK_Y, this.idleTextureKey());
     this.player.setOrigin(0.5, 1);
     this.player.setScrollFactor(SCROLL.actors);
-    this.player.setDepth(SPAWN.y);
+    this.player.setDepth(WALK_Y);
     this.player.setLighting(true);
     this.player.play("player-idle");
   }
@@ -277,20 +364,25 @@ export class HarborScene extends Phaser.Scene {
     });
     this.lighthouse = this.children.getByName("lighthouse") as Phaser.GameObjects.Image | undefined;
 
-    this.onceImage("coffee-shop", "coffee-shop", PLACES.coffee.x, PLACES.coffee.y, {
+    this.placeBuilding("coffee-shop", "coffee-shop", PLACES.coffee.x, PLACES.coffee.y, {
       depth: PLACES.coffee.y - 8,
+      underpaint: true,
     });
-    this.onceImage("shack-a", "shack-a", PLACES.shackA.x, PLACES.shackA.y, {
+    this.placeBuilding("shack-a", "shack-a", PLACES.shackA.x, PLACES.shackA.y, {
       depth: PLACES.shackA.y - 8,
+      underpaint: true,
     });
-    this.onceImage("shack-b", "shack-b", PLACES.shackB.x, PLACES.shackB.y, {
+    this.placeBuilding("shack-b", "shack-b", PLACES.shackB.x, PLACES.shackB.y, {
       depth: PLACES.shackB.y - 8,
+      underpaint: true,
     });
     this.onceImage("sign-github", "sign-github", PLACES.signGithub.x, PLACES.signGithub.y, {
       depth: PLACES.signGithub.y,
+      lighting: false,
     });
     this.onceImage("sign-x", "sign-x", PLACES.signX.x, PLACES.signX.y, {
       depth: PLACES.signX.y,
+      lighting: false,
     });
     this.onceImage("kayak", "kayak", PLACES.kayak.x, PLACES.kayak.y, { depth: PLACES.kayak.y });
     this.onceImage("paddle", "paddle", PLACES.paddle.x, PLACES.paddle.y, {
@@ -302,6 +394,96 @@ export class HarborScene extends Phaser.Scene {
     this.placeTraps();
     this.placeBoat();
     this.placeClouds();
+    this.ensureNightDecor();
+  }
+
+  private placeBuilding(
+    id: string,
+    key: string,
+    x: number,
+    y: number,
+    opts: { depth: number; underpaint?: boolean },
+  ): void {
+    if (opts.underpaint && this.textures.exists(key) && !this.placed.has(`${id}-under`)) {
+      const frame = this.textures.get(key).get();
+      const uw = Math.max(24, Math.round(frame.width * 0.82));
+      const uh = Math.max(24, Math.round(frame.height * 0.72));
+      const under = this.add.rectangle(x, y - Math.round(frame.height * 0.42), uw, uh, 0x1a1814);
+      under.setName(`${id}-under`);
+      under.setOrigin(0.5, 0.5);
+      under.setScrollFactor(SCROLL.land);
+      under.setDepth(opts.depth - 1);
+      // Rectangles are unlit solids (no Light2D pipeline) — intentional underpaint.
+      this.placed.add(`${id}-under`);
+    }
+    this.onceImage(id, key, x, y, { depth: opts.depth });
+  }
+
+  private ensureNightDecor(): void {
+    if (this.nightLights.length > 0) {
+      this.setNightDecorVisible(this.mood === "night");
+      return;
+    }
+
+    const fixtures: { x: number; y: number; windowOx: number; windowOy: number; lampOx: number }[] = [
+      { x: PLACES.coffee.x, y: PLACES.coffee.y, windowOx: -18, windowOy: -48, lampOx: 8 },
+      { x: PLACES.shackA.x, y: PLACES.shackA.y, windowOx: -10, windowOy: -42, lampOx: 6 },
+      { x: PLACES.shackB.x, y: PLACES.shackB.y, windowOx: -8, windowOy: -40, lampOx: 4 },
+    ];
+
+    for (const fix of fixtures) {
+      const warm = this.lights.addLight(fix.x + 4, fix.y - 36, 110, 0xffb060, 0);
+      this.nightLights.push(warm);
+
+      const street = this.lights.addLight(fix.x + fix.lampOx, fix.y + 10, 70, 0xffe2a8, 0);
+      this.nightLights.push(street);
+
+      if (this.textures.exists("glow-window")) {
+        const glow = this.add.image(fix.x + fix.windowOx, fix.y + fix.windowOy, "glow-window");
+        glow.setScrollFactor(SCROLL.land);
+        glow.setDepth(fix.y - 7);
+        glow.setBlendMode(Phaser.BlendModes.ADD);
+        glow.setLighting(false);
+        glow.setVisible(false);
+        this.nightGlows.push(glow);
+      }
+      if (this.textures.exists("glow-street")) {
+        const lamp = this.add.image(fix.x + fix.lampOx, fix.y + 2, "glow-street");
+        lamp.setOrigin(0.5, 1);
+        lamp.setScrollFactor(SCROLL.land);
+        lamp.setDepth(fix.y + 2);
+        lamp.setBlendMode(Phaser.BlendModes.ADD);
+        lamp.setLighting(false);
+        lamp.setVisible(false);
+        this.nightGlows.push(lamp);
+      }
+    }
+
+    // Subtle sign highlights so unlit signs stay readable at night.
+    this.nightLights.push(
+      this.lights.addLight(PLACES.signGithub.x, PLACES.signGithub.y - 12, 48, 0xfff2d0, 0),
+    );
+    this.nightLights.push(
+      this.lights.addLight(PLACES.signX.x, PLACES.signX.y - 12, 48, 0xfff2d0, 0),
+    );
+
+    this.setNightDecorVisible(this.mood === "night");
+  }
+
+  private setNightDecorVisible(on: boolean): void {
+    for (const light of this.nightLights) {
+      light.setIntensity(on ? 1.4 : 0);
+      light.setVisible(on);
+    }
+    // Street lamps slightly softer than facade washes.
+    for (let i = 0; i < this.nightLights.length; i += 1) {
+      if (i % 2 === 1 && i < 6) {
+        this.nightLights[i]?.setIntensity(on ? 0.85 : 0);
+      }
+    }
+    for (const glow of this.nightGlows) {
+      glow.setVisible(on);
+    }
   }
 
   private placeSeawall(): void {
@@ -360,6 +542,16 @@ export class HarborScene extends Phaser.Scene {
       this.wake.setVisible(false);
       this.wake.setLighting(true);
     }
+    if (this.textures.exists("boat-nav-lights") && !this.boatNavSprite) {
+      this.boatNavSprite = this.add.image(PLACES.boat.x, PLACES.boat.y, "boat-nav-lights");
+      this.boatNavSprite.setOrigin(0.5, 1);
+      this.boatNavSprite.setScrollFactor(SCROLL.actors);
+      this.boatNavSprite.setDepth(PLACES.boat.y + 1);
+      this.boatNavSprite.setFlipX(true);
+      this.boatNavSprite.setBlendMode(Phaser.BlendModes.ADD);
+      this.boatNavSprite.setLighting(false);
+      this.boatNavSprite.setVisible(false);
+    }
   }
 
   private placeClouds(): void {
@@ -412,6 +604,7 @@ export class HarborScene extends Phaser.Scene {
       scrollFactor?: number;
       depth?: number;
       flipX?: boolean;
+      lighting?: boolean;
     } = {},
   ): Phaser.GameObjects.Image | undefined {
     if (this.placed.has(id) || !this.textures.exists(key)) {
@@ -422,7 +615,7 @@ export class HarborScene extends Phaser.Scene {
     img.setOrigin(0.5, 1);
     img.setScrollFactor(opts.scrollFactor ?? SCROLL.land);
     img.setDepth(opts.depth ?? y);
-    img.setLighting(true);
+    img.setLighting(opts.lighting ?? true);
     if (opts.flipX) {
       img.setFlipX(true);
     }
@@ -447,7 +640,8 @@ export class HarborScene extends Phaser.Scene {
     keyboard.on("keydown-E", () => this.tryInteract());
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       const world = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-      this.walkTarget = { x: world.x, y: world.y };
+      // Side-view: pointer walk uses X only; Y stays on the ground line.
+      this.walkTarget = { x: world.x, y: WALK_Y };
     });
   }
 
@@ -458,51 +652,40 @@ export class HarborScene extends Phaser.Scene {
   private wish(dt: number): { x: number; y: number; keyed: boolean } {
     void dt;
     let x = 0;
-    let y = 0;
+    // Vertical wish ignored for walker and boat (side-view lock).
     if (this.cursors.left.isDown || this.wasd.left.isDown) {
       x -= 1;
     }
     if (this.cursors.right.isDown || this.wasd.right.isDown) {
       x += 1;
     }
-    if (this.cursors.up.isDown || this.wasd.up.isDown) {
-      y -= 1;
-    }
-    if (this.cursors.down.isDown || this.wasd.down.isDown) {
-      y += 1;
-    }
-    const keyed = x !== 0 || y !== 0;
+    const keyed = x !== 0;
     if (keyed) {
       this.walkTarget = null;
     } else if (this.walkTarget) {
       const body = this.possession === "boat" && this.boat ? this.boat : this.player;
       x = this.walkTarget.x - body.x;
-      y = this.walkTarget.y - body.y;
-      if (Math.hypot(x, y) < 4) {
+      if (Math.abs(x) < 4) {
         this.walkTarget = null;
         x = 0;
-        y = 0;
       }
     }
-    const mag = Math.hypot(x, y);
-    if (mag > 0) {
-      x /= mag;
-      y /= mag;
+    if (x !== 0) {
+      x = Math.sign(x);
     }
-    return { x, y, keyed };
+    return { x, y: 0, keyed };
   }
 
   private steer(dt: number): void {
     const wish = this.wish(dt);
     if (this.possession === "boat" && this.boat) {
       this.boatVx += (wish.x * 96 - this.boatVx) * Math.min(1, 1.6 * dt);
-      this.boatVy += (wish.y * 52 - this.boatVy) * Math.min(1, 1.6 * dt);
-      this.boat.x = Phaser.Math.Clamp(this.boat.x + this.boatVx * dt, 60, WORLD_WIDTH - 60);
-      this.boat.y = Phaser.Math.Clamp(this.boat.y + this.boatVy * dt, WATER_SURFACE_Y + 18, WATER_BOTTOM_Y - 6);
+        this.boat.x = Phaser.Math.Clamp(this.boat.x + this.boatVx * dt, 60, WORLD_WIDTH - 60);
+      this.boat.y = BOAT_WATER_Y;
       if (Math.abs(this.boatVx) > 8) {
         this.boat.setFlipX(this.boatVx > 0);
       }
-      const moving = Math.hypot(this.boatVx, this.boatVy) > 12;
+      const moving = Math.abs(this.boatVx) > 12;
       if (moving && this.textures.exists("boat-underway")) {
         this.boat.setTexture("boat-underway");
       } else if (this.textures.exists("boat")) {
@@ -523,26 +706,15 @@ export class HarborScene extends Phaser.Scene {
       24,
       WORLD_WIDTH - 24,
     );
-    this.player.y = Phaser.Math.Clamp(
-      this.player.y + wish.y * speed * dt,
-      this.minWalkerY(this.player.x),
-      LAND_BOTTOM_Y,
-    );
+    this.player.y = WALK_Y;
     if (wish.x !== 0) {
       this.player.setFlipX(wish.x < 0);
     }
-    if (wish.x !== 0 || wish.y !== 0) {
+    if (wish.x !== 0) {
       this.player.play("player-walk", true);
     } else {
       this.player.play("player-idle", true);
     }
-  }
-
-  private minWalkerY(x: number): number {
-    if (x > 40 && x < 210) {
-      return 176;
-    }
-    return LAND_TOP_Y + 10;
   }
 
   private updateDepth(): void {
@@ -553,13 +725,16 @@ export class HarborScene extends Phaser.Scene {
     if (this.wake && this.boat) {
       this.wake.setDepth(this.boat.y - 1);
     }
+    if (this.boatNavSprite && this.boat) {
+      this.boatNavSprite.setDepth(this.boat.y + 1);
+    }
   }
 
   private updateWake(): void {
     if (!this.wake || !this.boat) {
       return;
     }
-    const moving = this.possession === "boat" && Math.hypot(this.boatVx, this.boatVy) > 14;
+    const moving = this.possession === "boat" && Math.abs(this.boatVx) > 14;
     this.wake.setVisible(moving);
     if (!moving) {
       return;
@@ -571,9 +746,65 @@ export class HarborScene extends Phaser.Scene {
     this.wake.tilePositionX += facingRight ? 40 * 0.016 : -40 * 0.016;
   }
 
+  private ensureBoatNavLights(): void {
+    if (this.boatNavLights.length > 0 || !this.boat) {
+      return;
+    }
+    // Port (red), starboard (green), mast (white) — intensities toggled on board.
+    this.boatNavLights.push(this.lights.addLight(this.boat.x - 20, this.boat.y - 18, 42, 0xff3355, 0));
+    this.boatNavLights.push(this.lights.addLight(this.boat.x + 20, this.boat.y - 18, 42, 0x44ff88, 0));
+    this.boatNavLights.push(this.lights.addLight(this.boat.x, this.boat.y - 28, 36, 0xfff5e0, 0));
+  }
+
+  private setBoatNavVisible(on: boolean): void {
+    this.ensureBoatNavLights();
+    for (const light of this.boatNavLights) {
+      light.setIntensity(on ? 1.6 : 0);
+      light.setVisible(on);
+    }
+    if (this.boatNavSprite) {
+      this.boatNavSprite.setVisible(on);
+    }
+  }
+
+  private syncBoatNav(): void {
+    if (!this.boat || this.possession !== "boat") {
+      return;
+    }
+    this.ensureBoatNavLights();
+    const facingRight = this.boat.flipX;
+    const port = facingRight ? -22 : 22;
+    const starboard = facingRight ? 22 : -22;
+    if (this.boatNavLights[0]) {
+      this.boatNavLights[0].x = this.boat.x + port;
+      this.boatNavLights[0].y = this.boat.y - 18;
+    }
+    if (this.boatNavLights[1]) {
+      this.boatNavLights[1].x = this.boat.x + starboard;
+      this.boatNavLights[1].y = this.boat.y - 18;
+    }
+    if (this.boatNavLights[2]) {
+      this.boatNavLights[2].x = this.boat.x;
+      this.boatNavLights[2].y = this.boat.y - 28;
+    }
+    if (this.boatNavSprite) {
+      this.boatNavSprite.setPosition(this.boat.x, this.boat.y);
+      this.boatNavSprite.setFlipX(this.boat.flipX);
+    }
+  }
+
   private scrollWater(dt: number): void {
+    if (this.waterDeep) {
+      this.waterDeep.tilePositionX += 8 * dt;
+    }
     if (this.water) {
       this.water.tilePositionX += 12 * dt;
+    }
+    if (this.wavesLayer) {
+      this.wavesLayer.tilePositionX += 18 * dt;
+    }
+    if (this.foam) {
+      this.foam.tilePositionX += 22 * dt;
     }
   }
 
@@ -639,14 +870,15 @@ export class HarborScene extends Phaser.Scene {
   }
 
   private zones(): Zone[] {
+    // Walker Y is locked to WALK_Y — zone centers must sit on that line.
     const zones: Zone[] = [
-      { id: "cafe", x: PLACES.coffee.x + 28, y: LAND_TOP_Y + 18, w: 50, h: 36, mode: "walker" },
-      { id: "board", x: PLACES.boat.x, y: 184, w: 70, h: 40, mode: "walker" },
-      { id: "dismount", x: PLACES.pylon.x + 10, y: 176, w: 70, h: 40, mode: "boat" },
-      { id: "github", x: PLACES.signGithub.x, y: LAND_TOP_Y + 16, w: 36, h: 40, mode: "walker" },
-      { id: "x", x: PLACES.signX.x, y: LAND_TOP_Y + 16, w: 36, h: 40, mode: "walker" },
-      { id: "zoning", x: PLACES.shackA.x - 8, y: LAND_TOP_Y + 16, w: 50, h: 36, mode: "walker" },
-      { id: "potager", x: PLACES.shackB.x - 8, y: LAND_TOP_Y + 16, w: 50, h: 36, mode: "walker" },
+      { id: "cafe", x: PLACES.coffee.x + 28, y: WALK_Y, w: 56, h: 48, mode: "walker" },
+      { id: "board", x: PLACES.boat.x + 8, y: WALK_Y, w: 80, h: 48, mode: "walker" },
+      { id: "dismount", x: PLACES.pylon.x + 10, y: BOAT_WATER_Y, w: 70, h: 48, mode: "boat" },
+      { id: "github", x: PLACES.signGithub.x, y: WALK_Y, w: 40, h: 48, mode: "walker" },
+      { id: "x", x: PLACES.signX.x, y: WALK_Y, w: 40, h: 48, mode: "walker" },
+      { id: "zoning", x: PLACES.shackA.x - 8, y: WALK_Y, w: 56, h: 48, mode: "walker" },
+      { id: "potager", x: PLACES.shackB.x - 8, y: WALK_Y, w: 56, h: 48, mode: "walker" },
     ];
     return zones;
   }
@@ -728,22 +960,27 @@ export class HarborScene extends Phaser.Scene {
     this.player.setVisible(false);
     this.walkTarget = null;
     this.boatVx = 0;
-    this.boatVy = 0;
+    this.boat.y = BOAT_WATER_Y;
+    this.setBoatNavVisible(true);
+    this.syncBoatNav();
     applyHarborCamera(this, this.boat);
   }
 
   private dismount(): void {
     this.possession = "walker";
     this.player.setVisible(true);
-    this.player.setPosition(PLACES.pylon.x + 24, LAND_TOP_Y + 22);
+    this.player.setPosition(PLACES.pylon.x + 24, WALK_Y);
     this.boatVx = 0;
-    this.boatVy = 0;
-    if (this.boat && this.textures.exists("boat")) {
-      this.boat.setTexture("boat");
+    if (this.boat) {
+      this.boat.y = BOAT_WATER_Y;
+      if (this.textures.exists("boat")) {
+        this.boat.setTexture("boat");
+      }
     }
     if (this.wake) {
       this.wake.setVisible(false);
     }
+    this.setBoatNavVisible(false);
     applyHarborCamera(this, this.player);
   }
 
@@ -772,6 +1009,8 @@ export class HarborScene extends Phaser.Scene {
         this.rain.stop();
       }
     }
+    this.ensureNightDecor();
+    this.setNightDecorVisible(mood === "night");
     EventBus.emit("harbor-weather", mood);
   }
 

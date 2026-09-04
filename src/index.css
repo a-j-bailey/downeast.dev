@@ -198,12 +198,13 @@ img {
 .harbor-root {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   outline: none;
 }
 
 .harbor-root canvas {
   display: block;
-  /* Let Phaser.Scale.FIT size the canvas; forcing 100% height tore layers on portrait. */
+  /* Phaser Scale (FIT / ENVELOP) owns size — never force width/height 100%. */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }

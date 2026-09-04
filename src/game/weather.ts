@@ -92,7 +92,7 @@ export function ambientColor(mood: WeatherMood): number {
     case "fog":
       return 0x889099;
     case "night":
-      return 0x1a2233;
+      return 0x2a3344;
     default: {
       const _exhaustive: never = mood;
       return _exhaustive;

@@ -2,11 +2,18 @@ export const ART_DIR = "/harbor/processed";
 
 export const BOOT_IMAGES = [
   "water",
+  "water-deep",
+  "waves-foam",
+  "waves-0",
+  "wharf-planks",
+  "road-stone",
   "player-idle",
+  "player-idle-stand",
   "player-walk-0",
   "player-walk-1",
   "player-walk-2",
   "player-walk-3",
+  "player-walk-pass",
   "player-use",
   "coffee-shop",
   "lighthouse",
@@ -14,12 +21,15 @@ export const BOOT_IMAGES = [
   "seawall",
   "pier",
   "boat",
+  "boat-nav-lights",
   "shack-a",
   "shack-b",
   "sign-github",
   "sign-x",
   "kayak",
   "cloud",
+  "glow-window",
+  "glow-street",
 ] as const;
 
 export const STREAM_IMAGES = [
@@ -32,6 +42,8 @@ export const STREAM_IMAGES = [
   "trap-buoy",
   "shark",
   "shark-fin",
+  "waves-1",
+  "waves-2",
 ] as const;
 
 export function artUrl(key: string): string {
