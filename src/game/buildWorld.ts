@@ -184,6 +184,8 @@ export class HarborWorld {
       this.landPlanks.setDepth(DEPTH.planks);
     }
 
+    this.layoutWater();
+
     this.fogVeil = this.scene.add.rectangle(0, 0, 800, 400, 0xb8bec4, 0.4);
     this.fogVeil.setOrigin(0, 0);
     this.fogVeil.setScrollFactor(0);
@@ -303,6 +305,54 @@ export class HarborWorld {
       }
       star.setAlpha(0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * (1.3 + i * 0.17) + i)));
     });
+  }
+
+  layoutWater(): void {
+    const surfaceY = WATER_SURFACE_Y;
+    const shoreY = WATER_BOTTOM_Y;
+    const waterTop = Math.min(surfaceY, HORIZON_Y);
+    const bandX = WORLD_MID_X;
+    const bandW = WORLD_SPAN + 256;
+
+    // Fill to the bottom of the view so open sea left of the seawall is
+    // water, not a sky hole under the boat. Land backing still covers
+    // the street from LAND_TOP_Y down.
+    const deepH = Math.max(56, WORLD_HEIGHT - waterTop + 8);
+    if (this.waterDeep) {
+      this.waterDeep.setSize(bandW, deepH);
+      this.waterDeep.setPosition(bandX, Math.round(waterTop));
+    }
+    if (this.deepFill) {
+      this.deepFill.setSize(bandW, deepH + 4);
+      this.deepFill.setPosition(bandX, Math.round(waterTop));
+    }
+    if (this.wavesLayer) {
+      this.wavesLayer.setPosition(bandX, Math.round(surfaceY + 2));
+    }
+    if (this.water) {
+      this.water.setPosition(bandX, Math.round(surfaceY));
+    }
+    if (this.foam) {
+      this.foam.setPosition(bandX, Math.round(surfaceY));
+    }
+    if (this.shoreFoam) {
+      this.shoreFoam.setPosition(LAND_BAND_X, Math.round(shoreY));
+    }
+    const landH = WORLD_HEIGHT - LAND_TOP_Y + 8;
+    if (this.landBack) {
+      this.landBack.setSize(LAND_BAND_W, landH);
+      this.landBack.setPosition(LAND_BAND_X, Math.round(LAND_TOP_Y));
+    }
+    if (this.landFill) {
+      this.landFill.setSize(LAND_BAND_W, landH);
+      this.landFill.setPosition(LAND_BAND_X, Math.round(LAND_TOP_Y));
+    }
+    if (this.landPlanks) {
+      const plankTop = Math.round(LAND_TOP_Y - 8);
+      this.landPlanks.setSize(LAND_BAND_W, WORLD_HEIGHT - plankTop + 6);
+      this.landPlanks.setPosition(LAND_BAND_X, plankTop);
+    }
+    this.markWaterHomes();
   }
 
   scrollWater(dt: number): void {
