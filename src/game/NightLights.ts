@@ -73,7 +73,7 @@ export class NightLights {
         windowW: 36,
         windowH: 18,
         lampOx: 8,
-        lampOy: 2,
+        lampOy: -4,
       },
       {
         x: PLACES.shackA.x,
@@ -83,7 +83,7 @@ export class NightLights {
         windowW: 14,
         windowH: 12,
         lampOx: 6,
-        lampOy: 2,
+        lampOy: -4,
       },
       {
         x: PLACES.shackB.x,
@@ -93,7 +93,7 @@ export class NightLights {
         windowW: 12,
         windowH: 12,
         lampOx: 4,
-        lampOy: 2,
+        lampOy: -4,
       },
     ];
 

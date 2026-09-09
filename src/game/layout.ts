@@ -36,6 +36,7 @@ export const PLACES = {
   dock: { x: 36, y: DOCK_PLACE_Y },
   // Hull in the water just left of the dock; whole 171px sprite fits a 200-wide phone view.
   boat: { x: 44, y: BOAT_DOCK_Y },
+  // Village origin (0.5, 1) on the walking boards — not the seawall dirt line.
   shackA: { x: 248, y: WALKER_Y },
   // Land side of the seawall, left of the trap pile beside shack-a.
   flagpole: { x: 164, y: WALKER_Y },
@@ -53,10 +54,11 @@ export const PLACES = {
 } as const;
 
 /**
- * Far-shore hill is 10px with a solid plate on the bottom rows. Sit that
- * plate under the waterline so only the irregular peaks meet the surface.
+ * Show only the irregular peaks of far-shore.png. The full 10px tile has a
+ * solid plate on the bottom rows that reads as a dark band above the water.
  */
-export const FAR_SHORE_Y = WATER_SURFACE_Y + 6;
+export const FAR_SHORE_VISIBLE_H = 4;
+export const FAR_SHORE_Y = WATER_SURFACE_Y;
 
 /**
  * Halfway between the flagpole and the leftmost shack (Zoning Radar).

@@ -3,6 +3,7 @@ import { DEPTH, SCROLL } from "./layers";
 import {
   DOCK_DEPTH,
   FLAGPOLE_DEPTH,
+  FAR_SHORE_VISIBLE_H,
   FAR_SHORE_Y,
   HORIZON_Y,
   LAND_BAND_W,
@@ -152,6 +153,7 @@ export class HarborWorld {
       this.landFill.setOrigin(0.5, 0);
       this.landFill.setScrollFactor(SCROLL.land);
       this.landFill.setDepth(DEPTH.land);
+      this.landFill.setLighting(false);
     } else {
       this.landFill = this.scene.add.rectangle(LAND_BAND_X, LAND_TOP_Y, LAND_BAND_W, landH, 0x5f7034);
       this.landFill.setOrigin(0.5, 0);
@@ -172,7 +174,9 @@ export class HarborWorld {
       this.landPlanks.setOrigin(0.5, 0);
       this.landPlanks.setScrollFactor(SCROLL.land);
       this.landPlanks.setDepth(DEPTH.planks);
-      this.landPlanks.setLighting(true);
+      // Night ambient is ~0x1a2030. Lit planks go navy-black under unlit
+      // façades and read as a hover gap; keep the boards opaque like the walls.
+      this.landPlanks.setLighting(false);
     } else {
       this.landPlanks = this.scene.add.rectangle(
         LAND_BAND_X,
@@ -210,8 +214,11 @@ export class HarborWorld {
 
   placeReadyProps(): void {
     const farH = this.scene.textures.exists("far-shore")
-      ? this.scene.textures.get("far-shore").get().height
-      : 10;
+      ? Math.min(
+          FAR_SHORE_VISIBLE_H,
+          this.scene.textures.get("far-shore").get().height,
+        )
+      : FAR_SHORE_VISIBLE_H;
     this.farShore = this.tileIfNeeded(
       "far-shore",
       "far-shore",
@@ -256,9 +263,13 @@ export class HarborWorld {
       depth: PLACES.signX.y,
       lighting: false,
     });
-    this.onceImage("kayak", "kayak", PLACES.kayak.x, PLACES.kayak.y, { depth: PLACES.kayak.y });
+    this.onceImage("kayak", "kayak", PLACES.kayak.x, PLACES.kayak.y, {
+      depth: PLACES.kayak.y,
+      lighting: false,
+    });
     this.onceImage("paddle", "paddle", PLACES.paddle.x, PLACES.paddle.y, {
       depth: PLACES.paddle.y,
+      lighting: false,
     });
 
     this.placeSeawall();
@@ -531,10 +542,22 @@ export class HarborWorld {
   }
 
   private placeTraps(): void {
-    this.onceImage("trap-0", "trap", 198, WALKER_Y + 6, { depth: WALKER_Y + 6 });
-    this.onceImage("trap-stack", "trap-stack", 214, WALKER_Y + 8, { depth: WALKER_Y + 8 });
-    this.onceImage("trap-buoy", "trap-buoy", 760, WALKER_Y + 4, { depth: WALKER_Y + 4 });
-    this.onceImage("trap-1", "trap", 900, WALKER_Y + 6, { depth: WALKER_Y + 6 });
+    this.onceImage("trap-0", "trap", 198, WALKER_Y + 6, {
+      depth: WALKER_Y + 6,
+      lighting: false,
+    });
+    this.onceImage("trap-stack", "trap-stack", 214, WALKER_Y + 8, {
+      depth: WALKER_Y + 8,
+      lighting: false,
+    });
+    this.onceImage("trap-buoy", "trap-buoy", 760, WALKER_Y + 4, {
+      depth: WALKER_Y + 4,
+      lighting: false,
+    });
+    this.onceImage("trap-1", "trap", 900, WALKER_Y + 6, {
+      depth: WALKER_Y + 6,
+      lighting: false,
+    });
   }
 
   private placeFlag(): void {
@@ -544,7 +567,7 @@ export class HarborWorld {
         "flagpole",
         FLAGPOLE_PLACE.x,
         FLAGPOLE_PLACE.y,
-        { depth: FLAGPOLE_DEPTH },
+        { depth: FLAGPOLE_DEPTH, lighting: false },
       );
     }
     const flagKey = FLAG_KEYS.find((key) => this.scene.textures.exists(key));

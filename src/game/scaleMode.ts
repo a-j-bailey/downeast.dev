@@ -43,20 +43,22 @@ export function layoutHarborCanvas(
   _viewW: number = VIEW_WIDTH,
   _viewH: number = VIEW_HEIGHT,
 ): void {
-  const parentW = Math.max(1, parent.clientWidth || window.innerWidth || 1);
-  const parentH = Math.max(1, parent.clientHeight || window.innerHeight || 1);
-
   canvas.style.position = "absolute";
+  canvas.style.inset = "0";
   canvas.style.left = "0";
   canvas.style.top = "0";
   canvas.style.right = "0";
   canvas.style.bottom = "0";
   canvas.style.transform = "none";
-  canvas.style.width = `${parentW}px`;
-  canvas.style.height = `${parentH}px`;
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
   canvas.style.maxWidth = "none";
   canvas.style.maxHeight = "none";
   canvas.style.margin = "0";
   canvas.style.imageRendering = "pixelated";
+  parent.style.position = parent.style.position || "absolute";
+  parent.style.inset = "0";
+  parent.style.width = "100%";
+  parent.style.height = "100%";
   parent.style.overflow = "hidden";
 }
