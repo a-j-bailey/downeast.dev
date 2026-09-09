@@ -56,7 +56,7 @@ The eight-item GROK_BOT pass was against **production main**, which did not incl
 | 2 Soft scale | Tall phones still **fill** the parent (Adam). CSS size is integer px; `image-rendering: pixelated`. Non-uniform stretch is the fill tradeoff — integer zoom crops the boat. |
 | 3 Clock | Cream on night / rain / fog / dusk (sky lum < 152). Hud boots cream when the clock or `?weather=` says dark, so it does not flash ink. |
 | 4 Night | Forced night is navy sky `0x0a0e16` + ambient `0x1a2436` on create (not after fetch). |
-| 5 Tide | Half-range 12px (24px high vs low). `?tide=` snaps immediately instead of easing from mid. |
+| 5 Tide | Removed. Waterline is the authored seawall / dock / berth rest pose. No `?tide=`. |
 | 6 Ferry | Visible lane, cream hull tint, larger cabin glow at night. `?ferry=1` |
 | 7 Postcard | Keep walking is a solid ink chip; slightly taller hit. `?card=1` |
 | 8 Touch | Stick on touch / coarse / ≤720 / tall / `?stick=1`. Chip + 22px hit zone. |

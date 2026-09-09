@@ -10,6 +10,8 @@ import {
   PLACES,
   SEAWALL_ORIGIN_X,
   SEAWALL_TILE_W,
+  WATER_BOTTOM_Y,
+  WATER_SURFACE_Y,
   WORLD_HEIGHT,
   WORLD_MAX_X,
   WORLD_MID_X,
@@ -19,7 +21,6 @@ import {
 } from "./layout";
 import { setPixelHome } from "./camera";
 import { TEX } from "./textures";
-import { tideShoreY, tideSurfaceY, tideWaterTop } from "./tide";
 import type { WeatherMood } from "./weather";
 import {
   FLAGPOLE_PLACE,
@@ -36,7 +37,6 @@ export class HarborWorld {
   waterDeep?: Phaser.GameObjects.TileSprite;
   foam?: Phaser.GameObjects.TileSprite;
   shoreFoam?: Phaser.GameObjects.TileSprite;
-  shoreWash?: Phaser.GameObjects.TileSprite;
   wavesLayer?: Phaser.GameObjects.TileSprite;
   lighthouse?: Phaser.GameObjects.Image;
   farCottages: Phaser.GameObjects.Image[] = [];
@@ -45,7 +45,6 @@ export class HarborWorld {
   rain?: Phaser.GameObjects.Particles.ParticleEmitter;
   clouds: Phaser.GameObjects.Image[] = [];
   waterPhase = 0;
-  surfaceY = tideSurfaceY(0.5);
   skyIsDark = false;
 
   private scene: Phaser.Scene;
@@ -69,6 +68,12 @@ export class HarborWorld {
   buildBase(): void {
     const bandX = WORLD_MID_X;
     const bandW = WORLD_SPAN + 256;
+    const waterTop = WATER_SURFACE_Y;
+    // Fill to the bottom of the view so open sea left of the seawall is
+    // water, not a sky hole under the boat. Land backing still covers
+    // the street from LAND_TOP_Y down.
+    const deepH = Math.max(56, WORLD_HEIGHT - waterTop + 8);
+    const landH = WORLD_HEIGHT - LAND_TOP_Y + 8;
 
     const sky = this.scene.add.rectangle(
       bandX,
@@ -82,21 +87,21 @@ export class HarborWorld {
     sky.setName("sky");
 
     const deepKey = this.scene.textures.exists("water-deep") ? "water-deep" : "water";
-    this.waterDeep = this.scene.add.tileSprite(bandX, 0, bandW, 56, deepKey);
+    this.waterDeep = this.scene.add.tileSprite(bandX, waterTop, bandW, deepH, deepKey);
     this.waterDeep.setOrigin(0.5, 0);
     this.waterDeep.setScrollFactor(SCROLL.water);
     this.waterDeep.setDepth(DEPTH.waterDeep);
     this.waterDeep.setLighting(true);
     setPixelHome(this.waterDeep);
 
-    this.deepFill = this.scene.add.rectangle(bandX, 0, bandW, 4, 0x16344f);
+    this.deepFill = this.scene.add.rectangle(bandX, waterTop, bandW, deepH + 4, 0x16344f);
     this.deepFill.setOrigin(0.5, 0);
     this.deepFill.setScrollFactor(SCROLL.water);
     this.deepFill.setDepth(DEPTH.waterFill);
     setPixelHome(this.deepFill);
 
     if (this.scene.textures.exists("waves-0")) {
-      this.wavesLayer = this.scene.add.tileSprite(bandX, 0, bandW, 16, "waves-0");
+      this.wavesLayer = this.scene.add.tileSprite(bandX, WATER_SURFACE_Y + 2, bandW, 16, "waves-0");
       this.wavesLayer.setOrigin(0.5, 0);
       this.wavesLayer.setScrollFactor(SCROLL.water);
       this.wavesLayer.setDepth(DEPTH.waves);
@@ -105,7 +110,7 @@ export class HarborWorld {
     }
 
     const surfaceKey = this.scene.textures.exists("water") ? "water" : deepKey;
-    this.water = this.scene.add.tileSprite(bandX, 0, bandW, 32, surfaceKey);
+    this.water = this.scene.add.tileSprite(bandX, WATER_SURFACE_Y, bandW, 32, surfaceKey);
     this.water.setOrigin(0.5, 0);
     this.water.setScrollFactor(SCROLL.water);
     this.water.setDepth(DEPTH.water);
@@ -115,51 +120,42 @@ export class HarborWorld {
 
     if (this.scene.textures.exists("waves-foam")) {
       const foamH = Math.max(12, this.scene.textures.get("waves-foam").get().height);
-      this.foam = this.scene.add.tileSprite(bandX, 0, bandW, foamH, "waves-foam");
+      this.foam = this.scene.add.tileSprite(bandX, WATER_SURFACE_Y, bandW, foamH, "waves-foam");
       this.foam.setOrigin(0.5, 0);
       this.foam.setScrollFactor(SCROLL.water);
       this.foam.setDepth(DEPTH.foam);
       this.foam.setLighting(true);
       setPixelHome(this.foam);
 
-      this.shoreFoam = this.scene.add.tileSprite(LAND_BAND_X, 0, LAND_BAND_W, foamH, "waves-foam");
+      this.shoreFoam = this.scene.add.tileSprite(
+        LAND_BAND_X,
+        WATER_BOTTOM_Y,
+        LAND_BAND_W,
+        foamH,
+        "waves-foam",
+      );
       this.shoreFoam.setOrigin(0.5, 0.5);
       this.shoreFoam.setScrollFactor(SCROLL.land);
       this.shoreFoam.setDepth(DEPTH.shoreFoam);
       this.shoreFoam.setLighting(true);
-
-      this.shoreWash = this.scene.add.tileSprite(
-        LAND_BAND_X,
-        0,
-        LAND_BAND_W,
-        8,
-        this.scene.textures.exists("water-deep") ? "water-deep" : "waves-foam",
-      );
-      this.shoreWash.setOrigin(0.5, 0.5);
-      this.shoreWash.setScrollFactor(SCROLL.land);
-      this.shoreWash.setDepth(DEPTH.shoreWash);
-      this.shoreWash.setLighting(true);
-      this.shoreWash.setVisible(false);
     }
 
-    this.landBack = this.scene.add.rectangle(LAND_BAND_X, 0, LAND_BAND_W, 8, 0x3a3228);
+    this.landBack = this.scene.add.rectangle(LAND_BAND_X, LAND_TOP_Y, LAND_BAND_W, landH, 0x3a3228);
     this.landBack.setOrigin(0.5, 0);
     this.landBack.setScrollFactor(SCROLL.land);
     this.landBack.setDepth(DEPTH.landBack);
 
     if (this.scene.textures.exists("road-stone")) {
-      this.landFill = this.scene.add.tileSprite(LAND_BAND_X, 0, LAND_BAND_W, 8, "road-stone");
+      this.landFill = this.scene.add.tileSprite(LAND_BAND_X, LAND_TOP_Y, LAND_BAND_W, landH, "road-stone");
       this.landFill.setOrigin(0.5, 0);
       this.landFill.setScrollFactor(SCROLL.land);
       this.landFill.setDepth(DEPTH.land);
     } else {
-      this.landFill = this.scene.add.rectangle(LAND_BAND_X, 0, LAND_BAND_W, 8, 0x5f7034);
+      this.landFill = this.scene.add.rectangle(LAND_BAND_X, LAND_TOP_Y, LAND_BAND_W, landH, 0x5f7034);
       this.landFill.setOrigin(0.5, 0);
       this.landFill.setScrollFactor(SCROLL.land);
       this.landFill.setDepth(DEPTH.land);
     }
-
-    this.applyTide(0.5);
 
     if (this.scene.textures.exists("wharf-planks")) {
       const plankTop = LAND_TOP_Y - 8;
@@ -309,65 +305,6 @@ export class HarborWorld {
     });
   }
 
-  applyTide(level: number): void {
-    const surfaceY = tideSurfaceY(level);
-    const shoreY = tideShoreY(level);
-    const waterTop = tideWaterTop(surfaceY);
-    this.surfaceY = surfaceY;
-    const bandX = WORLD_MID_X;
-    const bandW = WORLD_SPAN + 256;
-
-    // Fill to the bottom of the view so open sea left of the seawall is
-    // water, not a sky hole under the boat. Land backing still covers
-    // the street from LAND_TOP_Y down.
-    const deepH = Math.max(56, WORLD_HEIGHT - waterTop + 8);
-    if (this.waterDeep) {
-      this.waterDeep.setSize(bandW, deepH);
-      this.waterDeep.setPosition(bandX, Math.round(waterTop));
-    }
-    if (this.deepFill) {
-      this.deepFill.setSize(bandW, deepH + 4);
-      this.deepFill.setPosition(bandX, Math.round(waterTop));
-    }
-    if (this.wavesLayer) {
-      this.wavesLayer.setPosition(bandX, Math.round(surfaceY + 2));
-    }
-    if (this.water) {
-      this.water.setPosition(bandX, Math.round(surfaceY));
-    }
-    if (this.foam) {
-      this.foam.setPosition(bandX, Math.round(surfaceY));
-    }
-    if (this.shoreFoam) {
-      this.shoreFoam.setPosition(LAND_BAND_X, Math.round(shoreY));
-    }
-    if (this.shoreWash) {
-      const washH = Math.max(0, shoreY - LAND_TOP_Y);
-      this.shoreWash.setVisible(washH > 0);
-      if (washH > 0) {
-        const h = Math.max(8, washH + 2);
-        this.shoreWash.setSize(LAND_BAND_W, h);
-        this.shoreWash.setPosition(LAND_BAND_X, Math.round(LAND_TOP_Y + washH / 2));
-      }
-    }
-    const landTop = Math.min(LAND_TOP_Y, shoreY);
-    const landH = WORLD_HEIGHT - landTop + 8;
-    if (this.landBack) {
-      this.landBack.setSize(LAND_BAND_W, landH);
-      this.landBack.setPosition(LAND_BAND_X, Math.round(landTop));
-    }
-    if (this.landFill) {
-      this.landFill.setSize(LAND_BAND_W, landH);
-      this.landFill.setPosition(LAND_BAND_X, Math.round(landTop));
-    }
-    if (this.landPlanks) {
-      const plankTop = Math.round(LAND_TOP_Y - 8);
-      this.landPlanks.setSize(LAND_BAND_W, WORLD_HEIGHT - plankTop + 6);
-      this.landPlanks.setPosition(LAND_BAND_X, plankTop);
-    }
-    this.markWaterHomes();
-  }
-
   scrollWater(dt: number): void {
     this.waterPhase += dt;
     const t = this.waterPhase;
@@ -414,10 +351,6 @@ export class HarborWorld {
       this.shoreFoam.tilePositionX = Math.round(Math.sin(t * 1.6 + 2.1) * 2.4);
       this.shoreFoam.tilePositionY = Math.round(Math.sin(t * 1.9 + 0.4) * 0.5);
       this.shoreFoam.setAlpha(0.22 + 0.28 * (0.5 + 0.5 * Math.sin(t * 1.7 + 1.1)));
-    }
-    if (this.shoreWash) {
-      this.shoreWash.tilePositionX = Math.round(Math.sin(t * 0.9 + 0.4) * 1.2);
-      this.shoreWash.setAlpha(0.72 + 0.1 * Math.sin(t * 1.5));
     }
   }
 
@@ -714,21 +647,5 @@ export class HarborWorld {
     }
     this.placed.add(id);
     return img;
-  }
-
-  private markWaterHomes(): void {
-    const layers = [
-      this.waterDeep,
-      this.deepFill,
-      this.wavesLayer,
-      this.water,
-      this.foam,
-      this.farShore,
-    ];
-    for (const layer of layers) {
-      if (layer) {
-        setPixelHome(layer);
-      }
-    }
   }
 }
