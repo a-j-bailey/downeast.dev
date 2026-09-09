@@ -1,6 +1,8 @@
 /** Logical design view. Extra world is shown on larger/wider screens. */
 export const VIEW_WIDTH = 480;
 export const VIEW_HEIGHT = 270;
+/** Ultrawide framebuffer cap — height stays 270; extra width shows more harbor. */
+export const VIEW_MAX_WIDTH = 960;
 
 /**
  * Town/land lives in 0..WORLD_MAX_X. Open water extends seaward (left)

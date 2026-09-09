@@ -20,36 +20,37 @@ export const BOAT_OPEN_MAX_Y = BOAT_DOCK_Y;
 /** Keel margin inside the seaward world edge. */
 export const BOAT_OPEN_MIN_X = WORLD_MIN_X + 64;
 
-export const PLACES = {
-  // Light finger-dock seaward of the seawall; boat berths on its left.
-  dock: { x: 36, y: BOAT_DOCK_Y - 18 },
-  // Hull in the water just left of the dock; whole 171px sprite fits a 200-wide phone view.
-  boat: { x: 44, y: BOAT_DOCK_Y },
-  shackA: { x: 248, y: LAND_TOP_Y },
-  // Land side of the seawall, left of the trap pile beside shack-a.
-  flagpole: { x: 164, y: LAND_TOP_Y },
-  shackB: { x: 338, y: LAND_TOP_Y },
-  coffee: { x: 448, y: LAND_TOP_Y },
-  // Rock/water in lighthouse.png meets the surface ~10px above the sprite bottom.
-  lighthouse: { x: 390, y: WATER_SURFACE_Y + 10 },
-  farCottageA: { x: 142, y: HORIZON_Y },
-  farCottageB: { x: 262, y: HORIZON_Y },
-  signGithub: { x: 560, y: LAND_TOP_Y },
-  signX: { x: 608, y: LAND_TOP_Y },
-  // Kayak is the Weather Otter interact; paddle is dressing only.
-  kayak: { x: 690, y: LAND_TOP_Y - 2 },
-  paddle: { x: 708, y: LAND_TOP_Y - 1 },
-} as const;
-
 /**
  * dock.png is 120×40, origin (0.5, 1). Top 2 rows are empty; deck boards
  * start on row 2. Walker feet lock to that surface.
  */
 export const DOCK_SPRITE_H = 40;
 export const DOCK_DECK_INSET = 2;
-export const DOCK_DECK_Y = PLACES.dock.y - DOCK_SPRITE_H + DOCK_DECK_INSET;
+const DOCK_PLACE_Y = BOAT_DOCK_Y - 18;
+export const DOCK_DECK_Y = DOCK_PLACE_Y - DOCK_SPRITE_H + DOCK_DECK_INSET;
 /** Single walking lane. Feet on the visible dock boards, not the pylons. */
 export const WALKER_Y = DOCK_DECK_Y;
+
+export const PLACES = {
+  // Light finger-dock seaward of the seawall; boat berths on its left.
+  dock: { x: 36, y: DOCK_PLACE_Y },
+  // Hull in the water just left of the dock; whole 171px sprite fits a 200-wide phone view.
+  boat: { x: 44, y: BOAT_DOCK_Y },
+  shackA: { x: 248, y: WALKER_Y },
+  // Land side of the seawall, left of the trap pile beside shack-a.
+  flagpole: { x: 164, y: WALKER_Y },
+  shackB: { x: 338, y: WALKER_Y },
+  coffee: { x: 448, y: WALKER_Y },
+  // Rock/water in lighthouse.png meets the surface ~10px above the sprite bottom.
+  lighthouse: { x: 390, y: WATER_SURFACE_Y + 10 },
+  farCottageA: { x: 142, y: HORIZON_Y },
+  farCottageB: { x: 262, y: HORIZON_Y },
+  signGithub: { x: 560, y: WALKER_Y },
+  signX: { x: 608, y: WALKER_Y },
+  // Kayak is the Weather Otter interact; paddle is dressing only.
+  kayak: { x: 690, y: WALKER_Y - 2 },
+  paddle: { x: 708, y: WALKER_Y - 1 },
+} as const;
 
 /**
  * Far-shore hill is 10px with a solid plate on the bottom rows. Sit that
@@ -87,7 +88,7 @@ export const WALKER_MIN_X = Math.round(PLACES.dock.x - 52);
 export const DOCK_DEPTH = WALKER_Y - 16;
 export const BOAT_DEPTH = BOAT_DOCK_Y + 20;
 /** Flagpole on the village street, left of the lobster traps. */
-export const FLAGPOLE_DEPTH = LAND_TOP_Y + 10;
+export const FLAGPOLE_DEPTH = WALKER_Y + 10;
 
 /**
  * Cormorant feet on the wood dock deck above the seaward (leftmost) pylon.

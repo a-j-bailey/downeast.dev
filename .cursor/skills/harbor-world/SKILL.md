@@ -25,7 +25,7 @@ See `harbor/ART.md` and `harbor/PROMPTS.md`.
 - Pin `phaser@4`. Isolate it. Official pattern: one React wrapper (`src/components/HarborGame.tsx`) `new Phaser.Game({ parent })` in `useEffect`, `destroy(true)` on unmount, `src/game/EventBus.ts` for React↔game.
 - **Never** import `phaser` from a module Workers/SSR might evaluate. Dynamic-import `src/game/createGame.ts` inside `useEffect` only. Do not use `@phaserjs/react`.
 - Split Phaser into its own async chunk (`vite.config.ts` `manualChunks`).
-- Logical view **480×270**, `render.pixelArt: true`, `roundPixels: true`, integer zoom. Extra world on wide screens; do not letterbox with black bars if you can cover.
+- Logical view **480×270**, `render.pixelArt: true`, `roundPixels: true`. Extra world on wide screens; canvas always fills the parent (no letterbox). Tall phones shrink width (≥200) so the berth stays in frame.
 - Canvas CSS: `image-rendering: pixelated`.
 - If Phaser 4 cone lights or MAX_ZOOM misbehave, drop to Phaser 3.90 with the **same** architecture. Do not mix 3 and 4 APIs.
 

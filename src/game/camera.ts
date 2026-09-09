@@ -23,11 +23,11 @@ function mainCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Camera | undefi
   return manager.main ?? manager.cameras[0];
 }
 
-/** Visible size: height always VIEW_HEIGHT; width may shrink on tall phones. */
+/** Visible size: height always VIEW_HEIGHT; width follows the filled parent. */
 export function harborViewSize(scene: Phaser.Scene): { width: number; height: number } {
   const w = Math.round(scene.scale.width) || VIEW_WIDTH;
   return {
-    width: Math.max(200, Math.min(VIEW_WIDTH, w)),
+    width: Math.max(200, w),
     height: VIEW_HEIGHT,
   };
 }

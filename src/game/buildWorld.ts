@@ -11,6 +11,7 @@ import {
   PLACES,
   SEAWALL_ORIGIN_X,
   SEAWALL_TILE_W,
+  WALKER_Y,
   WATER_BOTTOM_Y,
   WATER_SURFACE_Y,
   WORLD_HEIGHT,
@@ -530,10 +531,10 @@ export class HarborWorld {
   }
 
   private placeTraps(): void {
-    this.onceImage("trap-0", "trap", 198, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
-    this.onceImage("trap-stack", "trap-stack", 214, LAND_TOP_Y + 8, { depth: LAND_TOP_Y + 8 });
-    this.onceImage("trap-buoy", "trap-buoy", 760, LAND_TOP_Y + 4, { depth: LAND_TOP_Y + 4 });
-    this.onceImage("trap-1", "trap", 900, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
+    this.onceImage("trap-0", "trap", 198, WALKER_Y + 6, { depth: WALKER_Y + 6 });
+    this.onceImage("trap-stack", "trap-stack", 214, WALKER_Y + 8, { depth: WALKER_Y + 8 });
+    this.onceImage("trap-buoy", "trap-buoy", 760, WALKER_Y + 4, { depth: WALKER_Y + 4 });
+    this.onceImage("trap-1", "trap", 900, WALKER_Y + 6, { depth: WALKER_Y + 6 });
   }
 
   private placeFlag(): void {
