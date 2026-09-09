@@ -29,13 +29,6 @@ import {
   WALKER_Y,
   WORLD_WIDTH,
 } from "../layout";
-import {
-  levelFromOverride,
-  loadTideLevel,
-  tideFromQuery,
-  tideShoreY,
-  tideSurfaceY,
-} from "../tide";
 import { DEFAULT_WIND, type WindSample } from "../flag";
 import { DAY_AMBIENT, colorToCss, hudUsesCream } from "../skyBodies";
 import {
@@ -84,9 +77,6 @@ export class HarborScene extends Phaser.Scene {
   private touchStick = false;
   private playtestCruise = 0;
   private mood: WeatherMood = "clearDay";
-  private tideLevel = 0.5;
-  private tideTarget = 0.5;
-  private appliedTideKey = "";
   private activeZone: InteractId | null = null;
   private usingUntil = 0;
   private entering = false;
@@ -130,12 +120,6 @@ export class HarborScene extends Phaser.Scene {
     const search = window.location.search;
     const bootMood = weatherFromQuery(search) ?? moodFromClock(harborNow(search));
     this.applyMood(bootMood);
-    const bootTide = tideFromQuery(search);
-    if (bootTide) {
-      this.tideLevel = levelFromOverride(bootTide);
-      this.tideTarget = this.tideLevel;
-      this.world.applyTide(this.tideLevel);
-    }
 
     void loadAtmosphere(search).then((atmo) => {
       if (!this.sys.isActive()) {
@@ -146,15 +130,6 @@ export class HarborScene extends Phaser.Scene {
         directionDeg: atmo.windDirDeg,
       };
       this.applyMood(atmo.mood);
-    });
-    void loadTideLevel(search).then((level) => {
-      if (!this.sys.isActive()) {
-        return;
-      }
-      this.tideTarget = level;
-      if (bootTide) {
-        this.tideLevel = level;
-      }
     });
 
     this.time.addEvent({
@@ -224,7 +199,6 @@ export class HarborScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     const dt = Math.min(0.05, delta / 1000);
     this.world.scrollWater(dt);
-    this.easeTide(dt);
     this.world.driftClouds(dt);
     this.steer(dt);
     this.maybeOfferPostcard();
@@ -244,7 +218,7 @@ export class HarborScene extends Phaser.Scene {
     this.critters.update(dt);
     const sky = this.syncSky();
     this.world.updateFlag(this.wind);
-    this.ferry.update(dt, this.mood, sky.isDark, this.world.surfaceY);
+    this.ferry.update(dt, this.mood, sky.isDark);
     this.night.updateBeam(dt, sky.isDark);
     this.night.updateFarShore(sky.isDark);
     this.night.updatePlayerLantern(
@@ -661,22 +635,6 @@ export class HarborScene extends Phaser.Scene {
     this.player.setDepth(WALKER_Y);
     this.boat.dismount();
     applyHarborCamera(this, this.player);
-  }
-
-  private easeTide(dt: number): void {
-    this.tideLevel += (this.tideTarget - this.tideLevel) * Math.min(1, 1.8 * dt);
-    if (Math.abs(this.tideTarget - this.tideLevel) < 0.002) {
-      this.tideLevel = this.tideTarget;
-    }
-    const surfaceY = tideSurfaceY(this.tideLevel);
-    const shoreY = tideShoreY(this.tideLevel);
-    const key = `${surfaceY}:${shoreY}`;
-    if (key === this.appliedTideKey) {
-      return;
-    }
-    this.appliedTideKey = key;
-    this.world.applyTide(this.tideLevel);
-    this.critters.setSurfaceY(surfaceY);
   }
 
   private syncSky(): ReturnType<HarborWorld["updateSkyBodies"]> {

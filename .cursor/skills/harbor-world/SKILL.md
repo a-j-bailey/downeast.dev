@@ -59,7 +59,7 @@ Lights cannot live in Containers. Put the cone light on the scene root. Night: b
 - Boat is possession, not a costume. `walker | boat`. E at the pier mounts; E at a pylon dismounts. Wake TileSprite behind the hull. Water is the walkable bound while boating.
 - Signposts are in-world. E does `window.open` using URLs in `src/content/site.ts`.
 - Weather: Open-Meteo Bristol RI, five moods, 15–30 min cache, `?weather=night` to force the beam. Do not show temperature, wind, or "Bristol, RI".
-- Tide: NOAA CO-OPS station 8451929 (Bristol Harbor, Narragansett Bay; subordinate of Newport 8452660). Cache hi/lo predictions 20 min like weather, cosine-interpolate the live height, ease `WATER_SURFACE_Y` ±5px. High tide covers more seawall base. `?tide=high|low|mid` for playtest. Camera height stays 270.
+- Waterline is fixed at `WATER_SURFACE_Y` / `WATER_BOTTOM_Y` (the authored seawall, dock, and berth). Do not animate tide, fetch NOAA, or add `?tide=`.
 
 ## Do not
 

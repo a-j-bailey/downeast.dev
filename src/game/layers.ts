@@ -39,7 +39,6 @@ export const DEPTH = {
   foam: 21,
   landBack: 28,
   land: 30,
-  shoreWash: 31,
   planks: 32,
   shoreFoam: 33,
   seawall: 34,

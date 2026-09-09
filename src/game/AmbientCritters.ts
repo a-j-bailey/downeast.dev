@@ -1,7 +1,6 @@
 import Phaser from "phaser";
 import { SCROLL } from "./layers";
-import { CORMORANT, DOCK_DEPTH, WORLD_MAX_X, WORLD_MIN_X } from "./layout";
-import { tideSurfaceY } from "./tide";
+import { CORMORANT, DOCK_DEPTH, WATER_SURFACE_Y, WORLD_MAX_X, WORLD_MIN_X } from "./layout";
 import type { WeatherMood } from "./weather";
 
 type CormorantPose = "perch" | "wings" | "idle";
@@ -30,7 +29,6 @@ export class AmbientCritters {
   private scene: Phaser.Scene;
   private shark?: Phaser.GameObjects.Image;
   private sharkDir = 1;
-  private surfaceY = tideSurfaceY(0.5);
   private cormorant?: Phaser.GameObjects.Image;
   private pose: CormorantPose = "perch";
   private poseHold = 0;
@@ -41,17 +39,13 @@ export class AmbientCritters {
     this.poseHold = 3.2 + Math.random() * 2.4;
   }
 
-  setSurfaceY(y: number): void {
-    this.surfaceY = y;
-  }
-
   spawnShark(): void {
     if (this.shark || !this.scene.textures.exists("shark-fin")) {
       return;
     }
     this.sharkDir = Math.random() > 0.5 ? 1 : -1;
     const x = this.sharkDir > 0 ? WORLD_MIN_X + 40 : WORLD_MAX_X - 40;
-    const y = this.surfaceY + 20 + Math.random() * 18;
+    const y = WATER_SURFACE_Y + 20 + Math.random() * 18;
     this.shark = this.scene.add.image(x, y, "shark-fin");
     this.shark.setOrigin(0.5, 1);
     this.shark.setScrollFactor(SCROLL.actors);

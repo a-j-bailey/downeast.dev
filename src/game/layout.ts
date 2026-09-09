@@ -2,7 +2,7 @@ import { VIEW_HEIGHT, WORLD_HEIGHT, WORLD_MAX_X, WORLD_MIN_X } from "./view";
 
 /** Ground line sits in the bottom third of the 270-tall design view. */
 export const HORIZON_Y = 102;
-/** Water top meets far-shore baseline. Live tide eases this by a few pixels (see tide.ts). */
+/** Water top meets far-shore baseline. Fixed waterline; not a live tide. */
 export const WATER_SURFACE_Y = 102;
 export const WATER_BOTTOM_Y = 186;
 export const LAND_TOP_Y = 186;

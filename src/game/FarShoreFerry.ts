@@ -57,8 +57,7 @@ export class FarShoreFerry {
     );
   }
 
-  update(dt: number, mood: WeatherMood, isDark: boolean, surfaceY = WATER_SURFACE_Y): void {
-    this.keelY = Math.round(surfaceY + 4);
+  update(dt: number, mood: WeatherMood, isDark: boolean): void {
     this.place();
     if (!this.sprite) {
       return;
