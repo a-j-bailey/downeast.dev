@@ -723,4 +723,20 @@ export class HarborWorld {
     this.placed.add(id);
     return img;
   }
+
+  private markWaterHomes(): void {
+    const layers = [
+      this.waterDeep,
+      this.deepFill,
+      this.wavesLayer,
+      this.water,
+      this.foam,
+      this.farShore,
+    ];
+    for (const layer of layers) {
+      if (layer) {
+        setPixelHome(layer);
+      }
+    }
+  }
 }
