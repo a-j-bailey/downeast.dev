@@ -151,6 +151,12 @@ export function snapPixelWorld(scene: Phaser.Scene): void {
         continue;
       }
     }
+    const name = (child as { name?: string }).name;
+    // Keep actor simulation off the integer grid so walk/helm dt does not
+    // get eaten by round-then-add (surge then crawl).
+    if (name === "player" || name === "boat") {
+      continue;
+    }
     child.x = Math.round(child.x);
     child.y = Math.round(child.y);
   }

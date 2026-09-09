@@ -116,6 +116,7 @@ export class BoatController {
     this.sprite.setFlipX(false);
     if (this.scene.textures.exists("boat")) {
       this.sprite.setTexture("boat");
+      this.sprite.setLighting(true);
     }
     if (this.wake) {
       this.wake.setVisible(false);
@@ -133,6 +134,7 @@ export class BoatController {
       this.sprite.setFlipX(false);
       if (this.scene.textures.exists("boat")) {
         this.sprite.setTexture("boat");
+        this.sprite.setLighting(true);
       }
     }
     if (this.wake) {

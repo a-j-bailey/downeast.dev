@@ -26,7 +26,9 @@ export const BOAT_OPEN_MIN_X = WORLD_MIN_X + 64;
  */
 export const DOCK_SPRITE_H = 40;
 export const DOCK_DECK_INSET = 2;
-const DOCK_PLACE_Y = BOAT_DOCK_Y - 18;
+/** Nudge the finger-dock, walker, and street props up the view. */
+export const DOCK_LIFT = 6;
+const DOCK_PLACE_Y = BOAT_DOCK_Y - 18 - DOCK_LIFT;
 export const DOCK_DECK_Y = DOCK_PLACE_Y - DOCK_SPRITE_H + DOCK_DECK_INSET;
 /** Single walking lane. Feet on the visible dock boards, not the pylons. */
 export const WALKER_Y = DOCK_DECK_Y;

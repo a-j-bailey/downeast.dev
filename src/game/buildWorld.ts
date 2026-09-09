@@ -567,7 +567,7 @@ export class HarborWorld {
         "flagpole",
         FLAGPOLE_PLACE.x,
         FLAGPOLE_PLACE.y,
-        { depth: FLAGPOLE_DEPTH, lighting: false },
+        { depth: FLAGPOLE_DEPTH },
       );
     }
     const flagKey = FLAG_KEYS.find((key) => this.scene.textures.exists(key));
@@ -593,6 +593,7 @@ export class HarborWorld {
     const key = flagTextureKey(pose);
     if (this.scene.textures.exists(key) && this.flag.texture.key !== key) {
       this.flag.setTexture(key);
+      this.flag.setLighting(true);
     }
     this.flag.setFlipX(pose.flipX);
     this.flag.setOrigin(pose.flipX ? 1 : 0, 0);

@@ -74,6 +74,8 @@ export class HarborScene extends Phaser.Scene {
   private possession: Possession = "walker";
   private walkTarget: { x: number; y: number } | null = null;
   private stickX = 0;
+  /** Subpixel remainder so integer snaps cannot eat walk distance. */
+  private walkCarry = 0;
   private touchStick = false;
   private playtestCruise = 0;
   private mood: WeatherMood = "clearDay";
@@ -210,8 +212,7 @@ export class HarborScene extends Phaser.Scene {
       this.boat.sprite.x = Math.round(this.boat.sprite.x);
       this.boat.sprite.y = Math.round(this.boat.sprite.y);
     }
-    this.player.x = Math.round(this.player.x);
-    this.player.y = Math.round(this.player.y);
+    this.player.y = WALKER_Y;
     this.boat.updateDepth();
     this.boat.updateWake(this.possession, dt);
     this.boat.syncNav(this.possession === "boat");
@@ -284,6 +285,7 @@ export class HarborScene extends Phaser.Scene {
 
   private buildPlayer(): void {
     this.player = this.add.sprite(SPAWN.x, WALKER_Y, this.idleTextureKey());
+    this.player.setName("player");
     this.player.setOrigin(0.5, 1);
     this.player.setScrollFactor(SCROLL.actors);
     this.player.setDepth(WALKER_Y);
@@ -428,7 +430,9 @@ export class HarborScene extends Phaser.Scene {
       }
     }
     if (x === 0 && this.stickX !== 0) {
-      x = this.stickX;
+      // Walker: full lane speed once past the deadzone. Analog stick
+      // values were crawling then surging as the knob drifted.
+      x = this.possession === "boat" ? this.stickX : Math.sign(this.stickX);
     }
     if (x === 0 && this.playtestCruise !== 0 && this.possession === "boat") {
       x = this.playtestCruise;
@@ -454,6 +458,7 @@ export class HarborScene extends Phaser.Scene {
     const wish = this.wish(dt);
     this.noteWalk(wish, dt);
     if (this.possession === "boat" && this.boat.sprite) {
+      this.walkCarry = 0;
       this.boat.steer(dt, wish);
       const seat = this.boat.passengerSeat();
       if (seat) {
@@ -471,13 +476,22 @@ export class HarborScene extends Phaser.Scene {
     const using = this.time.now < this.usingUntil;
     if (using) {
       this.player.play("player-use", true);
+      this.walkCarry = 0;
       return;
     }
-    this.player.x = Phaser.Math.Clamp(
-      this.player.x + wish.x * speed * dt,
-      WALKER_MIN_X,
-      WORLD_WIDTH - 24,
-    );
+    if (wish.x === 0) {
+      this.walkCarry = 0;
+    } else {
+      this.walkCarry += wish.x * speed * dt;
+      const step =
+        this.walkCarry > 0 ? Math.floor(this.walkCarry) : Math.ceil(this.walkCarry);
+      this.walkCarry -= step;
+      this.player.x = Phaser.Math.Clamp(
+        this.player.x + step,
+        WALKER_MIN_X,
+        WORLD_WIDTH - 24,
+      );
+    }
     this.player.y = WALKER_Y;
     if (wish.x !== 0) {
       this.player.setFlipX(wish.x < 0);
@@ -624,6 +638,7 @@ export class HarborScene extends Phaser.Scene {
       this.player.play("player-idle", true);
     }
     this.walkTarget = null;
+    this.walkCarry = 0;
     applyHarborCamera(this, this.boat.sprite);
   }
 
@@ -633,6 +648,7 @@ export class HarborScene extends Phaser.Scene {
     this.player.setScale(1);
     this.player.setPosition(PLACES.dock.x + 20, WALKER_Y);
     this.player.setDepth(WALKER_Y);
+    this.walkCarry = 0;
     this.boat.dismount();
     applyHarborCamera(this, this.player);
   }
