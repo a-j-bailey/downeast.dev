@@ -8,9 +8,6 @@ export const WATER_BOTTOM_Y = 186;
 export const LAND_TOP_Y = 186;
 export const LAND_BOTTOM_Y = WORLD_HEIGHT - 4;
 
-/** Single walking lane. Walker Y is locked here. */
-export const WALKER_Y = 228;
-
 /**
  * Docked hull sits on the bottom edge of the design view (origin 0.5,1).
  * VIEW_HEIGHT - 4 keeps a couple px of margin under the keel.
@@ -33,7 +30,8 @@ export const PLACES = {
   flagpole: { x: 164, y: LAND_TOP_Y },
   shackB: { x: 338, y: LAND_TOP_Y },
   coffee: { x: 448, y: LAND_TOP_Y },
-  lighthouse: { x: 390, y: 118 },
+  // Rock/water in lighthouse.png meets the surface ~10px above the sprite bottom.
+  lighthouse: { x: 390, y: WATER_SURFACE_Y + 10 },
   farCottageA: { x: 142, y: HORIZON_Y },
   farCottageB: { x: 262, y: HORIZON_Y },
   signGithub: { x: 560, y: LAND_TOP_Y },
@@ -42,6 +40,22 @@ export const PLACES = {
   kayak: { x: 690, y: LAND_TOP_Y - 2 },
   paddle: { x: 708, y: LAND_TOP_Y - 1 },
 } as const;
+
+/**
+ * dock.png is 120×40, origin (0.5, 1). Top 2 rows are empty; deck boards
+ * start on row 2. Walker feet lock to that surface.
+ */
+export const DOCK_SPRITE_H = 40;
+export const DOCK_DECK_INSET = 2;
+export const DOCK_DECK_Y = PLACES.dock.y - DOCK_SPRITE_H + DOCK_DECK_INSET;
+/** Single walking lane. Feet on the visible dock boards, not the pylons. */
+export const WALKER_Y = DOCK_DECK_Y;
+
+/**
+ * Far-shore hill is 10px with a solid plate on the bottom rows. Sit that
+ * plate under the waterline so only the irregular peaks meet the surface.
+ */
+export const FAR_SHORE_Y = WATER_SURFACE_Y + 6;
 
 /**
  * Halfway between the flagpole and the leftmost shack (Zoning Radar).
@@ -77,11 +91,11 @@ export const FLAGPOLE_DEPTH = LAND_TOP_Y + 10;
 
 /**
  * Cormorant feet on the wood dock deck above the seaward (leftmost) pylon.
- * Dock sprite is 120×40, origin 0.5,1; deck top is 2px below the texture top.
+ * Same surface as WALKER_Y.
  */
 export const CORMORANT = {
   x: PLACES.dock.x - 44,
-  y: PLACES.dock.y - 38,
+  y: DOCK_DECK_Y,
 } as const;
 
 /**

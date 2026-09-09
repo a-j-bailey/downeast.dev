@@ -3,6 +3,7 @@ import { DEPTH, SCROLL } from "./layers";
 import {
   DOCK_DEPTH,
   FLAGPOLE_DEPTH,
+  FAR_SHORE_Y,
   HORIZON_Y,
   LAND_BAND_W,
   LAND_BAND_X,
@@ -214,7 +215,7 @@ export class HarborWorld {
       "far-shore",
       "far-shore",
       WORLD_MID_X,
-      HORIZON_Y,
+      FAR_SHORE_Y,
       WORLD_SPAN * 2,
       farH,
       SCROLL.farShore,

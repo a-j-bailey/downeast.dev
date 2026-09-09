@@ -78,14 +78,19 @@ export function ensureUiTextures(scene: Phaser.Scene): void {
     g.fillRect(2, 2, 2, 3);
   });
 
-  stamp(scene, TEX.camera, 11, 9, (g) => {
-    g.fillStyle(0xfffcf0, 1);
-    g.fillRect(4, 0, 3, 2);
-    g.fillRect(0, 2, 11, 7);
-    g.fillStyle(0x100f0f, 1);
-    g.fillRect(3, 4, 5, 4);
-    g.fillStyle(0xfffcf0, 1);
-    g.fillRect(5, 5, 1, 2);
+  stamp(scene, TEX.camera, 13, 10, (g) => {
+    const cream = 0xfffcf0;
+    const ink = 0x100f0f;
+    g.fillStyle(cream, 1);
+    g.fillRect(5, 0, 4, 2);
+    g.fillRect(0, 2, 13, 8);
+    g.fillStyle(ink, 1);
+    g.fillRect(10, 2, 2, 1);
+    g.fillRect(4, 3, 6, 6);
+    g.fillStyle(cream, 1);
+    g.fillRect(5, 4, 4, 4);
+    g.fillStyle(ink, 1);
+    g.fillRect(6, 5, 2, 2);
   });
 
   stamp(scene, TEX.grain, 16, 16, (g) => {
