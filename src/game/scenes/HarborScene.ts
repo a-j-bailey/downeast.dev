@@ -204,15 +204,15 @@ export class HarborScene extends Phaser.Scene {
     this.world.driftClouds(dt);
     this.steer(dt);
     this.maybeOfferPostcard();
-    this.player.setDepth(this.player.y);
-    if (this.possession === "boat") {
-      this.player.setDepth(BOAT_DEPTH + 2);
-    }
     if (this.boat.sprite) {
       this.boat.sprite.x = Math.round(this.boat.sprite.x);
       this.boat.sprite.y = Math.round(this.boat.sprite.y);
     }
     this.player.y = WALKER_Y;
+    this.player.setDepth(WALKER_Y);
+    if (this.possession === "boat") {
+      this.player.setDepth(BOAT_DEPTH + 2);
+    }
     this.boat.updateDepth();
     this.boat.updateWake(this.possession, dt);
     this.boat.syncNav(this.possession === "boat");
