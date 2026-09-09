@@ -3,6 +3,7 @@ import { DEPTH, SCROLL } from "./layers";
 import {
   DOCK_DEPTH,
   FLAGPOLE_DEPTH,
+  GROUND_CLUTTER_DEPTH,
   FAR_SHORE_VISIBLE_H,
   FAR_SHORE_Y,
   HORIZON_Y,
@@ -264,11 +265,11 @@ export class HarborWorld {
       lighting: false,
     });
     this.onceImage("kayak", "kayak", PLACES.kayak.x, PLACES.kayak.y, {
-      depth: PLACES.kayak.y,
+      depth: GROUND_CLUTTER_DEPTH,
       lighting: false,
     });
     this.onceImage("paddle", "paddle", PLACES.paddle.x, PLACES.paddle.y, {
-      depth: PLACES.paddle.y,
+      depth: GROUND_CLUTTER_DEPTH + 1,
       lighting: false,
     });
 
@@ -543,19 +544,19 @@ export class HarborWorld {
 
   private placeTraps(): void {
     this.onceImage("trap-0", "trap", 198, WALKER_Y + 6, {
-      depth: WALKER_Y + 6,
+      depth: GROUND_CLUTTER_DEPTH,
       lighting: false,
     });
     this.onceImage("trap-stack", "trap-stack", 214, WALKER_Y + 8, {
-      depth: WALKER_Y + 8,
+      depth: GROUND_CLUTTER_DEPTH + 1,
       lighting: false,
     });
     this.onceImage("trap-buoy", "trap-buoy", 760, WALKER_Y + 4, {
-      depth: WALKER_Y + 4,
+      depth: GROUND_CLUTTER_DEPTH,
       lighting: false,
     });
     this.onceImage("trap-1", "trap", 900, WALKER_Y + 6, {
-      depth: WALKER_Y + 6,
+      depth: GROUND_CLUTTER_DEPTH,
       lighting: false,
     });
   }

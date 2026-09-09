@@ -93,6 +93,11 @@ export const DOCK_DEPTH = WALKER_Y - 16;
 export const BOAT_DEPTH = BOAT_DOCK_Y + 20;
 /** Flagpole on the village street, left of the lobster traps. */
 export const FLAGPOLE_DEPTH = WALKER_Y + 10;
+/**
+ * Kayak, paddle, traps, buoys: planted on the boards, drawn behind the walker.
+ * Keep planting `y` as-is; only depth is below WALKER_Y so he covers them.
+ */
+export const GROUND_CLUTTER_DEPTH = WALKER_Y - 4;
 
 /**
  * Cormorant feet on the wood dock deck above the seaward (leftmost) pylon.
