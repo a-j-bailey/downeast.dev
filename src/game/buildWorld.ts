@@ -3,6 +3,9 @@ import { DEPTH, SCROLL } from "./layers";
 import {
   DOCK_DEPTH,
   FLAGPOLE_DEPTH,
+  GROUND_CLUTTER_DEPTH,
+  FAR_SHORE_VISIBLE_H,
+  FAR_SHORE_Y,
   HORIZON_Y,
   LAND_BAND_W,
   LAND_BAND_X,
@@ -10,6 +13,7 @@ import {
   PLACES,
   SEAWALL_ORIGIN_X,
   SEAWALL_TILE_W,
+  WALKER_Y,
   WATER_BOTTOM_Y,
   WATER_SURFACE_Y,
   WORLD_HEIGHT,
@@ -150,6 +154,7 @@ export class HarborWorld {
       this.landFill.setOrigin(0.5, 0);
       this.landFill.setScrollFactor(SCROLL.land);
       this.landFill.setDepth(DEPTH.land);
+      this.landFill.setLighting(false);
     } else {
       this.landFill = this.scene.add.rectangle(LAND_BAND_X, LAND_TOP_Y, LAND_BAND_W, landH, 0x5f7034);
       this.landFill.setOrigin(0.5, 0);
@@ -170,7 +175,9 @@ export class HarborWorld {
       this.landPlanks.setOrigin(0.5, 0);
       this.landPlanks.setScrollFactor(SCROLL.land);
       this.landPlanks.setDepth(DEPTH.planks);
-      this.landPlanks.setLighting(true);
+      // Night ambient is ~0x1a2030. Lit planks go navy-black under unlit
+      // façades and read as a hover gap; keep the boards opaque like the walls.
+      this.landPlanks.setLighting(false);
     } else {
       this.landPlanks = this.scene.add.rectangle(
         LAND_BAND_X,
@@ -183,6 +190,8 @@ export class HarborWorld {
       this.landPlanks.setScrollFactor(SCROLL.land);
       this.landPlanks.setDepth(DEPTH.planks);
     }
+
+    this.layoutWater();
 
     this.fogVeil = this.scene.add.rectangle(0, 0, 800, 400, 0xb8bec4, 0.4);
     this.fogVeil.setOrigin(0, 0);
@@ -206,13 +215,16 @@ export class HarborWorld {
 
   placeReadyProps(): void {
     const farH = this.scene.textures.exists("far-shore")
-      ? this.scene.textures.get("far-shore").get().height
-      : 10;
+      ? Math.min(
+          FAR_SHORE_VISIBLE_H,
+          this.scene.textures.get("far-shore").get().height,
+        )
+      : FAR_SHORE_VISIBLE_H;
     this.farShore = this.tileIfNeeded(
       "far-shore",
       "far-shore",
       WORLD_MID_X,
-      HORIZON_Y,
+      FAR_SHORE_Y,
       WORLD_SPAN * 2,
       farH,
       SCROLL.farShore,
@@ -252,9 +264,13 @@ export class HarborWorld {
       depth: PLACES.signX.y,
       lighting: false,
     });
-    this.onceImage("kayak", "kayak", PLACES.kayak.x, PLACES.kayak.y, { depth: PLACES.kayak.y });
+    this.onceImage("kayak", "kayak", PLACES.kayak.x, PLACES.kayak.y, {
+      depth: GROUND_CLUTTER_DEPTH,
+      lighting: false,
+    });
     this.onceImage("paddle", "paddle", PLACES.paddle.x, PLACES.paddle.y, {
-      depth: PLACES.paddle.y,
+      depth: GROUND_CLUTTER_DEPTH + 1,
+      lighting: false,
     });
 
     this.placeSeawall();
@@ -303,6 +319,54 @@ export class HarborWorld {
       }
       star.setAlpha(0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * (1.3 + i * 0.17) + i)));
     });
+  }
+
+  layoutWater(): void {
+    const surfaceY = WATER_SURFACE_Y;
+    const shoreY = WATER_BOTTOM_Y;
+    const waterTop = Math.min(surfaceY, HORIZON_Y);
+    const bandX = WORLD_MID_X;
+    const bandW = WORLD_SPAN + 256;
+
+    // Fill to the bottom of the view so open sea left of the seawall is
+    // water, not a sky hole under the boat. Land backing still covers
+    // the street from LAND_TOP_Y down.
+    const deepH = Math.max(56, WORLD_HEIGHT - waterTop + 8);
+    if (this.waterDeep) {
+      this.waterDeep.setSize(bandW, deepH);
+      this.waterDeep.setPosition(bandX, Math.round(waterTop));
+    }
+    if (this.deepFill) {
+      this.deepFill.setSize(bandW, deepH + 4);
+      this.deepFill.setPosition(bandX, Math.round(waterTop));
+    }
+    if (this.wavesLayer) {
+      this.wavesLayer.setPosition(bandX, Math.round(surfaceY + 2));
+    }
+    if (this.water) {
+      this.water.setPosition(bandX, Math.round(surfaceY));
+    }
+    if (this.foam) {
+      this.foam.setPosition(bandX, Math.round(surfaceY));
+    }
+    if (this.shoreFoam) {
+      this.shoreFoam.setPosition(LAND_BAND_X, Math.round(shoreY));
+    }
+    const landH = WORLD_HEIGHT - LAND_TOP_Y + 8;
+    if (this.landBack) {
+      this.landBack.setSize(LAND_BAND_W, landH);
+      this.landBack.setPosition(LAND_BAND_X, Math.round(LAND_TOP_Y));
+    }
+    if (this.landFill) {
+      this.landFill.setSize(LAND_BAND_W, landH);
+      this.landFill.setPosition(LAND_BAND_X, Math.round(LAND_TOP_Y));
+    }
+    if (this.landPlanks) {
+      const plankTop = Math.round(LAND_TOP_Y - 8);
+      this.landPlanks.setSize(LAND_BAND_W, WORLD_HEIGHT - plankTop + 6);
+      this.landPlanks.setPosition(LAND_BAND_X, plankTop);
+    }
+    this.markWaterHomes();
   }
 
   scrollWater(dt: number): void {
@@ -479,10 +543,22 @@ export class HarborWorld {
   }
 
   private placeTraps(): void {
-    this.onceImage("trap-0", "trap", 198, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
-    this.onceImage("trap-stack", "trap-stack", 214, LAND_TOP_Y + 8, { depth: LAND_TOP_Y + 8 });
-    this.onceImage("trap-buoy", "trap-buoy", 760, LAND_TOP_Y + 4, { depth: LAND_TOP_Y + 4 });
-    this.onceImage("trap-1", "trap", 900, LAND_TOP_Y + 6, { depth: LAND_TOP_Y + 6 });
+    this.onceImage("trap-0", "trap", 198, WALKER_Y + 6, {
+      depth: GROUND_CLUTTER_DEPTH,
+      lighting: false,
+    });
+    this.onceImage("trap-stack", "trap-stack", 214, WALKER_Y + 8, {
+      depth: GROUND_CLUTTER_DEPTH + 1,
+      lighting: false,
+    });
+    this.onceImage("trap-buoy", "trap-buoy", 760, WALKER_Y + 4, {
+      depth: GROUND_CLUTTER_DEPTH,
+      lighting: false,
+    });
+    this.onceImage("trap-1", "trap", 900, WALKER_Y + 6, {
+      depth: GROUND_CLUTTER_DEPTH,
+      lighting: false,
+    });
   }
 
   private placeFlag(): void {
@@ -518,6 +594,7 @@ export class HarborWorld {
     const key = flagTextureKey(pose);
     if (this.scene.textures.exists(key) && this.flag.texture.key !== key) {
       this.flag.setTexture(key);
+      this.flag.setLighting(true);
     }
     this.flag.setFlipX(pose.flipX);
     this.flag.setOrigin(pose.flipX ? 1 : 0, 0);
@@ -647,5 +724,21 @@ export class HarborWorld {
     }
     this.placed.add(id);
     return img;
+  }
+
+  private markWaterHomes(): void {
+    const layers = [
+      this.waterDeep,
+      this.deepFill,
+      this.wavesLayer,
+      this.water,
+      this.foam,
+      this.farShore,
+    ];
+    for (const layer of layers) {
+      if (layer) {
+        setPixelHome(layer);
+      }
+    }
   }
 }

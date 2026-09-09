@@ -1,6 +1,6 @@
-import { VIEW_HEIGHT, VIEW_WIDTH } from "./view";
+import { VIEW_HEIGHT, VIEW_MAX_WIDTH, VIEW_WIDTH } from "./view";
 
-/** Portrait-ish: shrink game width to phone aspect. Landscape: FIT 480×270. */
+/** Portrait-ish: used for on-screen stick, not for letterboxing. */
 export const TALL_ASPECT = 1.5;
 
 export function parentIsTall(width: number, height: number): boolean {
@@ -20,57 +20,45 @@ export type HarborView = {
 };
 
 /**
- * Logical framebuffer. Height always 270; tall phones shrink width to the
- * parent aspect (clamped ≥200) so the docked boat and street stay in frame.
- * Do not derive width from an integer CSS zoom — that crops and looks larger.
+ * Logical framebuffer. Height always 270. Width follows the parent aspect
+ * so the canvas can fill the window without letterbox or side-crop.
+ * Tall phones clamp to ≥200 so the berth stays in frame.
  */
 export function computeHarborView(parentW: number, parentH: number): HarborView {
   const w = Math.max(1, parentW);
   const h = Math.max(1, parentH);
   const tall = parentIsTall(w, h);
-  if (tall) {
-    const viewW = clamp(Math.round(VIEW_HEIGHT * (w / h)), 200, VIEW_WIDTH);
-    return { viewW, viewH: VIEW_HEIGHT, tall: true, zoom: h / VIEW_HEIGHT };
-  }
-  const fit = Math.min(w / VIEW_WIDTH, h / VIEW_HEIGHT);
-  return { viewW: VIEW_WIDTH, viewH: VIEW_HEIGHT, tall: false, zoom: fit };
+  const viewW = clamp(Math.round(VIEW_HEIGHT * (w / h)), 200, VIEW_MAX_WIDTH);
+  return { viewW, viewH: VIEW_HEIGHT, tall, zoom: h / VIEW_HEIGHT };
 }
 
 /**
  * Manual CSS layout for Phaser.Scale.NONE.
- * Tall: canvas fills parent (same framing as production). Wide: FIT letterbox.
+ * Canvas always fills the parent — desktop full-bleed, same as tall phones.
  * Framebuffer stays 1:1; CSS may be fractional. `image-rendering: pixelated`.
  */
 export function layoutHarborCanvas(
   parent: HTMLElement,
   canvas: HTMLCanvasElement,
-  viewW: number = VIEW_WIDTH,
-  viewH: number = VIEW_HEIGHT,
+  _viewW: number = VIEW_WIDTH,
+  _viewH: number = VIEW_HEIGHT,
 ): void {
-  const parentW = Math.max(1, parent.clientWidth || window.innerWidth || 1);
-  const parentH = Math.max(1, parent.clientHeight || window.innerHeight || 1);
-  const tall = parentIsTall(parentW, parentH);
-
-  let cssW: number;
-  let cssH: number;
-  if (tall) {
-    cssW = parentW;
-    cssH = parentH;
-  } else {
-    const zoom = Math.min(parentW / viewW, parentH / viewH);
-    cssW = viewW * zoom;
-    cssH = viewH * zoom;
-  }
-
   canvas.style.position = "absolute";
-  canvas.style.left = "50%";
-  canvas.style.top = "50%";
-  canvas.style.transform = "translate(-50%, -50%)";
-  canvas.style.width = `${Math.round(cssW)}px`;
-  canvas.style.height = `${Math.round(cssH)}px`;
+  canvas.style.inset = "0";
+  canvas.style.left = "0";
+  canvas.style.top = "0";
+  canvas.style.right = "0";
+  canvas.style.bottom = "0";
+  canvas.style.transform = "none";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
   canvas.style.maxWidth = "none";
   canvas.style.maxHeight = "none";
   canvas.style.margin = "0";
   canvas.style.imageRendering = "pixelated";
+  parent.style.position = parent.style.position || "absolute";
+  parent.style.inset = "0";
+  parent.style.width = "100%";
+  parent.style.height = "100%";
   parent.style.overflow = "hidden";
 }

@@ -23,11 +23,11 @@ function mainCamera(scene: Phaser.Scene): Phaser.Cameras.Scene2D.Camera | undefi
   return manager.main ?? manager.cameras[0];
 }
 
-/** Visible size: height always VIEW_HEIGHT; width may shrink on tall phones. */
+/** Visible size: height always VIEW_HEIGHT; width follows the filled parent. */
 export function harborViewSize(scene: Phaser.Scene): { width: number; height: number } {
   const w = Math.round(scene.scale.width) || VIEW_WIDTH;
   return {
-    width: Math.max(200, Math.min(VIEW_WIDTH, w)),
+    width: Math.max(200, w),
     height: VIEW_HEIGHT,
   };
 }
@@ -150,6 +150,12 @@ export function snapPixelWorld(scene: Phaser.Scene): void {
         child.y = Math.round(hy);
         continue;
       }
+    }
+    const name = (child as { name?: string }).name;
+    // Keep actor simulation off the integer grid so walk/helm dt does not
+    // get eaten by round-then-add (surge then crawl).
+    if (name === "player" || name === "boat") {
+      continue;
     }
     child.x = Math.round(child.x);
     child.y = Math.round(child.y);

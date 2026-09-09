@@ -50,12 +50,18 @@ html {
 html.harbor-play,
 html.harbor-play body,
 html.harbor-play #root {
+  width: 100%;
   height: 100%;
   min-height: 100%;
   min-height: 100dvh;
   margin: 0;
   overflow: hidden;
   background: var(--harbor-sky, #5b93c5);
+}
+
+html.harbor-play body,
+html.harbor-play #root {
+  position: relative;
 }
 
 body {
@@ -184,7 +190,8 @@ img {
 }
 
 .harbor-page {
-  position: relative;
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
   min-height: 100%;
@@ -204,7 +211,15 @@ img {
 }
 
 .harbor-root canvas {
+  position: absolute !important;
+  inset: 0 !important;
   display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  transform: none !important;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   image-rendering: pixelated;

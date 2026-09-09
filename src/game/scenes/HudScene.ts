@@ -358,16 +358,18 @@ export class HudScene extends Phaser.Scene {
     this.postcard.setView(this.viewW, this.viewH);
     const cx = Math.floor(this.viewW / 2);
 
-    // Stick dead-center, raised off the bottom edge. Chip sits above it
-    // so the prompt never covers the handle.
+    // Stick dead-center, just above the bottom edge so it sits further
+    // down the page without clipping the chevrons or handle.
     if (this.stickEnabled && this.stickHit) {
+      const visualHalf = Math.max(5, Math.round(this.stickRadius * 0.2));
+      const bottomPad = 8;
       this.stickCx = cx;
-      this.stickCy = this.viewH - 36;
+      this.stickCy = this.viewH - visualHalf - bottomPad;
       this.stickHit.setPosition(this.stickCx, this.stickCy);
       this.drawStick(this.stickX);
-      this.chip.setPosition(cx, this.viewH - 52);
-      this.chipText.setPosition(cx, this.viewH - 56);
-      this.chipHit.setPosition(cx, this.viewH - 50);
+      this.chip.setPosition(cx, this.stickCy - 16);
+      this.chipText.setPosition(cx, this.stickCy - 20);
+      this.chipHit.setPosition(cx, this.stickCy - 14);
     } else {
       this.chip.setPosition(cx, this.viewH - 8);
       this.chipText.setPosition(cx, this.viewH - 12);
