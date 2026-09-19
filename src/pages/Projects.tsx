@@ -37,15 +37,13 @@ export function Projects() {
     <article>
       <DocumentTitle kind="page" page="Projects" />
       <h1 className="page-title">Projects</h1>
-      {projects.length === 0 ? (
-        <p className="empty">Empty. I'm picky about what goes here.</p>
-      ) : (
+      {projects.length > 0 ? (
         <ul className="list">
           {projects.map((project) => (
             <ProjectItem key={project.title} project={project} />
           ))}
         </ul>
-      )}
+      ) : null}
     </article>
   );
 }

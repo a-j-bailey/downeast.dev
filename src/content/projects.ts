@@ -39,6 +39,6 @@ export const projects: Project[] = [
     url: "https://magicmirrorcreative.com/weatherotter",
     title: "Weather Otter",
     year: 2026,
-    summary: "An iPhone app that watches the forecast for a named activity and a place, then shows the next window that fits. Not a weather dashboard.",
+    summary: "An iPhone app that watches the forecast for a named activity and a place, then shows the next window that fits.",
   },
 ];

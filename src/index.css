@@ -256,11 +256,6 @@ html.harbor-postcard-open .harbor-wordmark {
   letter-spacing: -0.03em;
 }
 
-.empty {
-  margin: 0;
-  color: var(--tx);
-}
-
 .list {
   display: flex;
   flex-direction: column;
