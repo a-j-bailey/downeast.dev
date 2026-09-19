@@ -21,9 +21,7 @@ export function Thoughts() {
     <article>
       <DocumentTitle kind="page" page="Thoughts" />
       <h1 className="page-title">Thoughts</h1>
-      {sorted.length === 0 ? (
-        <p className="empty">Haven't posted.</p>
-      ) : (
+      {sorted.length > 0 ? (
         <ul className="list">
           {sorted.map((thought) => (
             <li key={`${thought.date}-${thought.title}`}>
@@ -37,7 +35,7 @@ export function Thoughts() {
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </article>
   );
 }
