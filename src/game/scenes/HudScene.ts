@@ -4,7 +4,8 @@ import { EventBus } from "../EventBus";
 import { HarborPostcard } from "../HarborPostcard";
 import { promptText, type InteractId } from "../interact";
 import { markPostcardShown, postcardForced } from "../postcard";
-import { TEX } from "../textures";
+import { readHarborMute } from "../soundBed";
+import { MUTE_CHIP, MUTE_HIT, MUTE_INSET, TEX } from "../textures";
 import { STICK_DEADZONE, shouldShowVirtualStick } from "../touchControls";
 import { harborNow, moodFromClock, nyClock, weatherFromQuery, type WeatherMood } from "../weather";
 
@@ -22,6 +23,8 @@ export class HudScene extends Phaser.Scene {
   private chipText!: Phaser.GameObjects.BitmapText;
   private glyph!: Phaser.GameObjects.Image;
   private clockText!: Phaser.GameObjects.BitmapText;
+  private muteIcon!: Phaser.GameObjects.Image;
+  private muted = false;
   private mood: WeatherMood = "clearDay";
   private isDark = false;
   private hudCream = false;
@@ -111,6 +114,17 @@ export class HudScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     this.cameraHit.on("pointerdown", this.onCamera);
 
+    this.muted = readHarborMute();
+    this.muteIcon = this.add
+      .image(0, 0, this.muted ? TEX.glyphMuteOff : TEX.glyphMuteOn)
+      .setOrigin(0, 0)
+      .setScrollFactor(0)
+      .setDepth(20)
+      .setInteractive(muteHitConfig());
+    this.muteIcon.on("pointerdown", () => {
+      EventBus.emit("harbor-mute-toggle");
+    });
+
     this.stickEnabled = shouldShowVirtualStick();
     if (this.stickEnabled) {
       this.buildStick();
@@ -136,10 +150,13 @@ export class HudScene extends Phaser.Scene {
     EventBus.on("harbor-prompt", this.onPrompt);
     EventBus.on("harbor-weather", this.onWeather);
     EventBus.on("harbor-postcard-request", this.onPostcardRequest);
+    EventBus.on("harbor-mute-state", this.onMuteState);
+    EventBus.emit("harbor-mute-query");
     this.events.once("shutdown", () => {
       EventBus.off("harbor-prompt", this.onPrompt);
       EventBus.off("harbor-weather", this.onWeather);
       EventBus.off("harbor-postcard-request", this.onPostcardRequest);
+      EventBus.off("harbor-mute-state", this.onMuteState);
       this.scale.off("resize", this.onResize, this);
       this.postcard.hide();
       this.emitStick(0);
@@ -267,10 +284,13 @@ export class HudScene extends Phaser.Scene {
     this.glyph.setVisible(show);
     this.clockText.setVisible(show);
     this.cameraIcon.setVisible(show);
+    this.muteIcon.setVisible(show);
     if (show) {
       this.cameraHit.setInteractive({ useHandCursor: true });
+      this.muteIcon.setInteractive(muteHitConfig());
     } else {
       this.cameraHit.disableInteractive();
+      this.muteIcon.disableInteractive();
     }
     if (this.stickBase) {
       this.stickBase.setVisible(show);
@@ -325,6 +345,11 @@ export class HudScene extends Phaser.Scene {
     }
   };
 
+  private onMuteState = (...args: unknown[]): void => {
+    this.muted = args[0] === true;
+    this.muteIcon.setTexture(this.muted ? TEX.glyphMuteOff : TEX.glyphMuteOn);
+  };
+
   private setPrompt(id: InteractId | null): void {
     this.promptId = id;
     if (!this.chromeVisible) {
@@ -376,11 +401,14 @@ export class HudScene extends Phaser.Scene {
       this.chipHit.setPosition(cx, this.viewH - 6);
     }
 
-    this.clockText.setTint(this.hudCream || this.isDark || this.mood === "rain" ? CREAM : INK);
+    const clockCream = this.hudCream || this.isDark || this.mood === "rain";
+    this.clockText.setTint(clockCream ? CREAM : INK);
     this.clockText.setPosition(Math.round(this.viewW - 10), 6);
     this.glyph.setPosition(Math.round(this.viewW - 12 - this.clockText.width), 6);
     this.cameraIcon.setPosition(6, 6);
     this.cameraHit.setPosition(4, 4);
+    const inset = muteInset(this, this.viewW, this.viewH);
+    this.muteIcon.setPosition(inset.x, inset.y);
   }
 }
 
@@ -401,4 +429,37 @@ function glyphKey(mood: WeatherMood): string {
       return _exhaustive;
     }
   }
+}
+
+function cssSafeInset(side: "top" | "left"): number {
+  const key = side === "top" ? "--sat" : "--sal";
+  return Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(key)) || 0;
+}
+
+function muteHitConfig(): {
+  useHandCursor: true;
+  hitArea: Phaser.Geom.Rectangle;
+  hitAreaCallback: typeof Phaser.Geom.Rectangle.Contains;
+} {
+  const offset = Math.floor((MUTE_CHIP - MUTE_HIT) / 2);
+  return {
+    useHandCursor: true,
+    hitArea: new Phaser.Geom.Rectangle(offset, offset, MUTE_HIT, MUTE_HIT),
+    hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+  };
+}
+
+function muteInset(
+  scene: Phaser.Scene,
+  viewW: number,
+  viewH: number,
+): { x: number; y: number } {
+  const canvas = scene.game.canvas;
+  const scaleX = Math.max(0.01, (canvas.clientWidth || viewW) / viewW);
+  const scaleY = Math.max(0.01, (canvas.clientHeight || viewH) / viewH);
+  const padX = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("left") / scaleX));
+  const padY = Math.max(MUTE_INSET, MUTE_INSET + Math.ceil(cssSafeInset("top") / scaleY));
+  // Postcard camera sits at (6, 6) with a 13px sprite; keep mute to its right.
+  const cameraRight = 6 + 13;
+  return { x: Math.max(padX, cameraRight + MUTE_INSET), y: padY };
 }
