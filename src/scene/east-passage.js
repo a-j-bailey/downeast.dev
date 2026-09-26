@@ -5,7 +5,7 @@
  * Original Canvas2D painter for downeast.dev. Deterministic 240 s loop.
  */
 import {
-  W, H, LOOP, TAU, frac, clamp, lerp, wave, step, cycle, scroll,
+  W, H, LOOP, TAU, frac, clamp, lerp, smooth, wave, step, cycle, scroll,
   hash, rng, bayer, hex, makeCanvas, makeHalo, drawHalo, reflect, streak, text,
 } from "../engine/core.js";
 
@@ -736,14 +736,15 @@ function drawFlag(t) {
 }
 
 function drawBoats(t) {
-  const bob = Math.round(wave(t, 7, 0.12) * 1.4);
-  ctx.drawImage(LOBSTER_C, 198, DECK - 14 + bob);
+  const bob = Math.round(wave(t, 7, 0.12) * 1.6);
+  ctx.drawImage(LOBSTER_C, 252, DECK - 10 + bob);
   ctx.fillStyle = "#f0c878";
-  if (wave(t, 5, 0.4) > -0.6) ctx.fillRect(208, DECK - 10 + bob, 1, 1);
-  ctx.fillRect(214, DECK - 11 + bob, 1, 1);
+  ctx.fillRect(262, DECK - 6 + bob, 1, 1);
+  ctx.fillRect(268, DECK - 7 + bob, 1, 1);
 
   const bob2 = Math.round(wave(t, 9, 0.7) * 1.2);
-  ctx.drawImage(SKIFF_C, 328, HOR + 28 + bob2);
+  ctx.drawImage(SKIFF_C, 318, HOR + 26 + bob2);
+
 
   const ferrySpan = 48;
   let fu = t - 36;
@@ -788,13 +789,22 @@ function drawWalker(t) {
   let flip = left;
   if (idle) {
     x = cyc === 1 ? x1 : x0;
-    ctx.drawImage(WALK_R[0], x, DECK - 8);
+    ctx.drawImage(cyc === 1 ? WALK_R[0] : WALK_L[0], x, DECK - 8);
     return;
   }
   x = Math.round(lerp(left ? x1 : x0, left ? x0 : x1, smooth(0.04, 0.96, u)));
   flip = left;
   const fr = Math.floor(u * 28) % 4;
   ctx.drawImage(flip ? WALK_L[fr] : WALK_R[fr], x, DECK - 8);
+}
+
+function drawStringLights(t) {
+  for (let x = 88; x < 272; x += 13) {
+    const glow = 0.55 + 0.45 * (0.5 + 0.5 * wave(t, 9, x * 0.03));
+    ctx.fillStyle = glow > 0.5 ? "#f2d078" : "#a07838";
+    ctx.fillRect(x, DECK - 11, 2, 1);
+    if (glow > 0.6) drawHalo(ctx, HALO_WIN, x + 0.5, DECK - 10, 0.28 * glow);
+  }
 }
 
 function drawWindows(t) {
@@ -866,6 +876,7 @@ function renderFrame(t) {
   drawSmoke(t);
   drawFlag(t);
   ctx.drawImage(DOCK_C, 0, 0);
+  drawStringLights(t);
   drawBoats(t);
   reflect(ctx, t, { top: HOR, rows: 42, squash: 1.7, alpha: 0.42, k1: 41, k2: 97, amp: 0.55, grow: 0.04 });
   streak(ctx, t, LIGHT.cx, 3.2, "#f0d878", 0.35, 1.2, HOR, HOR + 40);

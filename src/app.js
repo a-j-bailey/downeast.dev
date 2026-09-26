@@ -52,8 +52,12 @@ tickClock();
 setInterval(tickClock, 10000);
 
 function frame() {
-  render(loopTime());
-  display.present(buf, scene.focusX);
+  try {
+    render(loopTime());
+    display.present(buf, scene.focusX);
+  } catch (e) {
+    console.error(e);
+  }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -80,7 +84,6 @@ function startMusic() {
 }
 
 $("#play").addEventListener("click", () => {
-  startMusic();
   audio.toggle();
 });
 $("#next").addEventListener("click", () => {

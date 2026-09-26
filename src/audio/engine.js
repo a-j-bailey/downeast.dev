@@ -158,13 +158,24 @@ export function createEngine(ac, mixer, { scene, vibe, lite, onTrack } = {}) {
     };
   }
 
+  function fillQueue(from) {
+    const out = [];
+    let prev = from;
+    for (let i = 0; i < 5; i++) {
+      const p = planTrack(prev.nextSeed, { scene: sceneNow, prevKey: prev.key, vibe: vibeNow });
+      out.push(p);
+      prev = p;
+    }
+    queue = out;
+  }
+
   function startPlan(seed, t) {
     plan = planTrack(seed, { scene: sceneNow, prevKey: plan && plan.key, vibe: vibeNow });
     st = createBarState(plan);
     nextBar = 0;
     trackStart = t;
     buildInstruments();
-    queue = [planTrack(plan.nextSeed, { scene: sceneNow, prevKey: plan.key, vibe: vibeNow })];
+    fillQueue(plan);
     if (onTrack) onTrack(plan);
   }
 
@@ -265,7 +276,7 @@ export function createEngine(ac, mixer, { scene, vibe, lite, onTrack } = {}) {
     setVibe(v) {
       vibeNow = normVibe(v);
       if (plan) {
-        queue = [planTrack(plan.nextSeed, { scene: sceneNow, prevKey: plan.key, vibe: vibeNow })];
+        fillQueue(plan);
         if (vibeNow.band !== plan.vibe.band && st) {
           for (let i = nextBar; i < st.map.length; i++) st.map[i].L = bandLayers(plan.sections[st.map[i].si].layers, vibeNow.band);
         }

@@ -240,6 +240,8 @@ kbd {
 
 @media (pointer: coarse) {
   :root { --btn: 44px; }
+  #play, #mute { width: 52px; height: 52px; border-radius: 14px; }
+  #play svg, #mute svg { width: 18px; height: 18px; }
   .vol input, .mix-row input { height: 32px; }
   .t-opt { min-height: 40px; }
   .seg span { padding-block: 11px; }
