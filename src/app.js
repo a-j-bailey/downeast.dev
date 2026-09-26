@@ -76,6 +76,7 @@ for (const el of document.querySelectorAll("#vibe [name=energy]")) el.checked = 
 for (const el of document.querySelectorAll("#vibe [name=band]")) el.checked = el.value === savedVibe.band;
 
 let muted = false;
+let startedOnce = false;
 let preMute = { m: +musicVol.value, a: +ambVol.value };
 
 function startMusic() {
@@ -132,11 +133,15 @@ audio.on("state", (s) => {
   const icon = playing ? "i-pause" : "i-play";
   $("#play").innerHTML = `<svg><use href="#${icon}"/></svg>`;
   $("#play").setAttribute("aria-label", playing ? "Pause" : "Play music");
+  if (playing) {
+    startedOnce = true;
+    wake();
+  }
 });
 audio.on("track", (info) => {
   if (!info) return;
   $("#trackTitle").textContent = info.title;
-  $("#trackMeta").textContent = `${info.artist} · ${info.key} · ${info.bpm} bpm`;
+  $("#trackMeta").textContent = `${info.key} · ${info.bpm} bpm`;
   renderQueue();
 });
 audio.on("queue", renderQueue);
@@ -329,7 +334,10 @@ function toggleFS() {
 }
 if (!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)) $("#fs").hidden = true;
 $("#fs").addEventListener("click", toggleFS);
-$("#screen").addEventListener("dblclick", toggleFS);
+addEventListener("dblclick", (e) => {
+  const t = e.target;
+  if (t === document.body || t === document.documentElement || t === $("#screen")) toggleFS();
+});
 
 let idleTimer = 0;
 const canHover = matchMedia("(hover: hover)");
@@ -339,6 +347,7 @@ function popOpen() {
 function wake() {
   document.body.classList.remove("idle");
   clearTimeout(idleTimer);
+  if (!startedOnce) return;
   idleTimer = setTimeout(() => {
     const busy =
       (canHover.matches && document.querySelector(".ui:hover")) ||
