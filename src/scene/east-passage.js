@@ -315,7 +315,7 @@ function renderHills() {
       p.set(i, y, col);
     }
   }
-  for (let n = 0; n < 88; n++) {
+  for (let n = 0; n < 112; n++) {
     const x = 4 + Math.floor(r() * 400);
     const y = Math.round(ridge[x]) - 8 - Math.floor(r() * 6);
     const h = 9 + Math.floor(r() * 8);
@@ -325,20 +325,32 @@ function renderHills() {
     }
   }
   const hamlet = [
+    [8, 2, 10, 6, true],
     [22, 3, 11, 7, true],
     [38, 2, 9, 6, true],
+    [54, 3, 11, 7, true],
     [72, 4, 13, 8, true],
     [94, 2, 10, 7, false],
     [118, 3, 12, 7, true],
+    [134, 2, 8, 6, true],
     [148, 1, 9, 6, true],
+    [162, 3, 10, 7, true],
     [176, 3, 14, 8, true],
+    [194, 2, 8, 6, false],
     [204, 2, 10, 6, true],
+    [216, 3, 9, 7, true],
     [228, 1, 12, 8, true],
+    [240, 2, 9, 6, true],
     [252, 3, 9, 6, false],
+    [262, 2, 10, 7, true],
     [274, 2, 13, 8, true],
+    [286, 3, 9, 6, true],
     [298, 4, 10, 7, true],
+    [310, 2, 10, 6, true],
     [322, 2, 11, 7, true],
+    [334, 3, 8, 6, true],
     [344, 3, 8, 6, true],
+    [356, 4, 11, 8, true],
   ];
   const lights = [];
   for (const [cx, drop, w, h, lit] of hamlet) {
@@ -351,13 +363,13 @@ function renderHills() {
   p.set(steepleX + 2, steepleY - 10, "#3a2c20");
   lights.push({ x: steepleX + 2, y: steepleY + 4, ph: 0.4, k: 6 });
 
-  for (const px of [132, 186, 266]) {
+  for (const px of [108, 132, 158, 186, 222, 266, 304]) {
     const y = HOR - 2;
-    p.rect(px, y, 28, 2, "#1a1814");
-    for (let k = 0; k < 6; k++) p.rect(px + 2 + k * 5, y, 2, 5, "#141210");
+    p.rect(px, y, 26, 2, "#1a1814");
+    for (let k = 0; k < 5; k++) p.rect(px + 2 + k * 5, y, 2, 5, "#141210");
   }
 
-  for (let n = 0; n < 28; n++) {
+  for (let n = 0; n < 40; n++) {
     const x = 12 + Math.floor(r() * 350);
     const y = Math.round(ridge[x]) + 2 + Math.floor(r() * 8);
     lights.push({ x, y, ph: r(), k: 3 + Math.floor(r() * 9) });
@@ -403,6 +415,22 @@ function renderSpit() {
   windowPane(p, 394, 172, false);
   p.rect(386, 198, 26, 1, "#4a4438");
   for (let x = 388; x < 410; x += 4) p.rect(x, 194, 1, 4, "#3a342c");
+  p.rect(412, 186, 14, 16, "#2c2820");
+  shakeWall(p, 412, 190, 14, 12, "#221e18", "#2c2820", "#3a342c");
+  for (let i = 410; i < 428; i++) {
+    const y = 184 - Math.round((1 - Math.abs((i - 419) / 9)) * 5);
+    p.line(i, y, i, 190, i < 419 ? "#4a4034" : "#3a3428");
+    p.set(i, y, "#5a4e3e");
+  }
+  windowPane(p, 415, 192, false);
+  p.rect(448, 188, 10, 8, "#2a2620");
+  p.rect(448, 186, 10, 2, "#3a342c");
+  p.rect(450, 190, 3, 4, "#1c1a16");
+  for (let k = 0; k < 8; k++) {
+    const x = 430 + k * 5;
+    p.rect(x, QUAY - 4 + (k & 1), 3, 2, "#3a3830");
+    p.set(x + 1, QUAY - 5 + (k & 1), "#524e44");
+  }
   return p.done();
 }
 
@@ -430,6 +458,12 @@ function renderLighthouse() {
   p.rect(cx + 7, lantern + 10, 4, 2, "#d0c8bc");
   p.rect(cx - 3, base - 18, 3, 5, "#1c1a16");
   p.set(cx - 2, base - 16, "#f0c878");
+  p.rect(cx - 3, base - 36, 3, 5, "#1c1a16");
+  p.set(cx - 2, base - 34, "#f0c878");
+  p.rect(cx - 2, base - 10, 4, 8, "#2a241c");
+  p.set(cx, base - 6, "#c89040");
+  p.rect(cx - 9, lantern + 12, 18, 1, "#8a8074");
+  for (let x = cx - 8; x < cx + 8; x += 3) p.set(x, lantern + 12, "#d0c8bc");
   p.rect(cx - 8, lantern + 8, 16, 1, "#f4e8c0");
   p.rect(cx - 9, lantern + 4, 18, 1, "#8a2018");
   return p.done();
@@ -464,7 +498,7 @@ function windowPane(p, x, y, lit) {
 
 function renderVillage() {
   const p = painter(W, H);
-  for (let i = 0; i < 176; i++) {
+  for (let i = 0; i < 198; i++) {
     const top = QUAY - 4 - Math.round(2 * Math.sin(i * 0.2));
     for (let y = top; y < H; y++) {
       const col = y > QUAY + 8 ? "#1a1612" : ((i + y) & 2 ? "#2c241c" : "#32281e");
@@ -568,11 +602,60 @@ function renderVillage() {
   p.rect(112, 208, 8, 3, "#7a2018");
   p.rect(113, 205, 6, 3, "#c44030");
 
+  p.line(40, 176, 60, 170, "#3a3228");
+  p.set(44, 174, "#c8b090");
+  p.set(50, 172, "#8a2820");
+  p.set(56, 171, "#e8e0d0");
+  p.rect(110, 132, 1, 8, "#3a3428");
+  p.rect(108, 131, 6, 1, "#4a4034");
+  p.set(114, 131, "#c8b090");
+  for (let x = 84; x <= 108; x += 4) p.rect(x, 210, 1, 10, "#3a3228");
+  p.rect(84, 210, 26, 1, "#4a4034");
+  p.rect(86, 212, 4, 2, "#c8a070");
+  p.rect(94, 213, 5, 2, "#a89068");
+  p.rect(102, 212, 4, 2, "#c8a070");
+  p.rect(156, 214, 14, 5, "#5a4830");
+  p.rect(157, 213, 12, 1, "#6a5840");
+  p.rect(160, 216, 6, 3, "#3a2e20");
+
+  p.rect(178, 176, 22, 30, "#2a2218");
+  shakeWall(p, 178, 182, 22, 24, "#221a14", "#30261c", "#3a2c22");
+  for (let i = 176; i < 202; i++) {
+    const y = 174 - Math.round((1 - Math.abs((i - 189) / 13)) * 6);
+    p.line(i, y, i, 182, i < 189 ? "#4a3c28" : "#3a2e22");
+    p.set(i, y, "#5a4a32");
+  }
+  windowPane(p, 184, 186, false);
+  p.rect(192, 198, 6, 8, "#1a1410");
+  p.rect(180, 168, 4, 8, "#3a3024");
+  p.rect(179, 166, 6, 3, "#2a2418");
+
+  p.line(62, 168, 118, 164, "#3a3228");
+  p.set(70, 167, "#c8b090");
+  p.set(82, 166, "#8a2820");
+  p.set(94, 165, "#e8e0d0");
+  p.set(106, 165, "#c8b090");
+
+  p.rect(12, 188, 1, 14, "#3a3228");
+  p.rect(34, 188, 1, 14, "#3a3228");
+  for (let y = 190; y < 200; y += 3) {
+    p.line(12, y, 34, y + 1, "#4a4034");
+    p.line(12, y + 1, 34, y, "#2e281e");
+  }
+
+  p.rect(142, 198, 4, 10, "#3a2e22");
+  p.rect(141, 197, 6, 2, "#4a3c2c");
+  p.rect(143, 200, 2, 6, "#5a4830");
+  p.rect(6, 214, 16, 6, "#4a3a28");
+  p.rect(8, 212, 12, 2, "#5a4830");
+  p.rect(10, 216, 8, 3, "#3a2e20");
+
   const sheet = p.done();
   const sx = sheet.getContext("2d");
   sx.imageSmoothingEnabled = false;
   text(sx, "BAIT", 64, 158, "#c8b090");
   text(sx, "ICE", 150, 186, "#a09078");
+  text(sx, "NETS", 180, 178, "#a09078");
   return sheet;
 }
 
@@ -673,7 +756,36 @@ function renderDock() {
   }
   windowPane(p, 306, DECK - 14, false);
   p.rect(318, DECK - 4, 6, 4, "#3a3228");
+  p.rect(72, DECK - 6, 8, 6, "#3a3228");
+  p.rect(73, DECK - 5, 6, 4, "#2a241c");
+  for (let x = 74; x < 310; x += 22) {
+    p.rect(x, DECK + 8, 3, 3, "#1a1410");
+    p.rect(x - 1, DECK + 10, 5, 2, "#241c16");
+  }
+  p.rect(232, DECK - 16, 14, 16, "#2a2218");
+  shakeWall(p, 232, DECK - 12, 14, 12, "#241c16", "#32281e", "#3c3024");
+  for (let i = 230; i < 248; i++) {
+    const y = DECK - 18 - Math.round((1 - Math.abs((i - 239) / 9)) * 4);
+    p.line(i, y, i, DECK - 12, "#3a2e22");
+    p.set(i, y, "#4a3c2c");
+  }
+  windowPane(p, 235, DECK - 12, false);
+  p.rect(152, DECK - 1, 48, 1, "#5a4a34");
+  for (let i = 0; i < 10; i++) p.rect(154 + i * 5, DECK, 2, 8 + (i & 1) * 2, "#2a2218");
   return p.done();
+}
+
+function renderNet() {
+  return sprite(
+    [
+      "n.n.n.n",
+      ".n.n.n.",
+      "n.n.n.n",
+      ".n.n.n.",
+      "n.n.n.n",
+    ],
+    { n: "#4a4034" },
+  );
 }
 
 function renderCrate() {
@@ -753,13 +865,106 @@ function renderFerry() {
   );
 }
 
-function renderGull(frame) {
+function renderGullFly(frame, flip = false) {
+  const ink = {
+    w: "#f8f4ec",
+    h: "#fff8f0",
+    e: "#1c1814",
+    y: "#f0b040",
+    b: "#ece6dc",
+    t: "#c8c0b4",
+  };
   const rows = [
-    ["..w..", ".w.w.", "w...w"],
-    [".w.w.", "..w..", "w...w"],
-    ["w...w", ".w.w.", "..w.."],
+    [
+      "w.............w",
+      ".w.....w.....w.",
+      "..w...hhey..w..",
+      "...w..bbbb.w...",
+      "....w.bbb.w....",
+      "......tt.......",
+    ],
+    [
+      ".w...........w.",
+      "..ww...w...ww..",
+      "...w..hhey.w...",
+      "....w.bbbbw....",
+      ".....bbbb......",
+      "......tt.......",
+    ],
+    [
+      "...............",
+      "www....w....www",
+      "...w..hhey.w...",
+      "....w.bbbbw....",
+      ".....bbbb......",
+      "......tt.......",
+    ],
+    [
+      "...............",
+      "...............",
+      "......hhey.....",
+      ".w....bbbb...w.",
+      "..w...bbb...w..",
+      "...w..tt...w...",
+      "....w.....w....",
+    ],
+    [
+      "...............",
+      "...............",
+      "......hhey.....",
+      "......bbbb.....",
+      ".w....bbb....w.",
+      "..w...tt....w..",
+      "...w.......w...",
+      "....w.....w....",
+    ],
+    [
+      "..w.........w..",
+      "...w...w...w...",
+      "....w.hhey.w...",
+      ".....wbbbbw....",
+      ".....bbbb......",
+      "......tt.......",
+    ],
   ][frame];
-  return sprite(rows, { w: "#e8e4dc" });
+  return sprite(rows, ink, flip);
+}
+
+function renderGullPerch(frame) {
+  const rows = [
+    [
+      "...hey.",
+      "..bbbbb",
+      "...bb.t",
+      "...l.l.",
+    ],
+    [
+      "w..hey.w",
+      ".w.bbbb.",
+      "..wbb.t.",
+      "...l.l..",
+    ],
+  ][frame];
+  return sprite(rows, {
+    w: "#f4f0e8",
+    h: "#f8f4ee",
+    e: "#2a2420",
+    y: "#e8b050",
+    b: "#e4e0d8",
+    t: "#c8c4bc",
+    l: "#c8c0b4",
+  });
+}
+
+function flapFrame(t, ph, rate) {
+  const u = frac((t * rate) / LOOP + ph);
+  if (u < 0.12) return 0;
+  if (u < 0.24) return 1;
+  if (u < 0.40) return 2;
+  if (u < 0.54) return 3;
+  if (u < 0.70) return 4;
+  if (u < 0.84) return 3;
+  return 5;
 }
 
 function renderWalker(frame, flip) {
@@ -856,9 +1061,9 @@ function renderVignette() {
 
 /* ================= Prerender ================= */
 let MOON_C, SUN_C, HILLS, SPIT_C, LIGHT_C, VILLAGE_C, DOCK_C, TRAPS_C, CRATE_C, COIL_C, BARREL_C;
-let LOBSTER_C, SKIFF_C, FERRY_C, BUOY_C, CAT_C, VIG_C;
+let LOBSTER_C, SKIFF_C, FERRY_C, BUOY_C, CAT_C, NET_C, VIG_C;
 let HILLS_DAY, SPIT_DAY, LIGHT_DAY, VILLAGE_DAY, DOCK_DAY;
-let GULLS, WALK_R, WALK_L;
+let GULL_R, GULL_L, GULL_SIT, GULL_STRETCH, WALK_R, WALK_L;
 let HALO_MOON, HALO_SUN, HALO_WIN, HALO_LAMP, HALO_BEAM, HALO_BUOY, HALO_WARM;
 
 function prerender() {
@@ -884,8 +1089,12 @@ function prerender() {
   FERRY_C = renderFerry();
   BUOY_C = renderBuoy();
   CAT_C = renderCat();
+  NET_C = renderNet();
   VIG_C = renderVignette();
-  GULLS = [renderGull(0), renderGull(1), renderGull(2)];
+  GULL_R = [0, 1, 2, 3, 4, 5].map((f) => renderGullFly(f, false));
+  GULL_L = [0, 1, 2, 3, 4, 5].map((f) => renderGullFly(f, true));
+  GULL_SIT = renderGullPerch(0);
+  GULL_STRETCH = renderGullPerch(1);
   WALK_R = [0, 1, 2, 3].map((f) => renderWalker(f, false));
   WALK_L = [0, 1, 2, 3].map((f) => renderWalker(f, true));
   HALO_MOON = makeHalo(26, "#f0ece0", 0.32, 1.6, 6);
@@ -979,6 +1188,19 @@ function drawWater(t) {
     const foam = Math.round(wave(t, 15, y * 0.1) * 2);
     ctx.fillRect(64 + foam, y, 260, 1);
   }
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = SKY.day > 0.5 ? "#c8dce4" : "#8aa0a8";
+  for (let y = HOR + 6; y < QUAY - 4; y += 3) {
+    const ox = Math.round(wave(t, 7, y * 0.06) * 4);
+    ctx.fillRect((y * 13 + ox) % W, y, 6 + (y % 5), 1);
+  }
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = SKY.day > 0.5 ? "#d0e4ec" : "#5a7068";
+  for (let i = 0; i < 18; i++) {
+    const x = 70 + i * 18 + Math.round(wave(t, 11, i * 0.1) * 2);
+    const y = QUAY - 2 + Math.round(wave(t, 9, i * 0.17));
+    ctx.fillRect(x, y, 3, 1);
+  }
   ctx.globalAlpha = 1;
   const body = SKY.day > 0.35 && SKY.sun.alt > 0 ? SKY.sun : SKY.moon;
   if (body.alt > 0) {
@@ -1022,6 +1244,7 @@ function drawSmoke(t) {
   const stacks = [
     { x0: 44, y0: 156 },
     { x0: 111, y0: 136 },
+    { x0: 182, y0: 164 },
     { x0: 406, y0: 164 },
   ];
   ctx.fillStyle = "#8a8884";
@@ -1065,6 +1288,11 @@ function drawBoats(t) {
   ctx.fillStyle = "#f0c878";
   ctx.fillRect(340, HOR + 26 + bob7, 1, 1);
 
+  const bob10 = Math.round(wave(t, 6, 0.15) * 1.2);
+  ctx.drawImage(LOBSTER_C, 208, HOR + 18 + bob10);
+  ctx.fillStyle = "#f0c878";
+  ctx.fillRect(218, HOR + 22 + bob10, 1, 1);
+
   const bob2 = Math.round(wave(t, 9, 0.7) * 1.2);
   ctx.drawImage(SKIFF_C, 318, HOR + 32 + bob2);
   const bob4 = Math.round(wave(t, 6, 0.22) * 1.1);
@@ -1092,9 +1320,9 @@ function drawBoats(t) {
   }
 
   ctx.fillStyle = "#2a241c";
-  for (const px of [196, 238, 276, 336, 364]) {
+  for (const px of [148, 172, 196, 218, 238, 256, 276, 300, 336, 364, 382]) {
     const ph = px * 0.01;
-    const y = HOR + 18 + Math.round(wave(t, 8, ph) * 1.2);
+    const y = HOR + 16 + Math.round(wave(t, 8, ph) * 1.2);
     ctx.fillRect(px, y, 2, QUAY - y);
     ctx.fillStyle = "#4a4034";
     ctx.fillRect(px - 1, y, 4, 2);
@@ -1110,22 +1338,49 @@ function drawBoats(t) {
   const by3 = HOR + 30 + Math.round(wave(t, 7, 0.8));
   ctx.drawImage(BUOY_C, 390, by3);
   drawHalo(ctx, HALO_BUOY, 392, by3 + 1, 0.4 + 0.3 * (0.5 + 0.5 * wave(t, 2, 0.6)));
+  const by4 = HOR + 48 + Math.round(wave(t, 8, 0.35));
+  ctx.drawImage(BUOY_C, 188, by4);
+  drawHalo(ctx, HALO_BUOY, 190, by4 + 1, 0.32 + 0.28 * (0.5 + 0.5 * wave(t, 4, 0.2)));
+  const by5 = HOR + 28 + Math.round(wave(t, 6, 0.62));
+  ctx.drawImage(BUOY_C, 312, by5);
+  drawHalo(ctx, HALO_BUOY, 314, by5 + 1, 0.38 + 0.28 * (0.5 + 0.5 * wave(t, 3, 0.75)));
 }
 
 function drawGulls(t) {
-  const birds = [
-    { k: 3, ph: 0.02, y: 48, amp: 10 },
-    { k: 4, ph: 0.41, y: 62, amp: 8 },
-    { k: 2, ph: 0.7, y: 40, amp: 14 },
-    { k: 5, ph: 0.18, y: 88, amp: 6 },
-    { k: 3, ph: 0.55, y: 34, amp: 9 },
-    { k: 6, ph: 0.88, y: 72, amp: 7 },
+  const flyers = [
+    { k: 3, ph: 0.02, y: 42, amp: 9, dir: 1, rate: 288 },
+    { k: 4, ph: 0.41, y: 58, amp: 7, dir: -1, rate: 336 },
+    { k: 2, ph: 0.70, y: 36, amp: 12, dir: 1, rate: 240 },
+    { k: 5, ph: 0.18, y: 78, amp: 6, dir: 1, rate: 312 },
+    { k: 3, ph: 0.55, y: 50, amp: 8, dir: -1, rate: 264 },
+    { k: 6, ph: 0.88, y: 68, amp: 5, dir: 1, rate: 360 },
+    { k: 2, ph: 0.33, y: 88, amp: 7, dir: -1, rate: 216 },
+    { k: 4, ph: 0.61, y: 30, amp: 10, dir: 1, rate: 384 },
+    { k: 5, ph: 0.09, y: 46, amp: 8, dir: -1, rate: 300 },
+    { k: 3, ph: 0.77, y: 72, amp: 6, dir: 1, rate: 252 },
   ];
-  for (const b of birds) {
-    const x = scroll(t, b.k, W + 30) - 15;
+  for (const b of flyers) {
+    const span = W + 40;
+    const x = b.dir > 0
+      ? scroll(t, b.k, span) - 20
+      : span - 20 - scroll(t, b.k, span);
     const y = Math.round(b.y + wave(t, b.k * 3, b.ph) * b.amp);
-    const fr = step(t, 24) % 3;
-    ctx.drawImage(GULLS[fr], x, y);
+    const fr = flapFrame(t, b.ph, b.rate);
+    const sheet = b.dir > 0 ? GULL_R : GULL_L;
+    ctx.drawImage(sheet[fr], x, y);
+  }
+
+  const perches = [
+    { x: 94, y: DECK - 12, ph: 0.12 },
+    { x: 214, y: DECK - 12, ph: 0.47 },
+    { x: 308, y: DECK - 28, ph: 0.71 },
+    { x: LIGHT.cx + 6, y: LIGHT.lantern + 8, ph: 0.29 },
+    { x: 176, y: DECK - 14, ph: 0.83 },
+  ];
+  for (const p of perches) {
+    const { cyc, u } = cycle(t, 5, p.ph);
+    const stretch = cyc === 2 && u > 0.18 && u < 0.62;
+    ctx.drawImage(stretch ? GULL_STRETCH : GULL_SIT, p.x, p.y);
   }
 }
 
@@ -1161,6 +1416,12 @@ function drawStringLights(t) {
     ctx.fillRect(x, DECK - 11, 2, 1);
     if (glow > 0.48) drawHalo(ctx, HALO_WIN, x + 0.5, DECK - 10, 0.42 * glow);
   }
+  for (let x = 372; x < 456; x += 12) {
+    const glow = n * (0.5 + 0.5 * (0.5 + 0.5 * wave(t, 8, x * 0.04)));
+    ctx.fillStyle = glow > 0.5 ? "#ffe08a" : "#b88840";
+    ctx.fillRect(x, QUAY - 16, 2, 1);
+    if (glow > 0.5) drawHalo(ctx, HALO_WIN, x + 0.5, QUAY - 15, 0.36 * glow);
+  }
 }
 
 function drawWindows(t) {
@@ -1175,8 +1436,14 @@ function drawWindows(t) {
     { x: 133, y: 193 },
     { x: 157, y: 197 },
     { x: 1, y: 197 },
+    { x: 184, y: 186 },
+    { x: 235, y: DECK - 12 },
     { x: 309, y: DECK - 11 },
     { x: 397, y: 187 },
+    { x: 394, y: 172 },
+    { x: 415, y: 192 },
+    { x: LIGHT.cx - 2, y: LIGHT.base - 36 },
+    { x: LIGHT.cx - 2, y: LIGHT.base - 18 },
   ];
   const n = Math.max(SKY.night, SKY.twilight * 0.7);
   for (const s of spots) {
@@ -1209,20 +1476,26 @@ function drawWindows(t) {
 }
 
 function drawQuayLamp(t) {
-  const x = LAMP.x;
-  const top = LAMP.top;
-  ctx.fillStyle = "#2a241c";
-  ctx.fillRect(x, top, 2, DECK - top);
-  ctx.fillStyle = "#3a3228";
-  ctx.fillRect(x - 6, top + 1, 8, 1);
-  ctx.fillRect(x - 8, top + 2, 5, 4);
-  if (SKY.night > 0.12 || SKY.twilight > 0.35) {
-    ctx.fillStyle = "#f0d878";
-    ctx.fillRect(x - 7, top + 3, 3, 2);
-    drawHalo(ctx, HALO_LAMP, x - 5.5, top + 4, SKY.night * (0.55 + 0.2 * wave(t, 7, 0.3)));
-  } else {
-    ctx.fillStyle = "#8a8070";
-    ctx.fillRect(x - 7, top + 3, 3, 2);
+  const posts = [
+    { x: LAMP.x, top: LAMP.top },
+    { x: 292, top: 128 },
+  ];
+  for (const post of posts) {
+    const x = post.x;
+    const top = post.top;
+    ctx.fillStyle = "#2a241c";
+    ctx.fillRect(x, top, 2, DECK - top);
+    ctx.fillStyle = "#3a3228";
+    ctx.fillRect(x - 6, top + 1, 8, 1);
+    ctx.fillRect(x - 8, top + 2, 5, 4);
+    if (SKY.night > 0.12 || SKY.twilight > 0.35) {
+      ctx.fillStyle = "#f0d878";
+      ctx.fillRect(x - 7, top + 3, 3, 2);
+      drawHalo(ctx, HALO_LAMP, x - 5.5, top + 4, SKY.night * (0.55 + 0.2 * wave(t, 7, x * 0.01)));
+    } else {
+      ctx.fillStyle = "#8a8070";
+      ctx.fillRect(x - 7, top + 3, 3, 2);
+    }
   }
 }
 
@@ -1258,17 +1531,27 @@ function drawForeground(t) {
   ctx.drawImage(TRAPS_C, 52, QUAY - 8);
   ctx.drawImage(TRAPS_C, 168, DECK - 8);
   ctx.drawImage(TRAPS_C, 270, DECK - 8);
+  ctx.drawImage(TRAPS_C, 292, DECK - 6);
+  ctx.drawImage(TRAPS_C, 204, DECK - 8);
   ctx.drawImage(CRATE_C, 248, DECK - 6);
   ctx.drawImage(CRATE_C, 258, DECK - 6);
   ctx.drawImage(CRATE_C, 118, DECK - 6);
   ctx.drawImage(CRATE_C, 108, DECK - 6);
   ctx.drawImage(CRATE_C, 188, DECK - 6);
+  ctx.drawImage(CRATE_C, 176, DECK - 6);
+  ctx.drawImage(CRATE_C, 154, DECK - 6);
   ctx.drawImage(COIL_C, 140, DECK - 6);
   ctx.drawImage(COIL_C, 228, DECK - 6);
   ctx.drawImage(COIL_C, 280, DECK - 6);
+  ctx.drawImage(COIL_C, 98, DECK - 6);
+  ctx.drawImage(COIL_C, 312, DECK - 6);
   ctx.drawImage(BARREL_C, 82, DECK - 7);
   ctx.drawImage(BARREL_C, 200, DECK - 7);
   ctx.drawImage(BARREL_C, 160, DECK - 7);
+  ctx.drawImage(BARREL_C, 266, DECK - 7);
+  ctx.drawImage(NET_C, 14, QUAY - 18);
+  ctx.drawImage(NET_C, 128, DECK - 14);
+  ctx.drawImage(NET_C, 302, DECK - 14);
   ctx.drawImage(CAT_C, 236, DECK - 10 + Math.round(0.4 * (wave(t, 2, 0.9) > 0.7)));
   ctx.fillStyle = "#1c1814";
   ctx.fillRect(0, H - 8, W, 8);
@@ -1301,9 +1584,9 @@ function renderFrame(t, sky) {
   drawHills(t);
   drawWater(t);
   ctx.fillStyle = "#1a1612";
-  for (const px of [128, 182, 258]) {
-    ctx.fillRect(px, HOR - 5, 30, 2);
-    for (let k = 0; k < 6; k++) ctx.fillRect(px + 3 + k * 5, HOR - 5, 2, 7);
+  for (const px of [108, 128, 158, 182, 222, 258, 304]) {
+    ctx.fillRect(px, HOR - 5, 28, 2);
+    for (let k = 0; k < 5; k++) ctx.fillRect(px + 3 + k * 5, HOR - 5, 2, 7);
   }
   drawBeam(t);
   ctx.drawImage(SPIT_C, 0, 0);
@@ -1338,11 +1621,17 @@ function renderFrame(t, sky) {
     streak(ctx, t, 134, 1.6, "#e0b060", 0.28 * glow, 3.6, HOR, HOR + 30);
     streak(ctx, t, 158, 1.4, "#e0b060", 0.26 * glow, 4.2, HOR, HOR + 28);
     streak(ctx, t, LAMP.x - 5, 2.2, "#f4d078", 0.38 * glow, 2.0, HOR, HOR + 38);
+    streak(ctx, t, 286, 2.0, "#f4d078", 0.32 * glow, 2.4, HOR, HOR + 34);
     streak(ctx, t, 310, 1.6, "#e8b868", 0.28 * glow, 3.4, HOR, HOR + 30);
     streak(ctx, t, 400, 1.5, "#e8b868", 0.28 * glow, 3.2, HOR, HOR + 32);
     streak(ctx, t, 358, 1.2, "#e05040", 0.18 * glow, 4.0, HOR, HOR + 24);
+    streak(ctx, t, 190, 1.1, "#e05040", 0.14 * glow, 4.2, HOR, HOR + 22);
+    streak(ctx, t, 314, 1.1, "#e05040", 0.14 * glow, 4.4, HOR, HOR + 22);
     for (let x = 82; x < 318; x += 18) {
       streak(ctx, t, x, 0.9, "#f2d078", 0.18 * glow, 5.0 + (x % 7), HOR, HOR + 22);
+    }
+    for (let x = 372; x < 456; x += 18) {
+      streak(ctx, t, x, 0.8, "#f2d078", 0.14 * glow, 5.4 + (x % 5), HOR, HOR + 20);
     }
   } else if (SKY.sun.alt > 0) {
     streak(ctx, t, sunP.x, 4.2, "#f0e0a0", 0.28, 1.4, HOR, HOR + 48);
