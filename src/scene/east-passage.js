@@ -1149,13 +1149,14 @@ function drawWalker(t) {
 }
 
 function drawStringLights(t) {
-  if (SKY.night < 0.2) return;
+  const n = Math.max(SKY.night, SKY.twilight * 0.7);
+  if (n < 0.12) return;
   ctx.fillStyle = "#f0c878";
-  ctx.globalAlpha = 0.1 * SKY.night;
+  ctx.globalAlpha = 0.1 * n;
   ctx.fillRect(80, DECK + 1, 230, 6);
   ctx.globalAlpha = 1;
   for (let x = 82; x < 318; x += 10) {
-    const glow = SKY.night * (0.55 + 0.45 * (0.5 + 0.5 * wave(t, 9, x * 0.03)));
+    const glow = n * (0.55 + 0.45 * (0.5 + 0.5 * wave(t, 9, x * 0.03)));
     ctx.fillStyle = glow > 0.5 ? "#ffe08a" : "#b88840";
     ctx.fillRect(x, DECK - 11, 2, 1);
     if (glow > 0.48) drawHalo(ctx, HALO_WIN, x + 0.5, DECK - 10, 0.42 * glow);
@@ -1177,7 +1178,7 @@ function drawWindows(t) {
     { x: 309, y: DECK - 11 },
     { x: 397, y: 187 },
   ];
-  const n = SKY.night;
+  const n = Math.max(SKY.night, SKY.twilight * 0.7);
   for (const s of spots) {
     if (n > 0.2) {
       ctx.globalAlpha = n;
@@ -1215,7 +1216,7 @@ function drawQuayLamp(t) {
   ctx.fillStyle = "#3a3228";
   ctx.fillRect(x - 6, top + 1, 8, 1);
   ctx.fillRect(x - 8, top + 2, 5, 4);
-  if (SKY.night > 0.25) {
+  if (SKY.night > 0.12 || SKY.twilight > 0.35) {
     ctx.fillStyle = "#f0d878";
     ctx.fillRect(x - 7, top + 3, 3, 2);
     drawHalo(ctx, HALO_LAMP, x - 5.5, top + 4, SKY.night * (0.55 + 0.2 * wave(t, 7, 0.3)));
