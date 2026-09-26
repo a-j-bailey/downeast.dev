@@ -808,7 +808,83 @@ function renderCrate() {
 }
 
 /* ================= Boats ================= */
-function renderLobsterBoat() {
+function renderSmallLobster(flip = false) {
+  return sprite(
+    [
+      ".............",
+      "......www....",
+      ".....wgggw...",
+      ".....wgygw...",
+      "....wwwww....",
+      "...w......w..",
+      "..hhhhhhhhh..",
+      ".hbbbbbbbbbh.",
+      ".bbbbbbbbbbb.",
+      "..nnnnnnnnn..",
+    ],
+    {
+      w: "#e4dcc8",
+      g: "#3a5040",
+      y: "#f0c878",
+      h: "#c8b090",
+      b: "#b8a078",
+      n: "#243038",
+    },
+    flip,
+  );
+}
+
+function renderSail(flip = false) {
+  return sprite(
+    [
+      "......m......",
+      ".....m.s.....",
+      "....m..ss....",
+      "...m...sss...",
+      "..m....ssss..",
+      ".m.....sssss.",
+      "m......ssssss",
+      "m.wwwwwwsss..",
+      ".hbbbbbbbbh..",
+      "..nnnnnnnn...",
+    ],
+    {
+      m: "#3a3228",
+      s: "#f2eee4",
+      w: "#d8d0c4",
+      h: "#c0b8ac",
+      b: "#a89880",
+      n: "#243038",
+    },
+    flip,
+  );
+}
+
+function renderCatboat(flip = false) {
+  return sprite(
+    [
+      "....m........",
+      "...mss.......",
+      "..m.sss......",
+      ".m..ssss.....",
+      "m...sssss....",
+      "mwwwwwwsss...",
+      ".hbbbbbbbh...",
+      "..nnnnnnn....",
+    ],
+    {
+      m: "#2a241c",
+      s: "#e8dcc4",
+      w: "#c8b090",
+      h: "#a89070",
+      b: "#8a7458",
+      n: "#243038",
+    },
+    flip,
+  );
+}
+
+function renderLobsterBoat(flip = false) {
   return sprite(
     [
       "................",
@@ -831,6 +907,7 @@ function renderLobsterBoat() {
       b: "#c8c0b4",
       n: "#2a3238",
     },
+    flip,
   );
 }
 
@@ -1075,7 +1152,8 @@ function renderVignette() {
 
 /* ================= Prerender ================= */
 let MOON_C, SUN_C, HILLS, SPIT_C, LIGHT_C, VILLAGE_C, DOCK_C, TRAPS_C, CRATE_C, COIL_C, BARREL_C;
-let LOBSTER_C, SKIFF_C, FERRY_C, BUOY_C, CAT_C, NET_C, VIG_C;
+let LOBSTER_C, LOBSTER_L, LOBSTER_S, LOBSTER_SL, SKIFF_C, FERRY_C, BUOY_C, CAT_C, NET_C, VIG_C;
+let SAIL_R, SAIL_L, CATBOAT_R, CATBOAT_L;
 let HILLS_DAY, SPIT_DAY, LIGHT_DAY, VILLAGE_DAY, DOCK_DAY;
 let GULL_R, GULL_L, GULL_SIT, GULL_STRETCH, WALK_R, WALK_L;
 let HALO_MOON, HALO_SUN, HALO_WIN, HALO_LAMP, HALO_BEAM, HALO_BUOY, HALO_WARM;
@@ -1098,7 +1176,14 @@ function prerender() {
   CRATE_C = renderCrate();
   COIL_C = renderCoil();
   BARREL_C = renderBarrel();
-  LOBSTER_C = renderLobsterBoat();
+  LOBSTER_C = renderLobsterBoat(false);
+  LOBSTER_L = renderLobsterBoat(true);
+  LOBSTER_S = renderSmallLobster(false);
+  LOBSTER_SL = renderSmallLobster(true);
+  SAIL_R = renderSail(false);
+  SAIL_L = renderSail(true);
+  CATBOAT_R = renderCatboat(false);
+  CATBOAT_L = renderCatboat(true);
   SKIFF_C = renderSkiff();
   FERRY_C = renderFerry();
   BUOY_C = renderBuoy();
@@ -1286,39 +1371,8 @@ function drawFlag(t) {
 }
 
 function drawBoats(t) {
-  const bob = Math.round(wave(t, 7, 0.12) * 1.6);
-  ctx.drawImage(LOBSTER_C, 252, DECK - 10 + bob);
-  ctx.fillStyle = "#f0c878";
-  ctx.fillRect(262, DECK - 6 + bob, 1, 1);
-  ctx.fillRect(268, DECK - 7 + bob, 1, 1);
-
-  const bob3 = Math.round(wave(t, 8, 0.4) * 1.3);
-  ctx.drawImage(LOBSTER_C, 176, HOR + 28 + bob3);
-  ctx.fillStyle = "#f0c878";
-  ctx.fillRect(186, HOR + 32 + bob3, 1, 1);
-
-  const bob7 = Math.round(wave(t, 5, 0.81) * 1.4);
-  ctx.drawImage(LOBSTER_C, 330, HOR + 22 + bob7);
-  ctx.fillStyle = "#f0c878";
-  ctx.fillRect(340, HOR + 26 + bob7, 1, 1);
-
-  const bob10 = Math.round(wave(t, 6, 0.15) * 1.2);
-  ctx.drawImage(LOBSTER_C, 208, HOR + 18 + bob10);
-  ctx.fillStyle = "#f0c878";
-  ctx.fillRect(218, HOR + 22 + bob10, 1, 1);
-
-  const bob2 = Math.round(wave(t, 9, 0.7) * 1.2);
-  ctx.drawImage(SKIFF_C, 318, HOR + 32 + bob2);
-  const bob4 = Math.round(wave(t, 6, 0.22) * 1.1);
-  ctx.drawImage(SKIFF_C, 214, HOR + 36 + bob4);
-  const bob5 = Math.round(wave(t, 10, 0.55) * 0.9);
-  ctx.drawImage(SKIFF_C, 292, DECK - 4 + bob5);
-  const bob6 = Math.round(wave(t, 12, 0.33) * 1.0);
-  ctx.drawImage(SKIFF_C, 348, HOR + 40 + bob6);
-  const bob8 = Math.round(wave(t, 7, 0.9) * 1.0);
-  ctx.drawImage(SKIFF_C, 148, HOR + 34 + bob8);
-  const bob9 = Math.round(wave(t, 11, 0.05) * 0.8);
-  ctx.drawImage(SKIFF_C, 268, HOR + 44 + bob9);
+  const bob = (k, ph, amp) => Math.round(wave(t, k, ph) * amp);
+  const wrapX = (x, span) => ((x % span) + span) % span;
 
   const ferrySpan = 48;
   let fu = t - 36;
@@ -1326,36 +1380,74 @@ function drawBoats(t) {
   if (fu < ferrySpan) {
     const p = fu / ferrySpan;
     const fx = Math.round(lerp(W + 20, -40, p));
-    const fy = HOR + 8 + Math.round(wave(t, 3, 0.2));
+    const fy = HOR + 8 + bob(3, 0.2, 1);
     ctx.drawImage(FERRY_C, fx, fy);
     ctx.fillStyle = "#f0d080";
     ctx.fillRect(fx + 8, fy + 3, 1, 1);
     ctx.fillRect(fx + 12, fy + 3, 1, 1);
   }
 
+  const paint = (list) => {
+    for (const c of list) {
+      const y = c.y + bob(c.k, c.ph, c.amp);
+      ctx.drawImage(c.img, c.x, y);
+      if (c.lamps) {
+        ctx.fillStyle = "#f0c878";
+        for (const [dx, dy] of c.lamps) ctx.fillRect(c.x + dx, y + dy, 1, 1);
+      }
+    }
+  };
+
+  const span = W + 36;
+  paint([
+    { img: SAIL_R, x: scroll(t, 1, span) - 16, y: HOR + 6, k: 4, ph: 0.18, amp: 1.1 },
+    { img: SAIL_L, x: span - 16 - scroll(t, 2, span), y: HOR + 14, k: 5, ph: 0.44, amp: 1.0 },
+    { img: LOBSTER_SL, x: wrapX(scroll(t, 1, span) + 210, span) - 14, y: HOR + 11, k: 3, ph: 0.7, amp: 1.2, lamps: [[4, 3]] },
+    { img: CATBOAT_R, x: wrapX(scroll(t, 2, span) + 90, span) - 12, y: HOR + 18, k: 6, ph: 0.22, amp: 0.9 },
+  ]);
+  paint([
+    { img: LOBSTER_C, x: 176, y: HOR + 28, k: 8, ph: 0.4, amp: 1.3, lamps: [[10, 4]] },
+    { img: LOBSTER_L, x: 330, y: HOR + 22, k: 5, ph: 0.81, amp: 1.4, lamps: [[5, 4]] },
+    { img: LOBSTER_S, x: 208, y: HOR + 18, k: 6, ph: 0.15, amp: 1.2, lamps: [[8, 3]] },
+    { img: SAIL_L, x: 286, y: HOR + 20, k: 7, ph: 0.58, amp: 1.1 },
+    { img: CATBOAT_L, x: 154, y: HOR + 32, k: 9, ph: 0.08, amp: 1.0 },
+    { img: SKIFF_C, x: 318, y: HOR + 32, k: 9, ph: 0.7, amp: 1.2 },
+    { img: SKIFF_C, x: 214, y: HOR + 36, k: 6, ph: 0.22, amp: 1.1 },
+    { img: SKIFF_C, x: 348, y: HOR + 40, k: 12, ph: 0.33, amp: 1.0 },
+    { img: SKIFF_C, x: 148, y: HOR + 34, k: 7, ph: 0.9, amp: 1.0 },
+    { img: SKIFF_C, x: 268, y: HOR + 44, k: 11, ph: 0.05, amp: 0.8 },
+  ]);
+  paint([
+    { img: LOBSTER_C, x: 252, y: DECK - 10, k: 7, ph: 0.12, amp: 1.6, lamps: [[10, 4], [16, 3]] },
+    { img: LOBSTER_S, x: 168, y: DECK - 9, k: 8, ph: 0.63, amp: 1.3, lamps: [[8, 3]] },
+    { img: SAIL_R, x: 226, y: DECK - 18, k: 6, ph: 0.28, amp: 1.2 },
+    { img: CATBOAT_R, x: 304, y: DECK - 16, k: 5, ph: 0.51, amp: 1.1 },
+    { img: SKIFF_C, x: 292, y: DECK - 4, k: 10, ph: 0.55, amp: 0.9 },
+  ]);
+
   ctx.fillStyle = "#2a241c";
   for (const px of [148, 172, 196, 218, 238, 256, 276, 300, 336, 364, 382]) {
     const ph = px * 0.01;
-    const y = HOR + 16 + Math.round(wave(t, 8, ph) * 1.2);
+    const y = HOR + 16 + bob(8, ph, 1.2);
     ctx.fillRect(px, y, 2, QUAY - y);
     ctx.fillStyle = "#4a4034";
     ctx.fillRect(px - 1, y, 4, 2);
     ctx.fillStyle = "#2a241c";
   }
 
-  const by = HOR + 36 + Math.round(wave(t, 11, 0.5));
+  const by = HOR + 36 + bob(11, 0.5, 1);
   ctx.drawImage(BUOY_C, 356, by);
   drawHalo(ctx, HALO_BUOY, 358, by + 1, 0.45 + 0.4 * (0.5 + 0.5 * wave(t, 2, 0.1)));
-  const by2 = HOR + 42 + Math.round(wave(t, 9, 0.2));
+  const by2 = HOR + 42 + bob(9, 0.2, 1);
   ctx.drawImage(BUOY_C, 232, by2);
   drawHalo(ctx, HALO_BUOY, 234, by2 + 1, 0.35 + 0.3 * (0.5 + 0.5 * wave(t, 3, 0.4)));
-  const by3 = HOR + 30 + Math.round(wave(t, 7, 0.8));
+  const by3 = HOR + 30 + bob(7, 0.8, 1);
   ctx.drawImage(BUOY_C, 390, by3);
   drawHalo(ctx, HALO_BUOY, 392, by3 + 1, 0.4 + 0.3 * (0.5 + 0.5 * wave(t, 2, 0.6)));
-  const by4 = HOR + 48 + Math.round(wave(t, 8, 0.35));
+  const by4 = HOR + 48 + bob(8, 0.35, 1);
   ctx.drawImage(BUOY_C, 188, by4);
   drawHalo(ctx, HALO_BUOY, 190, by4 + 1, 0.32 + 0.28 * (0.5 + 0.5 * wave(t, 4, 0.2)));
-  const by5 = HOR + 28 + Math.round(wave(t, 6, 0.62));
+  const by5 = HOR + 28 + bob(6, 0.62, 1);
   ctx.drawImage(BUOY_C, 312, by5);
   drawHalo(ctx, HALO_BUOY, 314, by5 + 1, 0.38 + 0.28 * (0.5 + 0.5 * wave(t, 3, 0.75)));
 }
