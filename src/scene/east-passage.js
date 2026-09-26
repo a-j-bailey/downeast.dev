@@ -1661,7 +1661,11 @@ function renderFrame(t, sky) {
   ctx.globalAlpha = 1;
 }
 
-const GULL_T = [18, 64, 112, 168, 214];
+const GULLS = [
+  { t: 42, pan: -0.55, gain: 0.68 },
+  { t: 126, pan: 0.46, gain: 0.52 },
+  { t: 204, pan: -0.18, gain: 0.6 },
+];
 const BELL_T = [28, 88, 148, 208];
 const FERRY_T0 = 36;
 const FERRY_DUR = 48;
@@ -1677,7 +1681,7 @@ export default {
   events: [
     { t: FERRY_T0, type: "boat", dur: FERRY_DUR, pan: [1, -1], gain: 0.65 },
     { t: 102, type: "boat", dur: 22, pan: [-0.4, 0.5], gain: 0.4 },
-    ...GULL_T.map((t) => ({ t, type: "gull", pan: 0 })),
+    ...GULLS.map((g) => ({ t: g.t, type: "gull", pan: g.pan, gain: g.gain })),
     ...BELL_T.map((t) => ({ t, type: "bell", x: 356, gain: 0.7 })),
     { t: 74, type: "splash", x: 330, gain: 0.35 },
     { t: 190, type: "horn", gain: 0.45 },

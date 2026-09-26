@@ -3,7 +3,7 @@ import { noise, drops, hold } from "./dsp.js";
 import { snapToKey } from "./harmony.js";
 
 export const BED_MAX = { rain: 0.55, wind: 1.6, water: 1.05, waves: 0.5 };
-export const EVENT_GAIN = { bell: 0.16, chime: 0.22, horn: 0.4, gull: 0.24, splash: 0.45, boat: 0.32 };
+export const EVENT_GAIN = { bell: 0.16, chime: 0.22, horn: 0.4, gull: 0.09, splash: 0.28, boat: 0.32 };
 export const SOUND_NAMES = {
   rain: "Rain",
   wind: "Wind",
@@ -113,10 +113,6 @@ function bed(ac, out, env, name, level, t0, build) {
 }
 
 const span = (r, a, b) => a + r() * (b - a);
-const gate = (param, peak, t, atk, rel, tau) => {
-  param.setTargetAtTime(peak, t, atk);
-  param.setTargetAtTime(0, t + rel, tau);
-};
 
 export const BEDS = {
   rain(ac, out, env, level, t0) {
@@ -160,21 +156,16 @@ export const BEDS = {
   water(ac, out, env, level, t0) {
     return bed(ac, out, env, "water", level, t0, (k, g) => {
       const src = k.noise("brown");
-      const bp = k.F("bandpass", 340, 1.15);
-      const gg = k.G(0.8);
+      const bp = k.F("bandpass", 260, 0.8);
+      const lp = k.F("lowpass", 680, 0.55);
+      const gg = k.G(0.88);
       src.connect(bp);
-      bp.connect(gg);
+      bp.connect(lp);
+      lp.connect(gg);
       gg.connect(g);
-      k.every(t0, () => span(k.r, 0.4, 1.2), (t) => {
-        gg.gain.setTargetAtTime(span(k.r, 0.45, 1), t, 0.35);
-      });
-      const drip = k.O("sine", 1200);
-      const dripG = k.G(0);
-      drip.connect(dripG);
-      dripG.connect(g);
-      k.every(t0, () => span(k.r, 1.6, 4), (t) => {
-        drip.frequency.setValueAtTime(span(k.r, 900, 1800), t);
-        gate(dripG.gain, 0.08, t, 0.002, 0.02, 0.04);
+      k.every(t0, () => span(k.r, 1.8, 3.8), (t) => {
+        gg.gain.setTargetAtTime(span(k.r, 0.52, 0.94), t, 0.9);
+        bp.frequency.setTargetAtTime(span(k.r, 200, 340), t, 1.2);
       });
     });
   },
@@ -193,11 +184,11 @@ export const BEDS = {
       f.connect(ag);
       ag.connect(g);
       k.every(t0, () => span(k.r, 7, 11), (t) => {
-        f.frequency.setValueAtTime(400, t);
-        f.frequency.setTargetAtTime(2400, t + 1.2, 0.6);
-        f.frequency.setTargetAtTime(500, t + 4, 1.2);
-        ag.gain.setTargetAtTime(0.55, t, 0.8);
-        ag.gain.setTargetAtTime(0, t + 3.5, 1.4);
+        f.frequency.setValueAtTime(320, t);
+        f.frequency.setTargetAtTime(880, t + 1.4, 0.9);
+        f.frequency.setTargetAtTime(380, t + 4, 1.3);
+        ag.gain.setTargetAtTime(0.42, t, 1.0);
+        ag.gain.setTargetAtTime(0, t + 3.8, 1.6);
       });
     });
   },
@@ -296,50 +287,90 @@ export const EVENTS = {
     env.registry.add({ src: [a, b, c], all: [a, b, c, mix, lp, g], tag: `${env.tag}:horn` });
   },
   gull(ac, out, when, ev, env) {
-    const n = 2 + Math.floor((env.r ? env.r() : Math.random()) * 3);
+    const r = env.r || Math.random;
+    const n = r() < 0.22 ? 2 : 1;
     for (let i = 0; i < n; i++) {
-      const t = when + i * (0.28 + (env.r ? env.r() : 0.3) * 0.12);
-      const o = ac.createOscillator();
+      const t = when + i * (1.55 + r() * 0.7);
+      const f0 = 620 + r() * 150;
+      const fPeak = f0 * (1.07 + r() * 0.05);
+      const fEnd = f0 * (0.56 + r() * 0.08);
+      const body = ac.createOscillator();
+      const rasp = ac.createOscillator();
+      const raspG = ac.createGain();
+      const mix = ac.createGain();
       const bp = ac.createBiquadFilter();
+      const lp = ac.createBiquadFilter();
       const g = ac.createGain();
       const p = ac.createStereoPanner();
-      o.type = "sawtooth";
+      const send = ac.createGain();
+      body.type = "sine";
+      rasp.type = "triangle";
+      raspG.gain.value = 0.16;
+      mix.gain.value = 1;
       bp.type = "bandpass";
-      bp.frequency.value = 1900;
-      bp.Q.value = 3;
+      bp.frequency.value = 780;
+      bp.Q.value = 1.05;
+      lp.type = "lowpass";
+      lp.frequency.value = 1380;
+      lp.Q.value = 0.5;
       g.gain.value = 0;
-      p.pan.value = panOf(ev, (i % 2 ? 0.3 : -0.3));
-      o.connect(bp);
-      bp.connect(g);
+      send.gain.value = 0.58;
+      p.pan.value = panOf(ev, i ? 0.52 : -0.46);
+      body.frequency.setValueAtTime(f0, t);
+      body.frequency.setTargetAtTime(fPeak, t, 0.055);
+      body.frequency.setTargetAtTime(fEnd, t + 0.18, 0.24);
+      rasp.frequency.setValueAtTime(f0 * 1.012, t);
+      rasp.frequency.setTargetAtTime(fPeak * 1.012, t, 0.055);
+      rasp.frequency.setTargetAtTime(fEnd * 1.012, t + 0.18, 0.24);
+      body.connect(mix);
+      rasp.connect(raspG);
+      raspG.connect(mix);
+      mix.connect(bp);
+      bp.connect(lp);
+      lp.connect(g);
       g.connect(p);
       p.connect(out);
-      o.frequency.setValueAtTime(1200, t);
-      o.frequency.linearRampToValueAtTime(2050, t + 0.07);
-      o.frequency.linearRampToValueAtTime(880, t + 0.32);
-      o.start(t);
-      o.stop(t + 0.5);
-      g.gain.setTargetAtTime(EVENT_GAIN.gull * (ev.gain || 1), t, 0.01);
-      g.gain.setTargetAtTime(0, t + 0.22, 0.08);
-      env.registry.add({ src: [o], all: [o, bp, g, p], tag: `${env.tag}:gull` });
+      if (env.echo) {
+        g.connect(send);
+        send.connect(env.echo);
+      }
+      const amp = EVENT_GAIN.gull * (ev.gain || 1) * (0.62 + r() * 0.22);
+      g.gain.setTargetAtTime(amp, t, 0.055);
+      g.gain.setTargetAtTime(amp * 0.38, t + 0.32, 0.16);
+      g.gain.setTargetAtTime(0, t + 0.78, 0.3);
+      body.start(t);
+      rasp.start(t);
+      body.stop(t + 1.4);
+      rasp.stop(t + 1.4);
+      env.registry.add({
+        src: [body, rasp],
+        all: [body, rasp, raspG, mix, bp, lp, g, p, send],
+        tag: `${env.tag}:gull`,
+      });
     }
   },
   splash(ac, out, when, ev, env) {
     const src = ac.createBufferSource();
-    src.buffer = noise(ac, "white");
+    src.buffer = noise(ac, "pink");
     const bp = ac.createBiquadFilter();
+    const lp = ac.createBiquadFilter();
     const g = ac.createGain();
     bp.type = "bandpass";
-    bp.frequency.value = 900;
+    bp.frequency.value = 380;
+    bp.Q.value = 0.55;
+    lp.type = "lowpass";
+    lp.frequency.value = 820;
     g.gain.value = 0;
     src.connect(bp);
-    bp.connect(g);
+    bp.connect(lp);
+    lp.connect(g);
     g.connect(out);
     src.start(when);
-    src.stop(when + 0.5);
-    bp.frequency.setTargetAtTime(2200, when, 0.08);
-    g.gain.setTargetAtTime(EVENT_GAIN.splash * (ev.gain || 1), when, 0.008);
-    g.gain.setTargetAtTime(0, when + 0.12, 0.12);
-    env.registry.add({ src: [src], all: [src, bp, g], tag: `${env.tag}:splash` });
+    src.stop(when + 0.7);
+    bp.frequency.setTargetAtTime(260, when, 0.14);
+    g.gain.setTargetAtTime(EVENT_GAIN.splash * (ev.gain || 1), when, 0.04);
+    g.gain.setTargetAtTime(0, when + 0.22, 0.2);
+    env.registry.add({ src: [src], all: [src, bp, lp, g], tag: `${env.tag}:splash` });
   },
   boat(ac, out, when, ev, env) {
     const dur = ev.dur || 14;
