@@ -498,7 +498,7 @@ function windowPane(p, x, y, lit) {
 
 function renderVillage() {
   const p = painter(W, H);
-  for (let i = 0; i < 198; i++) {
+  for (let i = 0; i < 176; i++) {
     const top = QUAY - 4 - Math.round(2 * Math.sin(i * 0.2));
     for (let y = top; y < H; y++) {
       const col = y > QUAY + 8 ? "#1a1612" : ((i + y) & 2 ? "#2c241c" : "#32281e");
@@ -629,6 +629,11 @@ function renderVillage() {
   p.rect(192, 198, 6, 8, "#1a1410");
   p.rect(180, 168, 4, 8, "#3a3024");
   p.rect(179, 166, 6, 3, "#2a2418");
+  for (let i = 176; i < 202; i++) {
+    for (let y = QUAY - 2; y < QUAY + 8; y++) {
+      p.set(i, y, (i + y) & 2 ? "#2c241c" : "#32281e");
+    }
+  }
 
   p.line(62, 168, 118, 164, "#3a3228");
   p.set(70, 167, "#c8b090");
@@ -869,62 +874,68 @@ function renderGullFly(frame, flip = false) {
   const ink = {
     w: "#f8f4ec",
     h: "#fff8f0",
-    e: "#1c1814",
-    y: "#f0b040",
-    b: "#ece6dc",
+    e: "#1a1410",
+    y: "#f0a828",
+    b: "#ece4d8",
     t: "#c8c0b4",
+    s: "#d8d0c4",
   };
   const rows = [
     [
-      "w.............w",
-      ".w.....w.....w.",
-      "..w...hhey..w..",
-      "...w..bbbb.w...",
-      "....w.bbb.w....",
-      "......tt.......",
+      "..w.........w..",
+      ".www...h...www.",
+      "w.w...heys..w.w",
+      "w....sbbbbb...w",
+      ".....bbbbbbb...",
+      "......sbbbs....",
+      ".......tt......",
+    ],
+    [
+      "...............",
+      ".wwww.h.wwww...",
+      "ww...heys...ww.",
+      "w...sbbbbb...w.",
+      "....bbbbbbb....",
+      ".....sbbbs.....",
+      ".......tt......",
+    ],
+    [
+      "...............",
+      "...............",
+      "wwwww.heys.wwwww",
+      ".....sbbbbb....",
+      "....bbbbbbb....",
+      ".....sbbbs.....",
+      ".......tt......",
+    ],
+    [
+      "...............",
+      "......heys.....",
+      ".....sbbbbb....",
+      ".w...bbbbbbb.w.",
+      "..w...sbbbs.w..",
+      "...w...tt..w...",
+      "....w.....w....",
+      ".....w...w.....",
+    ],
+    [
+      "...............",
+      "......heys.....",
+      ".....sbbbbb....",
+      ".....bbbbbbb...",
+      ".w....sbbbs..w.",
+      "..w....tt...w..",
+      "...ww......ww..",
+      "....w......w...",
     ],
     [
       ".w...........w.",
-      "..ww...w...ww..",
-      "...w..hhey.w...",
-      "....w.bbbbw....",
-      ".....bbbb......",
-      "......tt.......",
-    ],
-    [
-      "...............",
-      "www....w....www",
-      "...w..hhey.w...",
-      "....w.bbbbw....",
-      ".....bbbb......",
-      "......tt.......",
-    ],
-    [
-      "...............",
-      "...............",
-      "......hhey.....",
-      ".w....bbbb...w.",
-      "..w...bbb...w..",
-      "...w..tt...w...",
-      "....w.....w....",
-    ],
-    [
-      "...............",
-      "...............",
-      "......hhey.....",
-      "......bbbb.....",
-      ".w....bbb....w.",
-      "..w...tt....w..",
-      "...w.......w...",
-      "....w.....w....",
-    ],
-    [
-      "..w.........w..",
-      "...w...w...w...",
-      "....w.hhey.w...",
-      ".....wbbbbw....",
-      ".....bbbb......",
-      "......tt.......",
+      "..ww...h...ww..",
+      "...w..heys.w...",
+      "w...sbbbbb....w",
+      "....bbbbbbb....",
+      ".....sbbbs.....",
+      ".......tt......",
     ],
   ][frame];
   return sprite(rows, ink, flip);
@@ -933,25 +944,28 @@ function renderGullFly(frame, flip = false) {
 function renderGullPerch(frame) {
   const rows = [
     [
-      "...hey.",
-      "..bbbbb",
-      "...bb.t",
-      "...l.l.",
+      "...heys.",
+      "..sbbbbb",
+      "..bbbbb.",
+      "...bb.t.",
+      "...l.l..",
     ],
     [
-      "w..hey.w",
-      ".w.bbbb.",
-      "..wbb.t.",
-      "...l.l..",
+      "w..heys.w",
+      ".wsbbbbb.",
+      "..wbbbb..",
+      "...bb.t..",
+      "...l.l...",
     ],
   ][frame];
   return sprite(rows, {
-    w: "#f4f0e8",
-    h: "#f8f4ee",
-    e: "#2a2420",
-    y: "#e8b050",
-    b: "#e4e0d8",
-    t: "#c8c4bc",
+    w: "#f8f4ec",
+    h: "#fff8f0",
+    e: "#1a1410",
+    y: "#f0a828",
+    s: "#d8d0c4",
+    b: "#ece4d8",
+    t: "#c8c0b4",
     l: "#c8c0b4",
   });
 }
