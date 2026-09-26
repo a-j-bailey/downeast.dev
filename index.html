@@ -2,16 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>downeast.dev, Adam Bailey</title>
-    <meta
-      name="description"
-      content="Adam Bailey. fresh New England software"
-    />
+    <meta name="description" content="Adam Bailey. fresh New England software" />
     <link rel="canonical" href="https://downeast.dev/" />
 
-    <meta name="theme-color" content="#FFFCF0" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#100F0F" />
+    <meta name="color-scheme" content="dark" />
 
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
@@ -21,10 +18,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="downeast.dev" />
     <meta property="og:title" content="downeast.dev, Adam Bailey" />
-    <meta
-      property="og:description"
-      content="Adam Bailey. fresh New England software"
-    />
+    <meta property="og:description" content="Adam Bailey. fresh New England software" />
     <meta property="og:url" content="https://downeast.dev/" />
     <meta property="og:image" content="https://downeast.dev/og.png" />
     <meta
@@ -39,25 +33,215 @@
     <meta name="twitter:site" content="@downeastdev" />
     <meta name="twitter:creator" content="@downeastdev" />
     <meta name="twitter:title" content="downeast.dev, Adam Bailey" />
-    <meta
-      name="twitter:description"
-      content="Adam Bailey. fresh New England software"
-    />
+    <meta name="twitter:description" content="Adam Bailey. fresh New England software" />
     <meta name="twitter:image" content="https://downeast.dev/og.png" />
-    <meta
-      name="twitter:image:alt"
-      content="Ink drawing of a man working on a laptop at the stern of a Downeast motorboat."
-    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="i-play" viewBox="0 0 8 8"><path d="M2 1h1v6H2zM3 2h1v4H3zM4 3h2v2H4z"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 8 8"><path d="M2 1h2v6H2zM5 1h2v6H5z"/></symbol>
+      <symbol id="i-next" viewBox="0 0 8 8"><path d="M1 1h2v6H1zM3 2h1v4H3zM4 3h2v2H4zM7 1h1v6H7z"/></symbol>
+      <symbol id="i-queue" viewBox="0 0 8 8"><path d="M0 1h1v1H0zM2 1h6v1H2zM0 4h1v1H0zM2 4h6v1H2zM0 7h1v1H0zM2 7h4v1H2z"/></symbol>
+      <symbol id="i-vibe" viewBox="0 0 8 8"><path d="M0 2h8v1H0zM1 1h2v3H1zM0 5h8v1H0zM5 4h2v3H5z"/></symbol>
+      <symbol id="i-timer" viewBox="0 0 8 8"><path d="M3 0h2v1H3zM1 2h1v1H1zM6 2h1v1H6zM2 3h1v3H2zM3 5h2v1H3zM0 2h1v4H0zM7 2h1v4H7zM1 6h1v1H1zM6 6h1v1H6zM2 7h4v1H2z"/></symbol>
+      <symbol id="i-full" viewBox="0 0 8 8"><path d="M0 0h3v1H1v2H0zM5 0h3v3H7V1H5zM0 5h1v2h2v1H0zM7 5h1v3H5V7h2z"/></symbol>
+      <symbol id="i-note" viewBox="0 0 8 8"><path d="M5 0h2v1H6v5H5zM2 5h3v2H2z"/></symbol>
+      <symbol id="i-wave" viewBox="0 0 8 8"><path d="M0 4h1v1H0zM1 3h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 3h1v1H5zM6 2h1v1H6zM7 3h1v1H7z"/></symbol>
+      <symbol id="i-mixer" viewBox="0 0 9 8"><path d="M1 0h1v8H1zM0 5h3v2H0zM4 0h1v8H4zM3 1h3v2H3zM7 0h1v8H7zM6 3h3v2H6z"/></symbol>
+      <symbol id="i-save" viewBox="0 0 8 8"><path d="M3 0h2v3H3zM1 3h6v1H1zM2 4h4v1H2zM3 5h2v1H3zM0 6h8v2H0z"/></symbol>
+      <symbol id="i-image" viewBox="0 0 8 8"><path d="M0 0h8v1H0zM0 1h1v6H0zM7 1h1v6H7zM1 7h6v1H1zM5 2h1v1H5zM2 5h2v1H2zM4 4h1v1H4zM6 5h1v1H6z"/></symbol>
+      <symbol id="i-help" viewBox="0 0 8 8"><path d="M2 0h4v1H2zM1 1h1v1H1zM6 1h1v2H6zM4 3h2v1H4zM3 4h2v1H3zM3 6h2v2H3z"/></symbol>
+      <symbol id="i-close" viewBox="0 0 8 8"><path d="M1 1h1v1H1zM2 2h1v1H2zM3 3h2v2H3zM5 2h1v1H5zM6 1h1v1H6zM2 5h1v1H2zM1 6h1v1H1zM5 5h1v1H5zM6 6h1v1H6z"/></symbol>
+      <symbol id="i-mute" viewBox="0 0 8 8"><path d="M1 3h2v2H1zM3 2h1v4H3zM5 1h1v1H5zM6 2h1v1H6zM5 6h1v1H5zM6 5h1v1H6z"/></symbol>
+      <symbol id="i-github" viewBox="0 0 16 16"><path d="M6 0h4v1H6zM4 1h8v1H4zM3 2h10v1H3zM2 3h3v1H2zM11 3h3v1H11zM2 4h2v1H2zM12 4h2v1H12zM1 5h3v1H1zM12 5h3v1H12zM1 6h3v6H1zM12 6h3v4H12zM4 12h3v1H4zM9 12h3v1H9zM5 13h2v2H5zM9 13h2v2H9z"/></symbol>
+      <symbol id="i-x" viewBox="0 0 16 16"><path d="M2 2h3v1H2zM11 2h3v1H11zM4 4h2v1H4zM10 4h2v1H10zM6 6h4v1H6zM7 8h2v1H7zM5 10h2v1H5zM9 10h2v1H9zM3 12h2v1H3zM11 12h2v1H11zM1 14h3v1H1zM12 14h3v1H12z"/></symbol>
+    </svg>
+
+    <canvas id="screen" aria-label="Animated pixel-art harbor: East Passage"></canvas>
+
+    <header class="hud-city ui">
+      <p class="wordmark">Downeast</p>
+      <h1 id="cityName">East Passage</h1>
+      <p class="sub"><span id="tagline">Fog on the harbor</span> · <time id="cityTime"></time></p>
+    </header>
+
+    <nav id="links" class="ui" aria-label="Adam Bailey">
+      <a href="/projects" id="projectsLink" data-sheet="projects">Projects</a>
+      <a class="icon-btn" href="https://github.com/a-j-bailey" target="_blank" rel="me noopener" aria-label="GitHub: a-j-bailey" title="GitHub">
+        <svg><use href="#i-github"/></svg>
+      </a>
+      <a class="icon-btn" href="https://x.com/downeastdev" target="_blank" rel="me noopener" aria-label="X: @downeastdev" title="X">
+        <svg><use href="#i-x"/></svg>
+      </a>
+    </nav>
+
+    <div class="hud-bottom ui">
+      <div class="dock">
+        <div id="queue" class="pop" role="dialog" aria-label="Up next" hidden>
+          <div class="pop-head"><span>Up next</span><small>pick a track to play it now</small></div>
+          <ol id="queueList" class="pop-list"></ol>
+        </div>
+        <div id="timers" class="pop" role="dialog" aria-label="Focus and sleep timers" hidden>
+          <div class="pop-head"><span>Focus</span><small id="focusInfo">focus / break minutes, on repeat</small></div>
+          <div id="focusRow" class="t-row"></div>
+          <div class="pop-head"><span>Sleep</span><small id="sleepInfo">minutes, then fade out and pause</small></div>
+          <div id="sleepRow" class="t-row"></div>
+        </div>
+        <form id="vibe" class="pop" role="dialog" aria-label="Vibe" hidden>
+          <div class="pop-head"><span>Vibe</span><small>shape the music</small></div>
+          <fieldset>
+            <legend>Energy</legend>
+            <div class="seg">
+              <label><input type="radio" name="energy" value="chill" /><span>Chill</span></label>
+              <label><input type="radio" name="energy" value="balanced" checked /><span>Balanced</span></label>
+              <label><input type="radio" name="energy" value="upbeat" /><span>Upbeat</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Band</legend>
+            <div class="seg">
+              <label><input type="radio" name="band" value="full" checked /><span>Full band</span></label>
+              <label><input type="radio" name="band" value="no-drums" /><span>No drums</span></label>
+              <label><input type="radio" name="band" value="keys" /><span>Keys only</span></label>
+            </div>
+          </fieldset>
+          <p class="vibe-note">Energy starts with the next track, the band on the next bar.</p>
+        </form>
+        <div id="mixer" class="pop" role="dialog" aria-label="Harbor sounds" hidden>
+          <div class="pop-head"><span>Harbor sounds</span><button id="mixReset" type="button" disabled>reset</button></div>
+          <div id="mixList"></div>
+        </div>
+        <div id="saveMenu" class="pop" role="dialog" aria-label="Save this scene" hidden>
+          <div class="pop-head"><span>Save this scene</span></div>
+          <div class="pop-list">
+            <button id="savePng" class="pop-item" type="button">
+              <svg><use href="#i-image"/></svg>
+              <span class="pop-text"><span class="pop-title">Save this frame</span><span class="pop-meta">PNG · 1920×1080</span></span>
+              <kbd>S</kbd>
+            </button>
+          </div>
+        </div>
+        <section id="player" aria-label="Music player">
+          <button id="play" class="icon-btn pulse" type="button" aria-label="Play music" title="Play / pause (Space)">
+            <svg><use href="#i-play"/></svg>
+          </button>
+          <button id="next" class="icon-btn" type="button" aria-label="Next track" title="Next track (N)">
+            <svg><use href="#i-next"/></svg>
+          </button>
+          <button id="queueBtn" class="icon-btn" type="button" aria-label="Up next" aria-expanded="false" aria-controls="queue" title="Up next (Q)">
+            <svg><use href="#i-queue"/></svg>
+          </button>
+          <button id="vibeBtn" class="icon-btn" type="button" aria-label="Vibe" aria-expanded="false" aria-controls="vibe" title="Vibe (V)">
+            <svg><use href="#i-vibe"/></svg>
+          </button>
+          <button id="timerBtn" class="icon-btn" type="button" aria-label="Focus and sleep timers" aria-expanded="false" aria-controls="timers" title="Timers (T)">
+            <svg><use href="#i-timer"/></svg>
+          </button>
+          <div class="track">
+            <span id="trackTitle">Press play for endless lofi</span>
+            <span id="trackMeta">music is generated live in your browser</span>
+          </div>
+          <div class="vols">
+            <label class="vol" title="Music volume">
+              <svg><use href="#i-note"/></svg>
+              <input id="musicVol" type="range" min="0" max="1" step="0.01" aria-label="Music volume" />
+            </label>
+            <label class="vol" title="Harbor sounds volume">
+              <svg><use href="#i-wave"/></svg>
+              <input id="ambVol" type="range" min="0" max="1" step="0.01" aria-label="Harbor sounds volume" />
+            </label>
+            <button id="mixerBtn" class="icon-btn" type="button" aria-label="Harbor sounds mixer" aria-expanded="false" aria-controls="mixer" title="Mixer (A)">
+              <svg><use href="#i-mixer"/></svg>
+            </button>
+            <button id="mute" class="icon-btn" type="button" aria-label="Mute" title="Mute (M)">
+              <svg><use href="#i-mute"/></svg>
+            </button>
+          </div>
+          <button id="saveBtn" class="icon-btn" type="button" aria-label="Save this scene" aria-expanded="false" aria-controls="saveMenu" title="Save this frame as a PNG (S)">
+            <svg><use href="#i-save"/></svg>
+          </button>
+          <button id="fs" class="icon-btn" type="button" aria-label="Fullscreen" title="Fullscreen (F)">
+            <svg><use href="#i-full"/></svg>
+          </button>
+          <button id="info" class="icon-btn" type="button" aria-label="About" aria-haspopup="dialog" title="About and shortcuts (?)">
+            <svg><use href="#i-help"/></svg>
+          </button>
+        </section>
+      </div>
+    </div>
+
+    <div id="corner">
+      <button id="timerPill" class="pill" type="button" hidden>
+        <span id="pillFocus"></span>
+        <span id="pillSleep"></span>
+      </button>
+    </div>
+
+    <dialog id="about" aria-label="About Downeast">
+      <div class="about-inner">
+        <button class="icon-btn about-close" type="button" aria-label="Close" data-close>
+          <svg><use href="#i-close"/></svg>
+        </button>
+        <div class="about-tabs" role="tablist" aria-label="About">
+          <button type="button" role="tab" id="about-tab-about" aria-controls="about-about" aria-selected="true">About</button>
+          <button type="button" role="tab" id="about-tab-projects" aria-controls="about-projects" aria-selected="false" tabindex="-1">Projects</button>
+          <button type="button" role="tab" id="about-tab-thoughts" aria-controls="about-thoughts" aria-selected="false" tabindex="-1">Thoughts</button>
+          <button type="button" role="tab" id="about-tab-keys" aria-controls="about-keys" aria-selected="false" tabindex="-1">Shortcuts</button>
+        </div>
+        <div class="about-body">
+          <section class="about-panel" id="about-about" role="tabpanel" aria-labelledby="about-tab-about">
+            <h2>downeast.dev</h2>
+            <p>Adam Bailey. fresh New England software</p>
+            <p>
+              East Passage is a living pixel harbor with endless lofi composed in the browser.
+              Press play. The dock fades when you leave it alone. H hides it.
+            </p>
+          </section>
+          <section class="about-panel" id="about-projects" role="tabpanel" aria-labelledby="about-tab-projects" hidden>
+            <h3>Projects</h3>
+            <ul id="projectList" class="work-list"></ul>
+          </section>
+          <section class="about-panel" id="about-thoughts" role="tabpanel" aria-labelledby="about-tab-thoughts" hidden>
+            <h3>Thoughts</h3>
+            <div id="thoughtList"></div>
+          </section>
+          <section class="about-panel" id="about-keys" role="tabpanel" aria-labelledby="about-tab-keys" hidden>
+            <h3>Shortcuts</h3>
+            <dl class="keys">
+              <div><dt><kbd>Space</kbd></dt><dd>Play / pause</dd></div>
+              <div><dt><kbd>N</kbd></dt><dd>Next track</dd></div>
+              <div><dt><kbd>M</kbd></dt><dd>Mute</dd></div>
+              <div><dt><kbd>Q</kbd></dt><dd>Up next</dd></div>
+              <div><dt><kbd>V</kbd></dt><dd>Vibe</dd></div>
+              <div><dt><kbd>T</kbd></dt><dd>Timers</dd></div>
+              <div><dt><kbd>A</kbd></dt><dd>Harbor mixer</dd></div>
+              <div><dt><kbd>S</kbd></dt><dd>Save a 1920×1080 PNG</dd></div>
+              <div><dt><kbd>F</kbd></dt><dd>Fullscreen</dd></div>
+              <div><dt><kbd>H</kbd></dt><dd>Hide the interface</dd></div>
+              <div><dt><kbd>?</kbd></dt><dd>This panel</dd></div>
+            </dl>
+          </section>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="sheet" aria-label="Page">
+      <div class="about-inner">
+        <button class="icon-btn about-close" type="button" aria-label="Close" data-close>
+          <svg><use href="#i-close"/></svg>
+        </button>
+        <h2 id="sheetTitle"></h2>
+        <div id="sheetBody"></div>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
