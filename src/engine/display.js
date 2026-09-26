@@ -18,6 +18,8 @@ export function createDisplay(canvas) {
     canvas.height = ch;
     canvas.style.width = innerWidth + "px";
     canvas.style.height = innerHeight + "px";
+    canvas.style.pointerEvents = "none";
+    canvas.style.touchAction = "none";
   }
 
   function layout(focusX) {

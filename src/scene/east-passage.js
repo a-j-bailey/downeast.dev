@@ -107,7 +107,7 @@ function renderSky() {
 const STARS = [];
 {
   const r = rng(41);
-  while (STARS.length < 34) {
+  while (STARS.length < 52) {
     const x = Math.floor(r() * W);
     const y = 3 + Math.floor(r() * 78);
     if (Math.hypot(x - MOON.x, y - MOON.y) < 18) continue;
@@ -201,6 +201,20 @@ const CLOUDS = [
 ].map(makeCloudLayer);
 
 /* ================= Far shore ================= */
+function farCottage(p, cx, ridgeY, w, h, lit) {
+  p.rect(cx, ridgeY, w, h, "#1a1612");
+  for (let i = cx; i < cx + w; i++) {
+    const peak = ridgeY - Math.round((1 - Math.abs((i - cx - w / 2) / (w / 2))) * Math.min(5, 2 + w / 4));
+    p.line(i, peak, i, ridgeY, i < cx + w / 2 ? "#2c241c" : "#221c16");
+    p.set(i, peak, "#3a2e22");
+  }
+  if (lit) {
+    p.set(cx + 2, ridgeY + 2, "#e8b058");
+    if (w > 8) p.set(cx + w - 3, ridgeY + 2, "#c89040");
+    if (h > 7) p.set(cx + Math.floor(w / 2), ridgeY + 5, "#d4a048");
+  }
+}
+
 function renderHills() {
   const p = painter(W, H);
   const r = rng(77);
@@ -208,49 +222,67 @@ function renderHills() {
   for (let i = 0; i < W; i++) {
     ridge[i] =
       HOR -
-      10 -
-      8 * Math.sin(i * 0.018) -
-      5 * Math.sin(i * 0.041 + 1.2) -
-      3 * Math.sin(i * 0.09) -
+      12 -
+      10 * Math.sin(i * 0.016) -
+      6 * Math.sin(i * 0.038 + 1.2) -
+      4 * Math.sin(i * 0.08) -
+      3 * Math.sin(i * 0.13 + 0.4) -
       (i > 360 ? (i - 360) * 0.08 : 0);
   }
   for (let i = 0; i < W; i++) {
     const top = Math.round(ridge[i]);
     for (let y = top; y < HOR + 8; y++) {
-      const t = (y - top) / 22;
-      let col = t < 0.3 ? "#14181c" : t < 0.7 ? "#12161a" : "#101418";
-      if (((i * 13 + y * 7) & 7) === 0) col = "#181c20";
+      const t = (y - top) / 24;
+      let col = t < 0.25 ? "#161a1e" : t < 0.55 ? "#13181c" : t < 0.8 ? "#101418" : "#0e1216";
+      if (((i * 13 + y * 7) & 7) === 0) col = "#1a1e22";
       p.set(i, y, col);
     }
   }
-  for (let n = 0; n < 52; n++) {
-    const x = 8 + Math.floor(r() * 360);
-    const y = Math.round(ridge[x]) - 7 - Math.floor(r() * 5);
-    const h = 8 + Math.floor(r() * 7);
+  for (let n = 0; n < 88; n++) {
+    const x = 4 + Math.floor(r() * 400);
+    const y = Math.round(ridge[x]) - 8 - Math.floor(r() * 6);
+    const h = 9 + Math.floor(r() * 8);
     for (let k = 0; k < h; k++) {
-      const w = Math.max(1, Math.round((1 - k / h) * (2 + (n % 3))));
-      p.rect(x - w, y + k, w * 2 + 1, 1, k < 2 ? "#1c2418" : "#141810");
+      const w = Math.max(1, Math.round((1 - k / h) * (2 + (n % 4))));
+      p.rect(x - w, y + k, w * 2 + 1, 1, k < 2 ? "#1e261a" : k < 5 ? "#161c14" : "#12160e");
     }
   }
-  const cottages = [
-    [48, 4],
-    [96, 2],
-    [168, 3],
-    [236, 1],
-    [292, 2],
+  const hamlet = [
+    [22, 3, 11, 7, true],
+    [38, 2, 9, 6, true],
+    [72, 4, 13, 8, true],
+    [94, 2, 10, 7, false],
+    [118, 3, 12, 7, true],
+    [148, 1, 9, 6, true],
+    [176, 3, 14, 8, true],
+    [204, 2, 10, 6, true],
+    [228, 1, 12, 8, true],
+    [252, 3, 9, 6, false],
+    [274, 2, 13, 8, true],
+    [298, 4, 10, 7, true],
+    [322, 2, 11, 7, true],
+    [344, 3, 8, 6, true],
   ];
-  for (const [cx, drop] of cottages) {
-    const y = Math.round(ridge[cx]) + drop;
-    p.rect(cx, y, 9, 6, "#1c1814");
-    p.rect(cx + 1, y - 3, 7, 3, "#2a2218");
-    p.set(cx + 4, y - 4, "#3a2c20");
-    p.set(cx + 3, y + 2, "#c89040");
-    p.set(cx + 6, y + 2, "#a07030");
+  for (const [cx, drop, w, h, lit] of hamlet) {
+    farCottage(p, cx, Math.round(ridge[cx]) + drop, w, h, lit);
   }
+  const steepleX = 248;
+  const steepleY = Math.round(ridge[steepleX]) - 2;
+  p.rect(steepleX, steepleY, 5, 14, "#1c1814");
+  p.rect(steepleX + 1, steepleY - 8, 3, 8, "#2a2218");
+  p.set(steepleX + 2, steepleY - 10, "#3a2c20");
+  p.set(steepleX + 2, steepleY + 4, "#e8b058");
+
+  for (const px of [132, 186, 266]) {
+    const y = HOR - 2;
+    p.rect(px, y, 28, 2, "#1a1814");
+    for (let k = 0; k < 6; k++) p.rect(px + 2 + k * 5, y, 2, 5, "#141210");
+  }
+
   const lights = [];
-  for (let n = 0; n < 28; n++) {
-    const x = 16 + Math.floor(r() * 330);
-    const y = Math.round(ridge[x]) + 2 + Math.floor(r() * 7);
+  for (let n = 0; n < 46; n++) {
+    const x = 12 + Math.floor(r() * 350);
+    const y = Math.round(ridge[x]) + 2 + Math.floor(r() * 8);
     lights.push({ x, y, ph: r(), k: 3 + Math.floor(r() * 9) });
     p.set(x, y, "#c8a060");
   }
@@ -261,23 +293,27 @@ function renderHills() {
 /* ================= Lighthouse + spit ================= */
 function renderSpit() {
   const p = painter(W, H);
-  for (let i = 372; i < W; i++) {
-    const rise = Math.max(0, (i - 390) * 0.18);
-    const top = QUAY - 8 - rise;
-    for (let y = Math.round(top); y < QUAY + 12; y++) {
+  for (let i = 368; i < W; i++) {
+    const rise = Math.max(0, (i - 388) * 0.2);
+    const top = QUAY - 10 - rise;
+    for (let y = Math.round(top); y < QUAY + 14; y++) {
       const wet = y > QUAY - 2;
       let col = wet ? "#2a2824" : ((i + y) & 3) === 0 ? "#4a463c" : "#3a3830";
-      if (hash(i, y, 3) > 0.82) col = "#524e44";
-      if (hash(i, y, 9) > 0.93) col = "#2c2a24";
+      if (hash(i, y, 3) > 0.78) col = "#524e44";
+      if (hash(i, y, 9) > 0.9) col = "#2c2a24";
+      if (hash(i, y, 5) > 0.96) col = "#6a6458";
       p.set(i, y, col);
     }
   }
-  for (let k = 0; k < 14; k++) {
-    const x = 378 + k * 7;
-    const y = QUAY - 4 + (k & 1);
-    p.rect(x, y, 3, 2, "#2e2c28");
+  for (let k = 0; k < 18; k++) {
+    const x = 372 + k * 6;
+    const y = QUAY - 5 + (k & 1);
+    p.rect(x, y, 4, 3, "#2e2c28");
     p.set(x + 1, y - 1, "#3a3832");
+    p.set(x + 2, y + 1, "#1c1a16");
   }
+  p.rect(378, 188, 8, 6, "#2a2620");
+  p.rect(378, 186, 8, 2, "#3a342c");
   p.rect(388, 176, 22, 22, "#2a2620");
   shakeWall(p, 388, 180, 22, 18, "#221e18", "#2c2820", "#3a342c");
   for (let i = 386; i < 412; i++) {
@@ -288,6 +324,9 @@ function renderSpit() {
   p.rect(404, 168, 4, 10, "#3a3428");
   p.rect(403, 166, 6, 3, "#2a241c");
   windowPane(p, 394, 184, true);
+  windowPane(p, 394, 172, false);
+  p.rect(386, 198, 26, 1, "#4a4438");
+  for (let x = 388; x < 410; x += 4) p.rect(x, 194, 1, 4, "#3a342c");
   return p.done();
 }
 
@@ -314,7 +353,9 @@ function renderLighthouse() {
   p.rect(cx - 11, lantern + 10, 4, 2, "#d0c8bc");
   p.rect(cx + 7, lantern + 10, 4, 2, "#d0c8bc");
   p.rect(cx - 3, base - 18, 3, 5, "#1c1a16");
-  p.set(cx - 2, base - 16, "#c89040");
+  p.set(cx - 2, base - 16, "#f0c878");
+  p.rect(cx - 8, lantern + 8, 16, 1, "#f4e8c0");
+  p.rect(cx - 9, lantern + 4, 18, 1, "#8a2018");
   return p.done();
 }
 
@@ -379,11 +420,19 @@ function renderVillage() {
   p.rect(54, 163, 72, 2, "#2a2018");
   p.rect(108, 140, 6, 16, "#3a3024");
   p.rect(107, 138, 8, 3, "#2a2418");
+  p.rect(42, 160, 5, 10, "#3a3024");
+  p.rect(41, 158, 7, 3, "#2a2418");
   windowPane(p, 68, 176, true);
   windowPane(p, 88, 176, true);
   windowPane(p, 108, 176, true);
+  windowPane(p, 78, 164, true);
+  windowPane(p, 98, 164, false);
   windowPane(p, 68, 192, false);
   windowPane(p, 88, 192, true);
+  p.rect(74, 170, 9, 5, "#c8a068");
+  p.rect(76, 171, 5, 3, "#5a4030");
+  p.set(78, 172, "#3a2c20");
+  p.set(80, 173, "#c8b090");
   p.rect(100, 196, 10, 12, "#1a1410");
   p.set(108, 202, "#a07038");
 
@@ -410,23 +459,29 @@ function renderVillage() {
   shakeWall(p, 0, 190, 10, 18, "#1c1610", "#2a2218", "#32281e");
   windowPane(p, 1, 194, true);
 
-  for (let n = 0; n < 8; n++) {
-    p.line(16 + n * 2, 198, 24 + n * 4, 216, n & 1 ? "#4a4034" : "#2e281e");
+  for (let n = 0; n < 14; n++) {
+    p.line(12 + n * 2, 196, 22 + n * 4, 218, n & 1 ? "#4a4034" : "#2e281e");
   }
-  p.rect(20, 214, 18, 4, "#4a4030");
-  p.rect(22, 211, 12, 3, "#5a4c38");
-  p.rect(26, 209, 6, 2, "#6a5a44");
+  p.rect(18, 216, 22, 4, "#4a4030");
+  p.rect(20, 213, 16, 3, "#5a4c38");
+  p.rect(24, 210, 8, 3, "#6a5a44");
+  for (let n = 0; n < 6; n++) {
+    p.line(132 + n, 186, 138 + n * 2, 206, n & 1 ? "#3a3428" : "#2a241c");
+  }
 
-  for (let k = 0; k < 7; k++) {
-    const x = 72 + (k % 3) * 5;
-    const y = 208 + Math.floor(k / 3) * 4;
+  for (let k = 0; k < 12; k++) {
+    const x = 68 + (k % 4) * 5;
+    const y = 206 + Math.floor(k / 4) * 4;
     p.rect(x, y, 5, 4, k & 1 ? "#3a3228" : "#2e281e");
     p.rect(x + 1, y + 1, 3, 2, "#241c16");
   }
-  for (let k = 0; k < 4; k++) {
-    p.rect(128 + k * 5, 208, 4, 4, "#3a3226");
-    p.set(129 + k * 5, 209, "#4a4030");
+  for (let k = 0; k < 7; k++) {
+    p.rect(124 + k * 5, 206, 4, 5, "#3a3226");
+    p.set(125 + k * 5, 207, "#4a4030");
   }
+  p.rect(52, 200, 8, 8, "#4a3a28");
+  p.rect(53, 201, 6, 6, "#2a2018");
+  p.rect(54, 203, 4, 4, "#5a4830");
 
   p.rect(4, 204, 10, 3, "#8a2820");
   p.rect(5, 201, 8, 3, "#c44030");
@@ -502,34 +557,46 @@ function renderBarrel() {
 
 function renderDock() {
   const p = painter(W, H);
-  for (let i = 70; i < 292; i++) {
+  for (let i = 64; i < 324; i++) {
     const y0 = DECK;
     for (let y = y0; y < y0 + 16; y++) {
-      const plank = Math.floor((i - 70) / 7);
-      const gap = (i - 70) % 7 === 6;
+      const plank = Math.floor((i - 64) / 6);
+      const gap = (i - 64) % 6 === 5;
       let col = gap ? "#1a1410" : plank & 1 ? "#4a3a28" : "#3e3222";
-      if (!gap && hash(i, y, 5) > 0.88) col = "#524030";
-      if (!gap && hash(i, y, 8) > 0.94) col = "#6a5840";
+      if (!gap && hash(i, y, 5) > 0.86) col = "#524030";
+      if (!gap && hash(i, y, 8) > 0.93) col = "#6a5840";
       if (y > y0 + 12) col = "#2a2018";
       if (!gap && y === y0 + 1) col = "#5a4a34";
+      if (!gap && y === y0 + 2 && hash(i, y, 2) > 0.7) col = "#7a6848";
       p.set(i, y, col);
     }
   }
-  for (let x = 86; x < 280; x += 18) {
-    p.rect(x, DECK + 14, 4, 32, "#2a2218");
-    p.rect(x + 1, DECK + 14, 2, 32, "#3a2e20");
-    p.rect(x - 1, QUAY + 20, 6, 3, "#1c1814");
-    p.rect(x, QUAY + 8, 1, 10, "#1a1410");
+  for (let x = 80; x < 316; x += 16) {
+    p.rect(x, DECK + 14, 4, 34, "#2a2218");
+    p.rect(x + 1, DECK + 14, 2, 34, "#3a2e20");
+    p.rect(x - 1, QUAY + 22, 6, 3, "#1c1814");
+    p.rect(x, QUAY + 8, 1, 12, "#1a1410");
+    p.rect(x + 3, QUAY + 10, 1, 8, "#14100c");
   }
-  p.rect(78, DECK - 1, 210, 1, "#6a5840");
-  for (let x = 92; x < 270; x += 16) {
+  p.rect(72, DECK - 1, 248, 1, "#6a5840");
+  for (let x = 86; x < 310; x += 14) {
     p.rect(x, DECK - 8, 1, 8, "#3a3228");
     p.rect(x - 4, DECK - 9, 9, 1, "#4a4034");
   }
-  for (const bx of [96, 148, 204, 248]) {
+  for (const bx of [90, 128, 168, 210, 248, 286]) {
     p.rect(bx, DECK - 3, 3, 4, "#2a241c");
     p.rect(bx + 1, DECK - 4, 1, 1, "#4a4034");
+    p.line(bx + 1, DECK, bx + 8, DECK + 6, "#4a4034");
   }
+  p.rect(300, DECK - 20, 20, 20, "#2a2218");
+  shakeWall(p, 300, DECK - 16, 20, 16, "#241c16", "#32281e", "#3c3024");
+  for (let i = 298; i < 322; i++) {
+    const y = DECK - 22 - Math.round((1 - Math.abs((i - 310) / 12)) * 5);
+    p.line(i, y, i, DECK - 16, "#3a2e22");
+    p.set(i, y, "#4a3c2c");
+  }
+  windowPane(p, 306, DECK - 14, true);
+  p.rect(318, DECK - 4, 6, 4, "#3a3228");
   return p.done();
 }
 
@@ -738,10 +805,10 @@ function prerender() {
   GULLS = [renderGull(0), renderGull(1), renderGull(2)];
   WALK_R = [0, 1, 2, 3].map((f) => renderWalker(f, false));
   WALK_L = [0, 1, 2, 3].map((f) => renderWalker(f, true));
-  HALO_MOON = makeHalo(22, "#f0ece0", 0.28, 1.6, 6);
-  HALO_WIN = makeHalo(14, "#f4c878", 0.62, 1.7, 6);
-  HALO_LAMP = makeHalo(18, "#f4d078", 0.7, 1.6, 6);
-  HALO_BEAM = makeHalo(36, "#f8e8b0", 0.38, 2.1, 6);
+  HALO_MOON = makeHalo(26, "#f0ece0", 0.32, 1.6, 6);
+  HALO_WIN = makeHalo(16, "#f4c878", 0.68, 1.7, 6);
+  HALO_LAMP = makeHalo(20, "#f4d078", 0.74, 1.6, 6);
+  HALO_BEAM = makeHalo(40, "#f8e8b0", 0.42, 2.1, 6);
   HALO_BUOY = makeHalo(7, "#e05040", 0.55, 1.6, 4);
   HALO_WARM = makeHalo(16, "#e8a048", 0.35, 1.8, 5);
 }
@@ -779,28 +846,42 @@ function drawHills(t) {
 }
 
 function drawWater(t) {
-  const pal = ["#0a1218", "#0e1820", "#121e28", "#182430", "#1e2c3a", "#243444", "#2c3e50"];
-  for (let y = HOR; y < QUAY + 22; y++) {
-    const depth = (y - HOR) / (QUAY + 22 - HOR);
+  const pal = [
+    "#081018", "#0c1620", "#101c28", "#142230", "#1a2a38",
+    "#203040", "#263848", "#2c4050", "#344858", "#3a5060",
+  ];
+  const bottom = QUAY + 24;
+  for (let y = HOR; y < bottom; y++) {
+    const depth = (y - HOR) / (bottom - HOR);
     const k = Math.min(pal.length - 1, Math.floor(depth * pal.length));
     ctx.fillStyle = pal[k];
     ctx.fillRect(0, y, W, 1);
-    ctx.fillStyle = "#2a4450";
-    ctx.globalAlpha = 0.16 + 0.12 * wave(t, 17, y * 0.02);
+    ctx.fillStyle = "#3a5868";
+    ctx.globalAlpha = 0.14 + 0.12 * wave(t, 17, y * 0.02);
     const ox = Math.round(wave(t, 9, y * 0.03) * (1 + depth * 3));
-    for (let i = (y * 3) % 9; i < W; i += 9) ctx.fillRect(i + ox, y, 2, 1);
+    for (let i = (y * 3) % 8; i < W; i += 8) ctx.fillRect(i + ox, y, 2, 1);
     ctx.fillStyle = "#1a3038";
-    ctx.globalAlpha = 0.1;
+    ctx.globalAlpha = 0.12;
     const ox2 = Math.round(wave(t, 13, y * 0.05) * (1 + depth));
-    for (let i = (y * 5) % 13; i < W; i += 13) ctx.fillRect(i + ox2, y, 3, 1);
+    for (let i = (y * 5) % 11; i < W; i += 11) ctx.fillRect(i + ox2, y, 3, 1);
+    ctx.fillStyle = "#8aa0a8";
+    ctx.globalAlpha = 0.06 + 0.05 * wave(t, 21, y * 0.07);
+    const ox3 = Math.round(wave(t, 5, y * 0.08) * (1 + depth * 2));
+    for (let i = (y * 7) % 17; i < W; i += 17) ctx.fillRect(i + ox3, y, 1, 1);
+  }
+  ctx.globalAlpha = 0.1;
+  ctx.fillStyle = "#6a5840";
+  for (let y = QUAY; y < QUAY + 10; y++) {
+    const foam = Math.round(wave(t, 15, y * 0.1) * 2);
+    ctx.fillRect(64 + foam, y, 260, 1);
   }
   ctx.globalAlpha = 1;
-  const pathY0 = HOR + 2;
-  for (let y = pathY0; y < QUAY - 4; y++) {
+  const pathY0 = HOR + 1;
+  for (let y = pathY0; y < QUAY - 2; y++) {
     const u = (y - pathY0) / (QUAY - pathY0);
-    const w = 1 + Math.round(u * 12);
+    const w = 2 + Math.round(u * 16);
     const ox = Math.round(wave(t, 11, y * 0.04) * (1 + u * 2));
-    ctx.globalAlpha = 0.11 * (1 - u);
+    ctx.globalAlpha = 0.16 * (1 - u);
     ctx.fillStyle = "#d8e4ec";
     ctx.fillRect(MOON.x - Math.floor(w / 2) + ox, y, w, 1);
   }
@@ -809,27 +890,28 @@ function drawWater(t) {
 
 function drawBeam(t) {
   const ang = TAU * (t / LOOP) * 8;
-  const len = 120;
+  const len = 132;
   const x0 = LIGHT.cx;
   const y0 = LIGHT.lantern + 2;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  for (let k = 0; k < 28; k++) {
-    const u = k / 28;
-    const spread = 0.2 + u * 0.5;
+  for (let k = 0; k < 36; k++) {
+    const u = k / 36;
+    const spread = 0.28 + u * 0.7;
     const x = x0 + Math.cos(ang) * len * u;
-    const y = y0 + Math.sin(ang) * 14 * u + u * 8;
-    ctx.globalAlpha = (1 - u) * 0.18;
+    const y = y0 + Math.sin(ang) * 16 * u + u * 10;
+    ctx.globalAlpha = (1 - u) * 0.22;
     ctx.fillStyle = "#f8e8b0";
-    const w = 1 + spread * 14;
-    ctx.fillRect(Math.round(x - w / 2), Math.round(y), Math.round(w), 1);
+    const w = 2 + spread * 16;
+    ctx.fillRect(Math.round(x - w / 2), Math.round(y), Math.round(w), 2);
   }
   ctx.restore();
-  drawHalo(ctx, HALO_BEAM, x0 + Math.cos(ang) * 26, y0 + Math.sin(ang) * 5, 0.7 + 0.2 * wave(t, 8, 0.2));
+  drawHalo(ctx, HALO_BEAM, x0 + Math.cos(ang) * 26, y0 + Math.sin(ang) * 5, 0.75 + 0.2 * wave(t, 8, 0.2));
 }
 
 function drawSmoke(t) {
   const stacks = [
+    { x0: 44, y0: 156 },
     { x0: 111, y0: 136 },
     { x0: 406, y0: 164 },
   ];
@@ -865,18 +947,27 @@ function drawBoats(t) {
   ctx.fillRect(268, DECK - 7 + bob, 1, 1);
 
   const bob3 = Math.round(wave(t, 8, 0.4) * 1.3);
-  ctx.drawImage(LOBSTER_C, 176, HOR + 30 + bob3);
+  ctx.drawImage(LOBSTER_C, 176, HOR + 28 + bob3);
   ctx.fillStyle = "#f0c878";
-  ctx.fillRect(186, HOR + 34 + bob3, 1, 1);
+  ctx.fillRect(186, HOR + 32 + bob3, 1, 1);
+
+  const bob7 = Math.round(wave(t, 5, 0.81) * 1.4);
+  ctx.drawImage(LOBSTER_C, 330, HOR + 22 + bob7);
+  ctx.fillStyle = "#f0c878";
+  ctx.fillRect(340, HOR + 26 + bob7, 1, 1);
 
   const bob2 = Math.round(wave(t, 9, 0.7) * 1.2);
   ctx.drawImage(SKIFF_C, 318, HOR + 32 + bob2);
   const bob4 = Math.round(wave(t, 6, 0.22) * 1.1);
-  ctx.drawImage(SKIFF_C, 214, HOR + 38 + bob4);
+  ctx.drawImage(SKIFF_C, 214, HOR + 36 + bob4);
   const bob5 = Math.round(wave(t, 10, 0.55) * 0.9);
   ctx.drawImage(SKIFF_C, 292, DECK - 4 + bob5);
   const bob6 = Math.round(wave(t, 12, 0.33) * 1.0);
   ctx.drawImage(SKIFF_C, 348, HOR + 40 + bob6);
+  const bob8 = Math.round(wave(t, 7, 0.9) * 1.0);
+  ctx.drawImage(SKIFF_C, 148, HOR + 34 + bob8);
+  const bob9 = Math.round(wave(t, 11, 0.05) * 0.8);
+  ctx.drawImage(SKIFF_C, 268, HOR + 44 + bob9);
 
   const ferrySpan = 48;
   let fu = t - 36;
@@ -891,9 +982,25 @@ function drawBoats(t) {
     ctx.fillRect(fx + 12, fy + 3, 1, 1);
   }
 
+  ctx.fillStyle = "#2a241c";
+  for (const px of [196, 238, 276, 336, 364]) {
+    const ph = px * 0.01;
+    const y = HOR + 18 + Math.round(wave(t, 8, ph) * 1.2);
+    ctx.fillRect(px, y, 2, QUAY - y);
+    ctx.fillStyle = "#4a4034";
+    ctx.fillRect(px - 1, y, 4, 2);
+    ctx.fillStyle = "#2a241c";
+  }
+
   const by = HOR + 36 + Math.round(wave(t, 11, 0.5));
   ctx.drawImage(BUOY_C, 356, by);
   drawHalo(ctx, HALO_BUOY, 358, by + 1, 0.45 + 0.4 * (0.5 + 0.5 * wave(t, 2, 0.1)));
+  const by2 = HOR + 42 + Math.round(wave(t, 9, 0.2));
+  ctx.drawImage(BUOY_C, 232, by2);
+  drawHalo(ctx, HALO_BUOY, 234, by2 + 1, 0.35 + 0.3 * (0.5 + 0.5 * wave(t, 3, 0.4)));
+  const by3 = HOR + 30 + Math.round(wave(t, 7, 0.8));
+  ctx.drawImage(BUOY_C, 390, by3);
+  drawHalo(ctx, HALO_BUOY, 392, by3 + 1, 0.4 + 0.3 * (0.5 + 0.5 * wave(t, 2, 0.6)));
 }
 
 function drawGulls(t) {
@@ -902,6 +1009,8 @@ function drawGulls(t) {
     { k: 4, ph: 0.41, y: 62, amp: 8 },
     { k: 2, ph: 0.7, y: 40, amp: 14 },
     { k: 5, ph: 0.18, y: 88, amp: 6 },
+    { k: 3, ph: 0.55, y: 34, amp: 9 },
+    { k: 6, ph: 0.88, y: 72, amp: 7 },
   ];
   for (const b of birds) {
     const x = scroll(t, b.k, W + 30) - 15;
@@ -915,8 +1024,8 @@ function drawWalker(t) {
   const { cyc, u } = cycle(t, 4, 0.08);
   const idle = cyc === 1 || cyc === 3;
   const left = cyc === 2;
-  const x0 = 96;
-  const x1 = 248;
+  const x0 = 88;
+  const x1 = 286;
   let x;
   let flip = left;
   if (idle) {
@@ -931,11 +1040,15 @@ function drawWalker(t) {
 }
 
 function drawStringLights(t) {
-  for (let x = 88; x < 272; x += 11) {
-    const glow = 0.6 + 0.4 * (0.5 + 0.5 * wave(t, 9, x * 0.03));
-    ctx.fillStyle = glow > 0.55 ? "#ffe08a" : "#b88840";
+  ctx.fillStyle = "#f0c878";
+  ctx.globalAlpha = 0.1;
+  ctx.fillRect(80, DECK + 1, 230, 6);
+  ctx.globalAlpha = 1;
+  for (let x = 82; x < 318; x += 10) {
+    const glow = 0.55 + 0.45 * (0.5 + 0.5 * wave(t, 9, x * 0.03));
+    ctx.fillStyle = glow > 0.5 ? "#ffe08a" : "#b88840";
     ctx.fillRect(x, DECK - 11, 2, 1);
-    if (glow > 0.5) drawHalo(ctx, HALO_WIN, x + 0.5, DECK - 10, 0.4 * glow);
+    if (glow > 0.48) drawHalo(ctx, HALO_WIN, x + 0.5, DECK - 10, 0.42 * glow);
   }
 }
 
@@ -946,10 +1059,12 @@ function drawWindows(t) {
     { x: 71, y: 179 },
     { x: 91, y: 179 },
     { x: 111, y: 179 },
+    { x: 81, y: 167 },
     { x: 91, y: 195 },
     { x: 133, y: 193 },
     { x: 157, y: 197 },
     { x: 1, y: 197 },
+    { x: 309, y: DECK - 11 },
     { x: 397, y: 187 },
   ];
   for (const s of spots) {
@@ -977,11 +1092,11 @@ function drawQuayLamp(t) {
 function drawMist(t) {
   ctx.fillStyle = "#c8c4bc";
   const g = gust(t);
-  for (let i = 0; i < 90; i++) {
-    const y = HOR - 6 + (i % 18) * 3;
-    const x = (scroll(t, 2, W) + i * 17 + Math.round(g * 8)) % W;
-    ctx.globalAlpha = 0.04 + 0.03 * ((i * 3) % 5 === 0 ? 1 : 0);
-    ctx.fillRect(x, y, 3 + (i % 3), 1);
+  for (let i = 0; i < 140; i++) {
+    const y = HOR - 10 + (i % 22) * 3;
+    const x = (scroll(t, 2, W) + i * 17 + Math.round(g * 10)) % W;
+    ctx.globalAlpha = 0.05 + 0.04 * ((i * 3) % 5 === 0 ? 1 : 0);
+    ctx.fillRect(x, y, 4 + (i % 4), 1);
   }
   ctx.globalAlpha = 1;
 }
@@ -1000,17 +1115,22 @@ function drawRain(t) {
 }
 
 function drawForeground(t) {
-  ctx.drawImage(TRAPS_C, 8, QUAY - 8);
-  ctx.drawImage(TRAPS_C, 34, QUAY - 2);
+  ctx.drawImage(TRAPS_C, 4, QUAY - 10);
+  ctx.drawImage(TRAPS_C, 28, QUAY - 4);
+  ctx.drawImage(TRAPS_C, 52, QUAY - 8);
   ctx.drawImage(TRAPS_C, 168, DECK - 8);
+  ctx.drawImage(TRAPS_C, 270, DECK - 8);
   ctx.drawImage(CRATE_C, 248, DECK - 6);
   ctx.drawImage(CRATE_C, 258, DECK - 6);
   ctx.drawImage(CRATE_C, 118, DECK - 6);
   ctx.drawImage(CRATE_C, 108, DECK - 6);
+  ctx.drawImage(CRATE_C, 188, DECK - 6);
   ctx.drawImage(COIL_C, 140, DECK - 6);
   ctx.drawImage(COIL_C, 228, DECK - 6);
+  ctx.drawImage(COIL_C, 280, DECK - 6);
   ctx.drawImage(BARREL_C, 82, DECK - 7);
   ctx.drawImage(BARREL_C, 200, DECK - 7);
+  ctx.drawImage(BARREL_C, 160, DECK - 7);
   ctx.drawImage(CAT_C, 236, DECK - 10 + Math.round(0.4 * (wave(t, 2, 0.9) > 0.7)));
   ctx.fillStyle = "#1c1814";
   ctx.fillRect(0, H - 8, W, 8);
@@ -1024,9 +1144,15 @@ function renderFrame(t) {
   ctx.drawImage(SKY_C, 0, 0);
   drawStars(t);
   ctx.drawImage(MOON_C, MOON.x - 7, MOON.y - 7);
+  drawHalo(ctx, HALO_MOON, MOON.x, MOON.y, 1);
   drawClouds(t);
   drawHills(t);
   drawWater(t);
+  ctx.fillStyle = "#1a1612";
+  for (const px of [128, 182, 258]) {
+    ctx.fillRect(px, HOR - 5, 30, 2);
+    for (let k = 0; k < 6; k++) ctx.fillRect(px + 3 + k * 5, HOR - 5, 2, 7);
+  }
   drawBeam(t);
   ctx.drawImage(SPIT_C, 0, 0);
   ctx.drawImage(LIGHT_C, 0, 0);
@@ -1037,18 +1163,20 @@ function renderFrame(t) {
   ctx.drawImage(DOCK_C, 0, 0);
   drawStringLights(t);
   drawBoats(t);
-  reflect(ctx, t, { top: HOR, rows: 48, squash: 1.65, alpha: 0.52, k1: 41, k2: 97, amp: 0.62, grow: 0.045 });
-  streak(ctx, t, LIGHT.cx, 3.6, "#f0d878", 0.48, 1.1, HOR, HOR + 48);
-  streak(ctx, t, 20, 1.8, "#f0c060", 0.32, 2.2, HOR, HOR + 32);
-  streak(ctx, t, 42, 1.6, "#e8b868", 0.26, 2.6, HOR, HOR + 30);
-  streak(ctx, t, 72, 2.0, "#f0c060", 0.3, 2.8, HOR, HOR + 34);
-  streak(ctx, t, 92, 1.8, "#e8b868", 0.26, 3.0, HOR, HOR + 32);
-  streak(ctx, t, 134, 1.6, "#e0b060", 0.24, 3.6, HOR, HOR + 28);
-  streak(ctx, t, 158, 1.4, "#e0b060", 0.22, 4.2, HOR, HOR + 26);
-  streak(ctx, t, LAMP.x - 5, 2.2, "#f4d078", 0.34, 2.0, HOR, HOR + 36);
-  streak(ctx, t, 400, 1.5, "#e8b868", 0.24, 3.2, HOR, HOR + 30);
-  for (let x = 88; x < 272; x += 22) {
-    streak(ctx, t, x, 0.9, "#f2d078", 0.16, 5.0 + (x % 7), HOR, HOR + 20);
+  reflect(ctx, t, { top: HOR, rows: 54, squash: 1.6, alpha: 0.56, k1: 41, k2: 97, amp: 0.66, grow: 0.045 });
+  streak(ctx, t, LIGHT.cx, 3.6, "#f0d878", 0.52, 1.1, HOR, HOR + 52);
+  streak(ctx, t, 20, 1.8, "#f0c060", 0.36, 2.2, HOR, HOR + 34);
+  streak(ctx, t, 42, 1.6, "#e8b868", 0.3, 2.6, HOR, HOR + 32);
+  streak(ctx, t, 72, 2.0, "#f0c060", 0.34, 2.8, HOR, HOR + 36);
+  streak(ctx, t, 92, 1.8, "#e8b868", 0.3, 3.0, HOR, HOR + 34);
+  streak(ctx, t, 134, 1.6, "#e0b060", 0.28, 3.6, HOR, HOR + 30);
+  streak(ctx, t, 158, 1.4, "#e0b060", 0.26, 4.2, HOR, HOR + 28);
+  streak(ctx, t, LAMP.x - 5, 2.2, "#f4d078", 0.38, 2.0, HOR, HOR + 38);
+  streak(ctx, t, 310, 1.6, "#e8b868", 0.28, 3.4, HOR, HOR + 30);
+  streak(ctx, t, 400, 1.5, "#e8b868", 0.28, 3.2, HOR, HOR + 32);
+  streak(ctx, t, 358, 1.2, "#e05040", 0.18, 4.0, HOR, HOR + 24);
+  for (let x = 82; x < 318; x += 18) {
+    streak(ctx, t, x, 0.9, "#f2d078", 0.18, 5.0 + (x % 7), HOR, HOR + 22);
   }
   drawWindows(t);
   drawGulls(t);
