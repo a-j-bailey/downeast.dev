@@ -33,6 +33,7 @@ addEventListener("resize", display.resize);
 visualViewport?.addEventListener("resize", display.resize);
 visualViewport?.addEventListener("scroll", display.resize);
 display.resize();
+display.bindPan($("#pan"));
 
 const [buf, ctx] = makeCanvas(W, H);
 const { render } = scene.create(ctx);

@@ -29,6 +29,13 @@ html, body {
   touch-action: none;
   pointer-events: none !important;
 }
+#pan {
+  position: fixed; inset: 0; z-index: 5;
+  touch-action: none;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -61,6 +68,7 @@ body.idle .hud-bottom, body.ui-off .hud-bottom { transform: translate(-50%, 8px)
   border: 1px solid var(--line); background: var(--panel);
   -webkit-backdrop-filter: blur(12px) saturate(1.2); backdrop-filter: blur(12px) saturate(1.2);
   pointer-events: auto;
+  touch-action: manipulation;
 }
 #links a { color: var(--muted); text-decoration: none; }
 #links a:hover, #links a:focus-visible { color: var(--tx); }
@@ -77,6 +85,7 @@ body.idle .hud-bottom, body.ui-off .hud-bottom { transform: translate(-50%, 8px)
   transform: translateX(-50%);
   width: min(912px, calc(100vw - 2 * var(--gutter)));
   pointer-events: auto;
+  touch-action: manipulation;
 }
 .dock { position: relative; z-index: 1; pointer-events: auto; }
 #player {
@@ -105,7 +114,7 @@ body.idle .hud-bottom, body.ui-off .hud-bottom { transform: translate(-50%, 8px)
 .vols { flex: none; display: flex; align-items: center; gap: 10px; }
 .vol { flex: none; display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .vol svg { flex: none; width: 14px; height: 14px; fill: currentColor; }
-.vol input { width: 84px; accent-color: var(--accent); }
+.vol input { width: 84px; accent-color: var(--accent); touch-action: pan-x; }
 #queueBtn[aria-expanded="true"],
 #timerBtn[aria-expanded="true"],
 #vibeBtn[aria-expanded="true"],
@@ -170,7 +179,7 @@ body.idle .hud-bottom, body.ui-off .hud-bottom { transform: translate(-50%, 8px)
 .mix-row { display: grid; grid-template-columns: 78px minmax(0, 1fr) 36px; align-items: center; gap: 10px; min-height: 32px; }
 .mix-sep { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); }
 .mix-name { font-size: 13px; }
-.mix-row input { width: 100%; min-width: 0; margin: 0; accent-color: var(--accent); }
+.mix-row input { width: 100%; min-width: 0; margin: 0; accent-color: var(--accent); touch-action: pan-x; }
 .mix-val { font: 11px var(--mono); color: var(--muted); text-align: right; }
 .mix-row.changed .mix-val { color: var(--accent); }
 
