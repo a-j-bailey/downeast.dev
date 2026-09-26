@@ -22,7 +22,7 @@ writes a static site to `dist/`. `npm run preview` serves that output locally.
 
 ## Scene loop
 
-The harbor is painted each frame into a 480×270 buffer and nearest-neighbor upscaled full-bleed (cover crop, so the dock stays in frame). Animation is a function of loop time `t % 240` seconds, so the night seals: boats, lights, gulls, and the dock walker all repeat cleanly.
+The harbor is painted each frame into a 480×270 buffer with smoothing off. Landscape uses integer-preferring nearest-neighbor scale (dimmed scene in the letterbox). Portrait fills the height and crops around the lighthouse (`focusX`). Animation is a function of loop time `t % 240` seconds, so the night seals: boats, lights, gulls, and the dock walker all repeat cleanly.
 
 ## Audio
 

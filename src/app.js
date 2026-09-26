@@ -83,6 +83,14 @@ function startMusic() {
   else if (audio.state === "paused") audio.play();
 }
 
+function gestureUnlock(e) {
+  if (audio.state !== "locked" && audio.state !== "interrupted") return;
+  const el = e.target;
+  if (el instanceof Element && el.closest("a, button, input, select, textarea, dialog, label")) return;
+  audio.unlock();
+}
+addEventListener("pointerdown", gestureUnlock);
+
 $("#play").addEventListener("click", () => {
   audio.toggle();
 });
@@ -164,6 +172,7 @@ const pops = {
   vibe: { el: $("#vibe"), btn: $("#vibeBtn") },
   timers: { el: $("#timers"), btn: $("#timerBtn") },
   mixer: { el: $("#mixer"), btn: $("#mixerBtn") },
+  save: { el: $("#saveMenu"), btn: $("#saveBtn") },
 };
 function closePops(except) {
   for (const [k, p] of Object.entries(pops)) {
@@ -186,6 +195,16 @@ $("#queueBtn").addEventListener("click", () => togglePop("queue"));
 $("#vibeBtn").addEventListener("click", () => togglePop("vibe"));
 $("#timerBtn").addEventListener("click", () => togglePop("timers"));
 $("#mixerBtn").addEventListener("click", () => togglePop("mixer"));
+$("#saveBtn").addEventListener("click", () => togglePop("save"));
+
+function dumpFrame() {
+  render(loopTime());
+  savePNG(buf, "downeast-east-passage");
+}
+$("#savePng").addEventListener("click", () => {
+  dumpFrame();
+  closePops();
+});
 
 $("#vibe").addEventListener("change", () => {
   const energy = $("#vibe [name=energy]:checked").value;
@@ -299,11 +318,6 @@ setInterval(() => {
   sleep = sl.sleep;
   updatePills();
 }, 500);
-
-$("#saveBtn").addEventListener("click", () => {
-  render(loopTime());
-  savePNG(buf, "downeast-east-passage");
-});
 
 function toggleFS() {
   if (document.fullscreenElement || document.webkitFullscreenElement) {
@@ -455,7 +469,12 @@ addEventListener("keydown", (e) => {
   if (k === " ") {
     e.preventDefault();
     $("#play").click();
-  } else if (k === "n") {
+    return;
+  }
+  if (audio.state === "locked" || audio.state === "interrupted") {
+    if (k !== "Escape" && k !== "h") audio.unlock();
+  }
+  if (k === "n") {
     startMusic();
     audio.next();
   } else if (k === "q") togglePop("queue");
@@ -465,8 +484,6 @@ addEventListener("keydown", (e) => {
   else if (k === "m") toggleMute();
   else if (k === "f") toggleFS();
   else if (k === "h") document.body.classList.toggle("ui-off");
-  else if (k === "s" && !e.repeat) {
-    render(loopTime());
-    savePNG(buf, "downeast-east-passage");
-  } else if (k === "Escape") closePops();
+  else if (k === "s" && !e.repeat) dumpFrame();
+  else if (k === "Escape") closePops();
 });

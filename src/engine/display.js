@@ -1,6 +1,10 @@
 import { W, H, clamp } from "./core.js";
 
-/** Present a 480×270 scene buffer full-bleed on the window (cover crop). */
+/**
+ * Present a 480×270 buffer on the full-window screen canvas.
+ * Landscape: integer-preferring nearest-neighbor scale, dimmed scene in the bars.
+ * Portrait: fill the height and crop the sides around the landmark (focusX).
+ */
 export function createDisplay(canvas) {
   const sctx = canvas.getContext("2d", { alpha: false });
   let cw = 1;
@@ -17,19 +21,33 @@ export function createDisplay(canvas) {
   }
 
   function layout(focusX) {
-    const scale = Math.max(cw / W, ch / H);
-    const visW = Math.min(W, cw / scale);
-    const visH = Math.min(H, ch / scale);
-    const sx = visW < W ? clamp(Math.round(focusX - visW / 2), 0, Math.round(W - visW)) : 0;
-    const sy = visH < H ? clamp(Math.round(H - visH - 6), 0, Math.round(H - visH)) : 0;
-    return { sx, sy, sw: visW, sh: visH, dx: 0, dy: 0, dw: cw, dh: ch };
+    if (cw < ch) {
+      const scale = ch / H;
+      const sw = Math.min(W, cw / scale);
+      const sx = clamp(Math.round(focusX - sw / 2), 0, Math.round(W - sw));
+      return { sx, sy: 0, sw, sh: H, dx: 0, dy: 0, dw: cw, dh: ch, bars: false };
+    }
+    let scale = Math.min(cw / W, ch / H);
+    const whole = Math.floor(scale);
+    if (whole >= 2 && scale - whole < 0.12) scale = whole;
+    const dw = Math.round(W * scale);
+    const dh = Math.round(H * scale);
+    const dx = Math.round((cw - dw) / 2);
+    const dy = Math.round((ch - dh) / 2);
+    return { sx: 0, sy: 0, sw: W, sh: H, dx, dy, dw, dh, bars: dx > 2 || dy > 2 };
   }
 
   function present(buf, focusX) {
     sctx.imageSmoothingEnabled = false;
     const L = layout(focusX);
-    sctx.fillStyle = "#100f0f";
-    sctx.fillRect(0, 0, cw, ch);
+    if (L.bars) {
+      sctx.drawImage(buf, 0, 0, W, H, 0, 0, cw, ch);
+      sctx.fillStyle = "rgba(16, 15, 15, 0.78)";
+      sctx.fillRect(0, 0, cw, ch);
+    } else {
+      sctx.fillStyle = "#100f0f";
+      sctx.fillRect(0, 0, cw, ch);
+    }
     sctx.drawImage(buf, L.sx, L.sy, L.sw, L.sh, L.dx, L.dy, L.dw, L.dh);
   }
 

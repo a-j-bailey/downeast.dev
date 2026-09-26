@@ -12,7 +12,7 @@ The homepage is a **calm media player**. Album art is a living 480×270 pixel Ne
 Vanilla Vite ES modules:
 
 - `src/engine/core.js` — 480×270, 240 s loop, `wave` / `step` / `cycle` / `scroll`
-- `src/engine/display.js` — integer-preferring nearest-neighbor present
+- `src/engine/display.js` — integer-preferring nearest-neighbor present; portrait crops around `focusX`
 - `src/scene/east-passage.js` — hand-authored Canvas2D painter
 - `src/audio/*` — Web Audio generative lofi + harbor ambience (no samples, no Tone.js)
 - `src/app.js` — dock UI, idle fade, keyboard, `/projects` overlay

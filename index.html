@@ -56,6 +56,7 @@
       <symbol id="i-wave" viewBox="0 0 8 8"><path d="M0 4h1v1H0zM1 3h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 3h1v1H5zM6 2h1v1H6zM7 3h1v1H7z"/></symbol>
       <symbol id="i-mixer" viewBox="0 0 9 8"><path d="M1 0h1v8H1zM0 5h3v2H0zM4 0h1v8H4zM3 1h3v2H3zM7 0h1v8H7zM6 3h3v2H6z"/></symbol>
       <symbol id="i-save" viewBox="0 0 8 8"><path d="M3 0h2v3H3zM1 3h6v1H1zM2 4h4v1H2zM3 5h2v1H3zM0 6h8v2H0z"/></symbol>
+      <symbol id="i-image" viewBox="0 0 8 8"><path d="M0 0h8v1H0zM0 1h1v6H0zM7 1h1v6H7zM1 7h6v1H1zM5 2h1v1H5zM2 5h2v1H2zM4 4h1v1H4zM6 5h1v1H6z"/></symbol>
       <symbol id="i-help" viewBox="0 0 8 8"><path d="M2 0h4v1H2zM1 1h1v1H1zM6 1h1v2H6zM4 3h2v1H4zM3 4h2v1H3zM3 6h2v2H3z"/></symbol>
       <symbol id="i-close" viewBox="0 0 8 8"><path d="M1 1h1v1H1zM2 2h1v1H2zM3 3h2v2H3zM5 2h1v1H5zM6 1h1v1H6zM2 5h1v1H2zM1 6h1v1H1zM5 5h1v1H5zM6 6h1v1H6z"/></symbol>
       <symbol id="i-mute" viewBox="0 0 8 8"><path d="M1 3h2v2H1zM3 2h1v4H3zM5 1h1v1H5zM6 2h1v1H6zM5 6h1v1H5zM6 5h1v1H6z"/></symbol>
@@ -117,6 +118,16 @@
           <div class="pop-head"><span>Harbor sounds</span><button id="mixReset" type="button" disabled>reset</button></div>
           <div id="mixList"></div>
         </div>
+        <div id="saveMenu" class="pop" role="dialog" aria-label="Save this scene" hidden>
+          <div class="pop-head"><span>Save this scene</span></div>
+          <div class="pop-list">
+            <button id="savePng" class="pop-item" type="button">
+              <svg><use href="#i-image"/></svg>
+              <span class="pop-text"><span class="pop-title">Save this frame</span><span class="pop-meta">PNG · 1920×1080</span></span>
+              <kbd>S</kbd>
+            </button>
+          </div>
+        </div>
         <section id="player" aria-label="Music player">
           <button id="play" class="icon-btn pulse" type="button" aria-label="Play music" title="Play / pause (Space)">
             <svg><use href="#i-play"/></svg>
@@ -153,7 +164,7 @@
               <svg><use href="#i-mute"/></svg>
             </button>
           </div>
-          <button id="saveBtn" class="icon-btn" type="button" aria-label="Save this frame as a PNG" title="Save PNG (S)">
+          <button id="saveBtn" class="icon-btn" type="button" aria-label="Save this scene" aria-expanded="false" aria-controls="saveMenu" title="Save this frame as a PNG (S)">
             <svg><use href="#i-save"/></svg>
           </button>
           <button id="fs" class="icon-btn" type="button" aria-label="Fullscreen" title="Fullscreen (F)">

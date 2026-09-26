@@ -16,7 +16,8 @@ const QUAY = 206;
 const DECK = 198;
 const MOON = { x: 86, y: 26 };
 const LIGHT = { cx: 428, base: 196, lantern: 62, w: 16 };
-const FOCUS = 268;
+const LAMP = { x: 64, arm: 52, top: 118 };
+const FOCUS = 348;
 
 const RGB = {};
 const rgbOf = (h) => RGB[h] || (RGB[h] = hex(h));
@@ -222,19 +223,34 @@ function renderHills() {
       p.set(i, y, col);
     }
   }
-  for (let n = 0; n < 28; n++) {
-    const x = 12 + Math.floor(r() * 340);
-    const y = Math.round(ridge[x]) - 6 - Math.floor(r() * 4);
-    const h = 7 + Math.floor(r() * 5);
+  for (let n = 0; n < 52; n++) {
+    const x = 8 + Math.floor(r() * 360);
+    const y = Math.round(ridge[x]) - 7 - Math.floor(r() * 5);
+    const h = 8 + Math.floor(r() * 7);
     for (let k = 0; k < h; k++) {
-      const w = Math.max(1, Math.round((1 - k / h) * 3));
-      p.rect(x - w, y + k, w * 2 + 1, 1, k < 2 ? "#1a2018" : "#141810");
+      const w = Math.max(1, Math.round((1 - k / h) * (2 + (n % 3))));
+      p.rect(x - w, y + k, w * 2 + 1, 1, k < 2 ? "#1c2418" : "#141810");
     }
   }
+  const cottages = [
+    [48, 4],
+    [96, 2],
+    [168, 3],
+    [236, 1],
+    [292, 2],
+  ];
+  for (const [cx, drop] of cottages) {
+    const y = Math.round(ridge[cx]) + drop;
+    p.rect(cx, y, 9, 6, "#1c1814");
+    p.rect(cx + 1, y - 3, 7, 3, "#2a2218");
+    p.set(cx + 4, y - 4, "#3a2c20");
+    p.set(cx + 3, y + 2, "#c89040");
+    p.set(cx + 6, y + 2, "#a07030");
+  }
   const lights = [];
-  for (let n = 0; n < 18; n++) {
-    const x = 20 + Math.floor(r() * 300);
-    const y = Math.round(ridge[x]) + 2 + Math.floor(r() * 6);
+  for (let n = 0; n < 28; n++) {
+    const x = 16 + Math.floor(r() * 330);
+    const y = Math.round(ridge[x]) + 2 + Math.floor(r() * 7);
     lights.push({ x, y, ph: r(), k: 3 + Math.floor(r() * 9) });
     p.set(x, y, "#c8a060");
   }
@@ -262,6 +278,16 @@ function renderSpit() {
     p.rect(x, y, 3, 2, "#2e2c28");
     p.set(x + 1, y - 1, "#3a3832");
   }
+  p.rect(388, 176, 22, 22, "#2a2620");
+  shakeWall(p, 388, 180, 22, 18, "#221e18", "#2c2820", "#3a342c");
+  for (let i = 386; i < 412; i++) {
+    const y = 174 - Math.round((1 - Math.abs((i - 399) / 13)) * 6);
+    p.line(i, y, i, 180, i < 399 ? "#4a4034" : "#3a3428");
+    p.set(i, y, "#5a4e3e");
+  }
+  p.rect(404, 168, 4, 10, "#3a3428");
+  p.rect(403, 166, 6, 3, "#2a241c");
+  windowPane(p, 394, 184, true);
   return p.done();
 }
 
@@ -367,6 +393,22 @@ function renderVillage() {
   }
   windowPane(p, 130, 190, true);
 
+  p.rect(148, 186, 26, 22, "#2a221a");
+  shakeWall(p, 148, 190, 26, 18, "#221a14", "#30261c", "#3a2c22");
+  for (let i = 146; i < 176; i++) {
+    const y = 184 - Math.round((1 - Math.abs((i - 161) / 15)) * 6);
+    p.line(i, y, i, 190, "#3a2e22");
+    p.set(i, y, "#4a3c2c");
+  }
+  windowPane(p, 154, 194, true);
+  p.rect(166, 198, 6, 10, "#1a1410");
+
+  for (let n = 0; n < 5; n++) {
+    p.line(18 + n * 2, 200, 22 + n * 3, 214, n & 1 ? "#3a3228" : "#2a241c");
+  }
+  p.rect(22, 212, 14, 3, "#4a4030");
+  p.rect(24, 210, 10, 2, "#5a4c38");
+
   p.rect(4, 204, 10, 3, "#8a2820");
   p.rect(5, 201, 8, 3, "#c44030");
   p.set(8, 200, "#e8e0d0");
@@ -380,6 +422,7 @@ function renderVillage() {
   const sx = sheet.getContext("2d");
   sx.imageSmoothingEnabled = false;
   text(sx, "BAIT", 64, 158, "#c8b090");
+  text(sx, "ICE", 150, 186, "#a09078");
   return sheet;
 }
 
@@ -428,6 +471,10 @@ function renderDock() {
   for (let x = 92; x < 270; x += 18) {
     p.rect(x, DECK - 8, 1, 8, "#3a3228");
     p.rect(x - 4, DECK - 9, 9, 1, "#4a4034");
+  }
+  for (const bx of [96, 148, 204, 248]) {
+    p.rect(bx, DECK - 3, 3, 4, "#2a241c");
+    p.rect(bx + 1, DECK - 4, 1, 1, "#4a4034");
   }
   return p.done();
 }
@@ -687,6 +734,16 @@ function drawWater(t) {
     for (let i = (y * 3) % 11; i < W; i += 11) ctx.fillRect(i + ox, y, 2, 1);
   }
   ctx.globalAlpha = 1;
+  const pathY0 = HOR + 2;
+  for (let y = pathY0; y < QUAY - 4; y++) {
+    const u = (y - pathY0) / (QUAY - pathY0);
+    const w = 1 + Math.round(u * 10);
+    const ox = Math.round(wave(t, 11, y * 0.04) * (1 + u * 2));
+    ctx.globalAlpha = 0.08 * (1 - u);
+    ctx.fillStyle = "#d8e0e8";
+    ctx.fillRect(MOON.x - Math.floor(w / 2) + ox, y, w, 1);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawBeam(t) {
@@ -711,15 +768,19 @@ function drawBeam(t) {
 }
 
 function drawSmoke(t) {
-  const x0 = 111;
-  const y0 = 136;
+  const stacks = [
+    { x0: 111, y0: 136 },
+    { x0: 406, y0: 164 },
+  ];
   ctx.fillStyle = "#8a8884";
-  for (let i = 0; i < 10; i++) {
-    const u = ((t * 8) / LOOP + i * 0.07) % 1;
-    const x = x0 + Math.round(wave(t, 6, i * 0.1) * 3 * u + gust(t) * 6 * u);
-    const y = y0 - Math.round(u * 28);
-    ctx.globalAlpha = (1 - u) * 0.28;
-    ctx.fillRect(x, y, 1 + (u > 0.4 ? 1 : 0), 1);
+  for (const s of stacks) {
+    for (let i = 0; i < 10; i++) {
+      const u = ((t * 8) / LOOP + i * 0.07 + s.x0 * 0.001) % 1;
+      const x = s.x0 + Math.round(wave(t, 6, i * 0.1) * 3 * u + gust(t) * 6 * u);
+      const y = s.y0 - Math.round(u * 28);
+      ctx.globalAlpha = (1 - u) * 0.28;
+      ctx.fillRect(x, y, 1 + (u > 0.4 ? 1 : 0), 1);
+    }
   }
   ctx.globalAlpha = 1;
 }
@@ -742,9 +803,17 @@ function drawBoats(t) {
   ctx.fillRect(262, DECK - 6 + bob, 1, 1);
   ctx.fillRect(268, DECK - 7 + bob, 1, 1);
 
+  const bob3 = Math.round(wave(t, 8, 0.4) * 1.3);
+  ctx.drawImage(LOBSTER_C, 176, HOR + 22 + bob3);
+  ctx.fillStyle = "#f0c878";
+  ctx.fillRect(186, HOR + 26 + bob3, 1, 1);
+
   const bob2 = Math.round(wave(t, 9, 0.7) * 1.2);
   ctx.drawImage(SKIFF_C, 318, HOR + 26 + bob2);
-
+  const bob4 = Math.round(wave(t, 6, 0.22) * 1.1);
+  ctx.drawImage(SKIFF_C, 214, HOR + 34 + bob4);
+  const bob5 = Math.round(wave(t, 10, 0.55) * 0.9);
+  ctx.drawImage(SKIFF_C, 292, DECK - 4 + bob5);
 
   const ferrySpan = 48;
   let fu = t - 36;
@@ -815,6 +884,8 @@ function drawWindows(t) {
     { x: 91, y: 179 },
     { x: 91, y: 195 },
     { x: 133, y: 193 },
+    { x: 157, y: 197 },
+    { x: 397, y: 187 },
   ];
   for (const s of spots) {
     const flicker = 0.75 + 0.25 * wave(t, 13 + (s.x & 7), s.x * 0.01);
@@ -822,6 +893,19 @@ function drawWindows(t) {
   }
   drawHalo(ctx, HALO_LAMP, LIGHT.cx, LIGHT.lantern + 2, 0.7 + 0.15 * wave(t, 8, 0.4));
   drawHalo(ctx, HALO_MOON, MOON.x, MOON.y, 0.85);
+}
+
+function drawQuayLamp(t) {
+  const x = LAMP.x;
+  const top = LAMP.top;
+  ctx.fillStyle = "#2a241c";
+  ctx.fillRect(x, top, 2, DECK - top);
+  ctx.fillStyle = "#3a3228";
+  ctx.fillRect(x - 6, top + 1, 8, 1);
+  ctx.fillRect(x - 8, top + 2, 5, 4);
+  ctx.fillStyle = "#f0d878";
+  ctx.fillRect(x - 7, top + 3, 3, 2);
+  drawHalo(ctx, HALO_LAMP, x - 5.5, top + 4, 0.55 + 0.2 * wave(t, 7, 0.3));
 }
 
 function drawMist(t) {
@@ -851,8 +935,10 @@ function drawRain(t) {
 
 function drawForeground(t) {
   ctx.drawImage(TRAPS_C, 14, QUAY - 6);
+  ctx.drawImage(TRAPS_C, 36, QUAY - 2);
   ctx.drawImage(CRATE_C, 248, DECK - 6);
   ctx.drawImage(CRATE_C, 258, DECK - 6);
+  ctx.drawImage(CRATE_C, 118, DECK - 6);
   ctx.drawImage(CAT_C, 252, DECK - 10 + Math.round(0.4 * (wave(t, 2, 0.9) > 0.7)));
   ctx.fillStyle = "#1c1814";
   ctx.fillRect(0, H - 8, W, 8);
@@ -873,6 +959,7 @@ function renderFrame(t) {
   ctx.drawImage(SPIT_C, 0, 0);
   ctx.drawImage(LIGHT_C, 0, 0);
   ctx.drawImage(VILLAGE_C, 0, 0);
+  drawQuayLamp(t);
   drawSmoke(t);
   drawFlag(t);
   ctx.drawImage(DOCK_C, 0, 0);
@@ -883,6 +970,8 @@ function renderFrame(t) {
   streak(ctx, t, 20, 1.6, "#e8b868", 0.22, 2.4, HOR, HOR + 28);
   streak(ctx, t, 72, 1.8, "#e8b868", 0.2, 3.1, HOR, HOR + 30);
   streak(ctx, t, 134, 1.4, "#e0b060", 0.18, 4.0, HOR, HOR + 24);
+  streak(ctx, t, 158, 1.2, "#e0b060", 0.16, 4.6, HOR, HOR + 22);
+  streak(ctx, t, 400, 1.3, "#e8b868", 0.18, 3.4, HOR, HOR + 26);
   drawWindows(t);
   drawGulls(t);
   drawWalker(t);
