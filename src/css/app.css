@@ -18,7 +18,7 @@
 }
 * { box-sizing: border-box; }
 html, body {
-  margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--tx);
+  margin: 0; height: 100%; height: 100dvh; overflow: hidden; background: var(--bg); color: var(--tx);
   font: 14px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
@@ -262,23 +262,30 @@ kbd {
   .seg span { padding-block: 11px; }
 }
 @media (max-width: 900px) {
-  #player { flex-wrap: wrap; gap: 2px 6px; }
-  .vols { order: 1; flex: 1 0 calc(100% - 3 * (var(--btn) + 6px)); min-width: 0; gap: 14px; }
-  #vibeBtn, #timerBtn, #saveBtn { order: 2; }
+  .hud-city { max-width: calc(100vw - 128px); }
+  #cityName { font-size: 24px; }
+  .hud-bottom { width: calc(100vw - 2 * var(--gutter)); }
+  #player { flex-wrap: wrap; gap: 6px 8px; }
+  .track { flex: 1 1 160px; min-width: 0; }
+  .vols { flex: 1 1 100%; min-width: 0; gap: 12px; }
   .vol { flex: 1; min-width: 0; }
   .vol input { flex: 1; width: auto; min-width: 0; }
 }
-@media (max-width: 600px) {
+@media (max-width: 640px), (orientation: portrait) and (max-width: 900px) {
   :root { --edge: 8px; }
-  #cityName { font-size: 24px; }
+  .hud-city { max-width: calc(100vw - 108px); }
+  #cityName { font-size: 22px; }
+  .sub { font-size: 12px; }
   #projectsLink { width: var(--btn); padding: 0; justify-content: center; font-size: 0; }
   #projectsLink::first-letter { font-size: 13px; }
+  #player { gap: 6px; }
+  #play { order: 1; }
+  #next { order: 2; }
+  .track { order: 3; flex: 1 1 0; min-width: 0; }
   .vols { display: contents; }
-  #player::before, #player::after { content: ""; flex-basis: 100%; }
-  #player::before { order: 1; }
-  .vol { order: 2; padding-inline: 6px; }
-  #player::after { order: 3; }
-  #vibeBtn, #timerBtn, #mixerBtn, #mute, #saveBtn { order: 4; }
+  #mute { order: 4; }
+  #queueBtn, #vibeBtn, #timerBtn, #mixerBtn, #saveBtn, #fs, #info { order: 5; }
+  .vol { order: 6; flex: 1 1 calc(50% - 12px); min-width: 0; padding-inline: 4px; }
   .pop, #mixer, #saveMenu { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {

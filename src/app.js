@@ -3,6 +3,7 @@ import { createDisplay } from "./engine/display.js";
 import { savePNG } from "./engine/save.js";
 import { createPlayer } from "./audio/player.js";
 import { FOCUS_PRESETS, SLEEP_MINUTES, startFocus, advanceFocus, skipPhase, startSleep, sleepStep, countdown } from "./audio/timers.js";
+import { skyAt } from "./engine/solar.js";
 import scene from "./scene/east-passage.js";
 import { SITE_HOST, PERSON_NAME, SITE_BLURB, TIME_ZONE, pageTitle } from "./content/site.js";
 import { projects } from "./content/projects.js";
@@ -29,6 +30,8 @@ const store = {
 
 const display = createDisplay($("#screen"));
 addEventListener("resize", display.resize);
+visualViewport?.addEventListener("resize", display.resize);
+visualViewport?.addEventListener("scroll", display.resize);
 display.resize();
 
 const [buf, ctx] = makeCanvas(W, H);
@@ -45,15 +48,29 @@ $("#cityName").textContent = scene.name;
 $("#tagline").textContent = scene.tagline;
 
 const timeFmt = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" });
+
+function clockDate() {
+  const at = new URLSearchParams(location.search).get("at");
+  if (at) {
+    const d = new Date(at);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return new Date();
+}
+
 function tickClock() {
-  $("#cityTime").textContent = `${timeFmt.format(new Date())} local time`;
+  const now = clockDate();
+  const sky = skyAt(now);
+  $("#cityTime").textContent = `${timeFmt.format(now)} local time`;
+  $("#tagline").textContent = sky.tagline;
 }
 tickClock();
-setInterval(tickClock, 10000);
+setInterval(tickClock, 1000);
 
 function frame() {
   try {
-    render(loopTime());
+    const sky = skyAt(clockDate());
+    render(loopTime(), sky);
     display.present(buf, scene.focusX);
   } catch (e) {
     console.error(e);

@@ -2,31 +2,46 @@ import { W, H, clamp } from "./core.js";
 
 /**
  * Present a 480×270 buffer on the full-window screen canvas.
- * Landscape: integer-preferring nearest-neighbor scale, dimmed scene in the bars.
- * Portrait: fill the height and crop the sides around the landmark (focusX).
+ * Tall / portrait: fill height, crop sides around focusX (lighthouse).
+ * Landscape: integer-preferring nearest-neighbor contain, dimmed bars.
  */
 export function createDisplay(canvas) {
   const sctx = canvas.getContext("2d", { alpha: false });
   let cw = 1;
   let ch = 1;
 
+  function viewSize() {
+    const vv = window.visualViewport;
+    return {
+      cssW: Math.max(1, vv?.width ?? innerWidth),
+      cssH: Math.max(1, vv?.height ?? innerHeight),
+    };
+  }
+
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    cw = Math.max(1, Math.round(innerWidth * dpr));
-    ch = Math.max(1, Math.round(innerHeight * dpr));
+    const { cssW, cssH } = viewSize();
+    cw = Math.max(1, Math.round(cssW * dpr));
+    ch = Math.max(1, Math.round(cssH * dpr));
     canvas.width = cw;
     canvas.height = ch;
-    canvas.style.width = innerWidth + "px";
-    canvas.style.height = innerHeight + "px";
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
     canvas.style.pointerEvents = "none";
     canvas.style.touchAction = "none";
+    sctx.imageSmoothingEnabled = false;
   }
 
   function layout(focusX) {
-    if (cw < ch) {
+    const sceneAspect = W / H;
+    const viewAspect = cw / ch;
+    const cover = viewAspect + 0.02 < sceneAspect;
+    if (cover) {
       const scale = ch / H;
-      const sw = Math.min(W, cw / scale);
-      const sx = clamp(Math.round(focusX - sw / 2), 0, Math.round(W - sw));
+      const visW = cw / scale;
+      const sw = Math.min(W, visW);
+      const maxSx = Math.max(0, W - sw);
+      const sx = clamp(focusX - sw / 2, 0, maxSx);
       return { sx, sy: 0, sw, sh: H, dx: 0, dy: 0, dw: cw, dh: ch, bars: false };
     }
     let scale = Math.min(cw / W, ch / H);

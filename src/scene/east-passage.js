@@ -8,6 +8,7 @@ import {
   W, H, LOOP, TAU, frac, clamp, lerp, smooth, wave, step, cycle, scroll,
   hash, rng, bayer, hex, makeCanvas, makeHalo, drawHalo, reflect, streak, text,
 } from "../engine/core.js";
+import { mixPalette, projectSky } from "../engine/solar.js";
 
 let ctx;
 
@@ -17,7 +18,17 @@ const DECK = 198;
 const MOON = { x: 86, y: 26 };
 const LIGHT = { cx: 428, base: 196, lantern: 62, w: 16 };
 const LAMP = { x: 64, arm: 52, top: 118 };
-const FOCUS = 348;
+const FOCUS = 412;
+
+let SKY = {
+  phase: "night",
+  day: 0,
+  night: 1,
+  twilight: 0.2,
+  tagline: "Fog on the harbor",
+  sun: { alt: -30, az: 300 },
+  moon: { alt: 40, az: 90 },
+};
 
 const RGB = {};
 const rgbOf = (h) => RGB[h] || (RGB[h] = hex(h));
@@ -71,28 +82,71 @@ function pline(x0, y0, x1, y1, col) {
   }
 }
 
+function tintSheet(src, fill) {
+  const [c, x] = makeCanvas(src.width, src.height);
+  x.drawImage(src, 0, 0);
+  x.globalCompositeOperation = "source-atop";
+  x.fillStyle = fill;
+  x.fillRect(0, 0, src.width, src.height);
+  return c;
+}
+
 const gust = (t) => clamp(0.38 + 0.28 * wave(t, 4, 0.18) + 0.16 * wave(t, 11, 0.61) + 0.1 * wave(t, 23, 0.07), 0, 1);
 
 /* ================= Sky ================= */
-const SKY = [
+const PAL_NIGHT = [
   "#07080e", "#0a0d14", "#0e121c", "#121824", "#171e2c", "#1c2534",
   "#232c3c", "#2a3442", "#323a44", "#3c403c", "#4a4438", "#5a4c38",
 ].map(hex);
+const PAL_DAWN = [
+  "#1a1838", "#24204c", "#3a2c5c", "#5c4068", "#8a5a70", "#c07868",
+  "#e09870", "#f0b888", "#ecc8a0", "#d4c4a0", "#b0a888", "#8a8870",
+].map(hex);
+const PAL_DAY = [
+  "#5a94c4", "#6aa0cc", "#7aadd4", "#8cb8dc", "#a0c6e4", "#b4d2e8",
+  "#c4dbe8", "#d0e0e4", "#d4dcc8", "#c8c8a8", "#b4b894", "#9eaa88",
+].map(hex);
+const PAL_DUSK = [
+  "#141428", "#1c1838", "#302040", "#582848", "#8a3848", "#c05040",
+  "#e07848", "#f09858", "#e8a878", "#c09070", "#887060", "#5a5048",
+].map(hex);
 
-function renderSky() {
+function paletteFor(sky) {
+  const tw = sky.sun.az < 180 ? PAL_DAWN : PAL_DUSK;
+  if (sky.sun.alt >= 10) return PAL_DAY;
+  if (sky.sun.alt >= 0) return mixPalette(tw, PAL_DAY, sky.sun.alt / 10);
+  if (sky.sun.alt >= -12) return mixPalette(PAL_NIGHT, tw, (sky.sun.alt + 12) / 12);
+  return PAL_NIGHT;
+}
+
+function bodyProject(body) {
+  return projectSky(body.alt, body.az, HOR, W);
+}
+
+let skyCache = { key: "", c: null };
+
+function renderSkySheet(sky) {
+  const pal = paletteFor(sky);
+  const sunP = bodyProject(sky.sun);
+  const moonP = bodyProject(sky.moon);
   const [c, x] = makeCanvas(W, H);
   const img = x.createImageData(W, H);
   const d = img.data;
   for (let y = 0; y < H; y++) {
     for (let i = 0; i < W; i++) {
       let v = Math.pow(Math.min(1, y / 160), 1.25) * 0.78;
-      v += Math.max(0, 1 - Math.hypot((i - 90) / 220, (y - 28) / 70)) * 0.18;
-      v += Math.max(0, 1 - Math.hypot((i - 70) / 160, (y - 190) / 90)) * 0.22;
-      v += Math.max(0, 1 - Math.hypot((i - 428) / 90, (y - 80) / 80)) * 0.14;
-      const f = clamp(v, 0, 1) * (SKY.length - 1);
+      if (sky.sun.alt > -8) {
+        v += Math.max(0, 1 - Math.hypot((i - sunP.x) / 220, (y - sunP.y) / 70)) * (0.22 + 0.35 * sky.day);
+      }
+      if (sky.moon.alt > 0 && sky.night > 0.15) {
+        v += Math.max(0, 1 - Math.hypot((i - moonP.x) / 200, (y - moonP.y) / 70)) * 0.16 * sky.night;
+      }
+      v += Math.max(0, 1 - Math.hypot((i - 70) / 160, (y - 190) / 90)) * 0.12 * (0.4 + 0.6 * sky.night);
+      v += Math.max(0, 1 - Math.hypot((i - 428) / 90, (y - 80) / 80)) * 0.1 * (0.3 + 0.7 * sky.night);
+      const f = clamp(v, 0, 1) * (pal.length - 1);
       let k = Math.floor(f);
       if (f - k > bayer(i, y)) k++;
-      const col = SKY[Math.min(k, SKY.length - 1)];
+      const col = pal[Math.min(k, pal.length - 1)];
       const o = (y * W + i) * 4;
       d[o] = col[0];
       d[o + 1] = col[1];
@@ -104,6 +158,13 @@ function renderSky() {
   return c;
 }
 
+function skySheet(sky) {
+  const key = `${sky.phase}:${Math.round(sky.sun.alt * 2)}:${Math.round(sky.sun.az / 4)}`;
+  if (skyCache.key === key) return skyCache.c;
+  skyCache = { key, c: renderSkySheet(sky) };
+  return skyCache.c;
+}
+
 const STARS = [];
 {
   const r = rng(41);
@@ -113,6 +174,23 @@ const STARS = [];
     if (Math.hypot(x - MOON.x, y - MOON.y) < 18) continue;
     STARS.push({ x, y, k: 11 + Math.floor(r() * 70), ph: r(), b: 0.22 + r() * 0.55 });
   }
+}
+
+function renderSun() {
+  const R = 8;
+  const s = R * 2 + 1;
+  const p = painter(s, s);
+  for (let y = 0; y < s; y++) {
+    for (let i = 0; i < s; i++) {
+      const dd = Math.hypot(i - R, y - R);
+      if (dd > R + 0.2) continue;
+      let col = "#fff6c4";
+      if (dd > R - 2) col = "#f0c060";
+      if (dd > R - 1) col = "#e8a038";
+      p.set(i, y, col);
+    }
+  }
+  return p.done();
 }
 
 function renderMoon() {
@@ -201,7 +279,7 @@ const CLOUDS = [
 ].map(makeCloudLayer);
 
 /* ================= Far shore ================= */
-function farCottage(p, cx, ridgeY, w, h, lit) {
+function farCottage(p, cx, ridgeY, w, h, lit, lights) {
   p.rect(cx, ridgeY, w, h, "#1a1612");
   for (let i = cx; i < cx + w; i++) {
     const peak = ridgeY - Math.round((1 - Math.abs((i - cx - w / 2) / (w / 2))) * Math.min(5, 2 + w / 4));
@@ -209,9 +287,8 @@ function farCottage(p, cx, ridgeY, w, h, lit) {
     p.set(i, peak, "#3a2e22");
   }
   if (lit) {
-    p.set(cx + 2, ridgeY + 2, "#e8b058");
-    if (w > 8) p.set(cx + w - 3, ridgeY + 2, "#c89040");
-    if (h > 7) p.set(cx + Math.floor(w / 2), ridgeY + 5, "#d4a048");
+    lights.push({ x: cx + 2, y: ridgeY + 2, ph: hash(cx, ridgeY), k: 4 + (cx % 7) });
+    if (w > 8) lights.push({ x: cx + w - 3, y: ridgeY + 2, ph: hash(cx + 3, ridgeY), k: 5 + (cx % 5) });
   }
 }
 
@@ -263,15 +340,16 @@ function renderHills() {
     [322, 2, 11, 7, true],
     [344, 3, 8, 6, true],
   ];
+  const lights = [];
   for (const [cx, drop, w, h, lit] of hamlet) {
-    farCottage(p, cx, Math.round(ridge[cx]) + drop, w, h, lit);
+    farCottage(p, cx, Math.round(ridge[cx]) + drop, w, h, lit, lights);
   }
   const steepleX = 248;
   const steepleY = Math.round(ridge[steepleX]) - 2;
   p.rect(steepleX, steepleY, 5, 14, "#1c1814");
   p.rect(steepleX + 1, steepleY - 8, 3, 8, "#2a2218");
   p.set(steepleX + 2, steepleY - 10, "#3a2c20");
-  p.set(steepleX + 2, steepleY + 4, "#e8b058");
+  lights.push({ x: steepleX + 2, y: steepleY + 4, ph: 0.4, k: 6 });
 
   for (const px of [132, 186, 266]) {
     const y = HOR - 2;
@@ -279,12 +357,10 @@ function renderHills() {
     for (let k = 0; k < 6; k++) p.rect(px + 2 + k * 5, y, 2, 5, "#141210");
   }
 
-  const lights = [];
-  for (let n = 0; n < 46; n++) {
+  for (let n = 0; n < 28; n++) {
     const x = 12 + Math.floor(r() * 350);
     const y = Math.round(ridge[x]) + 2 + Math.floor(r() * 8);
     lights.push({ x, y, ph: r(), k: 3 + Math.floor(r() * 9) });
-    p.set(x, y, "#c8a060");
   }
   const sheet = p.done();
   return { sheet, lights };
@@ -323,7 +399,7 @@ function renderSpit() {
   }
   p.rect(404, 168, 4, 10, "#3a3428");
   p.rect(403, 166, 6, 3, "#2a241c");
-  windowPane(p, 394, 184, true);
+  windowPane(p, 394, 184, false);
   windowPane(p, 394, 172, false);
   p.rect(386, 198, 26, 1, "#4a4438");
   for (let x = 388; x < 410; x += 4) p.rect(x, 194, 1, 4, "#3a342c");
@@ -404,8 +480,8 @@ function renderVillage() {
     p.set(i, y, "#5a4834");
   }
   p.rect(6, 175, 56, 2, "#2a2018");
-  windowPane(p, 16, 184, true);
-  windowPane(p, 38, 184, true);
+  windowPane(p, 16, 184, false);
+  windowPane(p, 38, 184, false);
   windowPane(p, 16, 196, false);
   p.rect(28, 196, 8, 12, "#1c1610");
   p.set(34, 202, "#c89040");
@@ -422,13 +498,13 @@ function renderVillage() {
   p.rect(107, 138, 8, 3, "#2a2418");
   p.rect(42, 160, 5, 10, "#3a3024");
   p.rect(41, 158, 7, 3, "#2a2418");
-  windowPane(p, 68, 176, true);
-  windowPane(p, 88, 176, true);
-  windowPane(p, 108, 176, true);
-  windowPane(p, 78, 164, true);
+  windowPane(p, 68, 176, false);
+  windowPane(p, 88, 176, false);
+  windowPane(p, 108, 176, false);
+  windowPane(p, 78, 164, false);
   windowPane(p, 98, 164, false);
   windowPane(p, 68, 192, false);
-  windowPane(p, 88, 192, true);
+  windowPane(p, 88, 192, false);
   p.rect(74, 170, 9, 5, "#c8a068");
   p.rect(76, 171, 5, 3, "#5a4030");
   p.set(78, 172, "#3a2c20");
@@ -443,7 +519,7 @@ function renderVillage() {
     p.line(i, y, i, 184, "#3a2e22");
     p.set(i, y, "#4a3c2c");
   }
-  windowPane(p, 130, 190, true);
+  windowPane(p, 130, 190, false);
 
   p.rect(148, 186, 26, 22, "#2a221a");
   shakeWall(p, 148, 190, 26, 18, "#221a14", "#30261c", "#3a2c22");
@@ -452,12 +528,12 @@ function renderVillage() {
     p.line(i, y, i, 190, "#3a2e22");
     p.set(i, y, "#4a3c2c");
   }
-  windowPane(p, 154, 194, true);
+  windowPane(p, 154, 194, false);
   p.rect(166, 198, 6, 10, "#1a1410");
 
   p.rect(0, 186, 10, 22, "#241c16");
   shakeWall(p, 0, 190, 10, 18, "#1c1610", "#2a2218", "#32281e");
-  windowPane(p, 1, 194, true);
+  windowPane(p, 1, 194, false);
 
   for (let n = 0; n < 14; n++) {
     p.line(12 + n * 2, 196, 22 + n * 4, 218, n & 1 ? "#4a4034" : "#2e281e");
@@ -595,7 +671,7 @@ function renderDock() {
     p.line(i, y, i, DECK - 16, "#3a2e22");
     p.set(i, y, "#4a3c2c");
   }
-  windowPane(p, 306, DECK - 14, true);
+  windowPane(p, 306, DECK - 14, false);
   p.rect(318, DECK - 4, 6, 4, "#3a3228");
   return p.done();
 }
@@ -779,19 +855,26 @@ function renderVignette() {
 }
 
 /* ================= Prerender ================= */
-let SKY_C, MOON_C, HILLS, SPIT_C, LIGHT_C, VILLAGE_C, DOCK_C, TRAPS_C, CRATE_C, COIL_C, BARREL_C;
+let MOON_C, SUN_C, HILLS, SPIT_C, LIGHT_C, VILLAGE_C, DOCK_C, TRAPS_C, CRATE_C, COIL_C, BARREL_C;
 let LOBSTER_C, SKIFF_C, FERRY_C, BUOY_C, CAT_C, VIG_C;
+let HILLS_DAY, SPIT_DAY, LIGHT_DAY, VILLAGE_DAY, DOCK_DAY;
 let GULLS, WALK_R, WALK_L;
-let HALO_MOON, HALO_WIN, HALO_LAMP, HALO_BEAM, HALO_BUOY, HALO_WARM;
+let HALO_MOON, HALO_SUN, HALO_WIN, HALO_LAMP, HALO_BEAM, HALO_BUOY, HALO_WARM;
 
 function prerender() {
-  SKY_C = renderSky();
   MOON_C = renderMoon();
+  SUN_C = renderSun();
   HILLS = renderHills();
   SPIT_C = renderSpit();
   LIGHT_C = renderLighthouse();
   VILLAGE_C = renderVillage();
   DOCK_C = renderDock();
+  const dayWash = "rgba(214, 196, 140, 0.42)";
+  HILLS_DAY = tintSheet(HILLS.sheet, dayWash);
+  SPIT_DAY = tintSheet(SPIT_C, dayWash);
+  LIGHT_DAY = tintSheet(LIGHT_C, "rgba(220, 210, 180, 0.28)");
+  VILLAGE_DAY = tintSheet(VILLAGE_C, dayWash);
+  DOCK_DAY = tintSheet(DOCK_C, "rgba(210, 190, 140, 0.32)");
   TRAPS_C = renderTraps();
   CRATE_C = renderCrate();
   COIL_C = renderCoil();
@@ -806,6 +889,7 @@ function prerender() {
   WALK_R = [0, 1, 2, 3].map((f) => renderWalker(f, false));
   WALK_L = [0, 1, 2, 3].map((f) => renderWalker(f, true));
   HALO_MOON = makeHalo(26, "#f0ece0", 0.32, 1.6, 6);
+  HALO_SUN = makeHalo(28, "#ffe08a", 0.45, 1.5, 6);
   HALO_WIN = makeHalo(16, "#f4c878", 0.68, 1.7, 6);
   HALO_LAMP = makeHalo(20, "#f4d078", 0.74, 1.6, 6);
   HALO_BEAM = makeHalo(40, "#f8e8b0", 0.42, 2.1, 6);
@@ -815,9 +899,14 @@ function prerender() {
 
 /* ================= Frame ================= */
 function drawStars(t) {
+  if (SKY.night < 0.2) return;
   ctx.fillStyle = "#e8e4d8";
+  const moonP = bodyProject(SKY.moon);
+  const sunP = bodyProject(SKY.sun);
   for (const s of STARS) {
-    const a = s.b * (0.45 + 0.55 * (0.5 + 0.5 * wave(t, s.k, s.ph)));
+    if (SKY.moon.alt > 0 && Math.hypot(s.x - moonP.x, s.y - moonP.y) < 16) continue;
+    if (SKY.sun.alt > -6 && Math.hypot(s.x - sunP.x, s.y - sunP.y) < 20) continue;
+    const a = s.b * SKY.night * (0.45 + 0.55 * (0.5 + 0.5 * wave(t, s.k, s.ph)));
     if (a < 0.18) continue;
     ctx.globalAlpha = a;
     ctx.fillRect(s.x, s.y, 1, 1);
@@ -826,17 +915,26 @@ function drawStars(t) {
 }
 
 function drawClouds(t) {
+  const fade = 0.35 + 0.65 * SKY.night + 0.25 * SKY.twilight;
+  ctx.globalAlpha = fade;
   for (const layer of CLOUDS) {
     const ox = scroll(t, layer.k, W);
     ctx.drawImage(layer.c, ox - W, layer.y);
     ctx.drawImage(layer.c, ox, layer.y);
   }
+  ctx.globalAlpha = 1;
 }
 
 function drawHills(t) {
   ctx.drawImage(HILLS.sheet, 0, 0);
+  if (SKY.day > 0.04) {
+    ctx.globalAlpha = SKY.day;
+    ctx.drawImage(HILLS_DAY, 0, 0);
+    ctx.globalAlpha = 1;
+  }
+  if (SKY.night < 0.18) return;
   for (const L of HILLS.lights) {
-    const on = 0.55 + 0.45 * (0.5 + 0.5 * wave(t, L.k, L.ph));
+    const on = SKY.night * (0.55 + 0.45 * (0.5 + 0.5 * wave(t, L.k, L.ph)));
     if (on < 0.4) continue;
     ctx.globalAlpha = on;
     ctx.fillStyle = "#e8c878";
@@ -846,21 +944,27 @@ function drawHills(t) {
 }
 
 function drawWater(t) {
-  const pal = [
+  const palN = [
     "#081018", "#0c1620", "#101c28", "#142230", "#1a2a38",
     "#203040", "#263848", "#2c4050", "#344858", "#3a5060",
-  ];
+  ].map(hex);
+  const palD = [
+    "#3a7088", "#448098", "#4e8ca4", "#5898b0", "#62a4b8",
+    "#6cacbe", "#76b4c4", "#80bccc", "#8ac0ce", "#94c4d0",
+  ].map(hex);
+  const pal = mixPalette(palN, palD, SKY.day);
   const bottom = QUAY + 24;
   for (let y = HOR; y < bottom; y++) {
     const depth = (y - HOR) / (bottom - HOR);
     const k = Math.min(pal.length - 1, Math.floor(depth * pal.length));
-    ctx.fillStyle = pal[k];
+    const col = pal[k];
+    ctx.fillStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
     ctx.fillRect(0, y, W, 1);
-    ctx.fillStyle = "#3a5868";
+    ctx.fillStyle = SKY.day > 0.5 ? "#d8e8f0" : "#3a5868";
     ctx.globalAlpha = 0.14 + 0.12 * wave(t, 17, y * 0.02);
     const ox = Math.round(wave(t, 9, y * 0.03) * (1 + depth * 3));
     for (let i = (y * 3) % 8; i < W; i += 8) ctx.fillRect(i + ox, y, 2, 1);
-    ctx.fillStyle = "#1a3038";
+    ctx.fillStyle = SKY.day > 0.5 ? "#8ab0c0" : "#1a3038";
     ctx.globalAlpha = 0.12;
     const ox2 = Math.round(wave(t, 13, y * 0.05) * (1 + depth));
     for (let i = (y * 5) % 11; i < W; i += 11) ctx.fillRect(i + ox2, y, 3, 1);
@@ -876,19 +980,24 @@ function drawWater(t) {
     ctx.fillRect(64 + foam, y, 260, 1);
   }
   ctx.globalAlpha = 1;
-  const pathY0 = HOR + 1;
-  for (let y = pathY0; y < QUAY - 2; y++) {
-    const u = (y - pathY0) / (QUAY - pathY0);
-    const w = 2 + Math.round(u * 16);
-    const ox = Math.round(wave(t, 11, y * 0.04) * (1 + u * 2));
-    ctx.globalAlpha = 0.16 * (1 - u);
-    ctx.fillStyle = "#d8e4ec";
-    ctx.fillRect(MOON.x - Math.floor(w / 2) + ox, y, w, 1);
+  const body = SKY.day > 0.35 && SKY.sun.alt > 0 ? SKY.sun : SKY.moon;
+  if (body.alt > 0) {
+    const p = bodyProject(body);
+    const pathY0 = HOR + 1;
+    for (let y = pathY0; y < QUAY - 2; y++) {
+      const u = (y - pathY0) / (QUAY - pathY0);
+      const w = 2 + Math.round(u * 16);
+      const ox = Math.round(wave(t, 11, y * 0.04) * (1 + u * 2));
+      ctx.globalAlpha = (SKY.day > 0.35 ? 0.22 : 0.16) * (1 - u);
+      ctx.fillStyle = SKY.day > 0.35 ? "#f4e8c0" : "#d8e4ec";
+      ctx.fillRect(Math.round(p.x) - Math.floor(w / 2) + ox, y, w, 1);
+    }
   }
   ctx.globalAlpha = 1;
 }
 
 function drawBeam(t) {
+  if (SKY.night < 0.35) return;
   const ang = TAU * (t / LOOP) * 8;
   const len = 132;
   const x0 = LIGHT.cx;
@@ -900,13 +1009,13 @@ function drawBeam(t) {
     const spread = 0.28 + u * 0.7;
     const x = x0 + Math.cos(ang) * len * u;
     const y = y0 + Math.sin(ang) * 16 * u + u * 10;
-    ctx.globalAlpha = (1 - u) * 0.22;
+    ctx.globalAlpha = SKY.night * (1 - u) * 0.22;
     ctx.fillStyle = "#f8e8b0";
     const w = 2 + spread * 16;
     ctx.fillRect(Math.round(x - w / 2), Math.round(y), Math.round(w), 2);
   }
   ctx.restore();
-  drawHalo(ctx, HALO_BEAM, x0 + Math.cos(ang) * 26, y0 + Math.sin(ang) * 5, 0.75 + 0.2 * wave(t, 8, 0.2));
+  drawHalo(ctx, HALO_BEAM, x0 + Math.cos(ang) * 26, y0 + Math.sin(ang) * 5, SKY.night * (0.75 + 0.2 * wave(t, 8, 0.2)));
 }
 
 function drawSmoke(t) {
@@ -1040,12 +1149,13 @@ function drawWalker(t) {
 }
 
 function drawStringLights(t) {
+  if (SKY.night < 0.2) return;
   ctx.fillStyle = "#f0c878";
-  ctx.globalAlpha = 0.1;
+  ctx.globalAlpha = 0.1 * SKY.night;
   ctx.fillRect(80, DECK + 1, 230, 6);
   ctx.globalAlpha = 1;
   for (let x = 82; x < 318; x += 10) {
-    const glow = 0.55 + 0.45 * (0.5 + 0.5 * wave(t, 9, x * 0.03));
+    const glow = SKY.night * (0.55 + 0.45 * (0.5 + 0.5 * wave(t, 9, x * 0.03)));
     ctx.fillStyle = glow > 0.5 ? "#ffe08a" : "#b88840";
     ctx.fillRect(x, DECK - 11, 2, 1);
     if (glow > 0.48) drawHalo(ctx, HALO_WIN, x + 0.5, DECK - 10, 0.42 * glow);
@@ -1067,13 +1177,34 @@ function drawWindows(t) {
     { x: 309, y: DECK - 11 },
     { x: 397, y: 187 },
   ];
+  const n = SKY.night;
   for (const s of spots) {
-    const flicker = 0.8 + 0.2 * wave(t, 13 + (s.x & 7), s.x * 0.01);
-    drawHalo(ctx, HALO_WIN, s.x + 3, s.y + 3, flicker);
-    drawHalo(ctx, HALO_WARM, s.x + 3, s.y + 9, 0.35 * flicker);
+    if (n > 0.2) {
+      ctx.globalAlpha = n;
+      ctx.fillStyle = "#1a1610";
+      ctx.fillRect(s.x, s.y, 7, 8);
+      ctx.fillStyle = "#ffe8a8";
+      ctx.fillRect(s.x + 1, s.y + 1, 2, 2);
+      ctx.fillStyle = "#f4d078";
+      ctx.fillRect(s.x + 4, s.y + 1, 2, 2);
+      ctx.fillStyle = "#e8b050";
+      ctx.fillRect(s.x + 1, s.y + 4, 2, 3);
+      ctx.fillStyle = "#d49838";
+      ctx.fillRect(s.x + 4, s.y + 4, 2, 3);
+      ctx.fillStyle = "#fff6d0";
+      ctx.fillRect(s.x + 2, s.y + 2, 1, 1);
+      ctx.globalAlpha = 1;
+      const flicker = n * (0.8 + 0.2 * wave(t, 13 + (s.x & 7), s.x * 0.01));
+      drawHalo(ctx, HALO_WIN, s.x + 3, s.y + 3, flicker);
+      drawHalo(ctx, HALO_WARM, s.x + 3, s.y + 9, 0.35 * flicker);
+    }
   }
-  drawHalo(ctx, HALO_LAMP, LIGHT.cx, LIGHT.lantern + 2, 0.85 + 0.15 * wave(t, 8, 0.4));
-  drawHalo(ctx, HALO_MOON, MOON.x, MOON.y, 1);
+  if (n > 0.25) {
+    drawHalo(ctx, HALO_LAMP, LIGHT.cx, LIGHT.lantern + 2, n * (0.85 + 0.15 * wave(t, 8, 0.4)));
+  } else {
+    ctx.fillStyle = "#c8c0b4";
+    ctx.fillRect(LIGHT.cx - 4, LIGHT.lantern, 8, 5);
+  }
 }
 
 function drawQuayLamp(t) {
@@ -1084,18 +1215,24 @@ function drawQuayLamp(t) {
   ctx.fillStyle = "#3a3228";
   ctx.fillRect(x - 6, top + 1, 8, 1);
   ctx.fillRect(x - 8, top + 2, 5, 4);
-  ctx.fillStyle = "#f0d878";
-  ctx.fillRect(x - 7, top + 3, 3, 2);
-  drawHalo(ctx, HALO_LAMP, x - 5.5, top + 4, 0.55 + 0.2 * wave(t, 7, 0.3));
+  if (SKY.night > 0.25) {
+    ctx.fillStyle = "#f0d878";
+    ctx.fillRect(x - 7, top + 3, 3, 2);
+    drawHalo(ctx, HALO_LAMP, x - 5.5, top + 4, SKY.night * (0.55 + 0.2 * wave(t, 7, 0.3)));
+  } else {
+    ctx.fillStyle = "#8a8070";
+    ctx.fillRect(x - 7, top + 3, 3, 2);
+  }
 }
 
 function drawMist(t) {
-  ctx.fillStyle = "#c8c4bc";
+  const dens = 0.35 + 0.65 * SKY.twilight + 0.4 * SKY.night;
+  ctx.fillStyle = SKY.day > 0.5 ? "#d8dce0" : "#c8c4bc";
   const g = gust(t);
   for (let i = 0; i < 140; i++) {
     const y = HOR - 10 + (i % 22) * 3;
     const x = (scroll(t, 2, W) + i * 17 + Math.round(g * 10)) % W;
-    ctx.globalAlpha = 0.05 + 0.04 * ((i * 3) % 5 === 0 ? 1 : 0);
+    ctx.globalAlpha = dens * (0.05 + 0.04 * ((i * 3) % 5 === 0 ? 1 : 0));
     ctx.fillRect(x, y, 4 + (i % 4), 1);
   }
   ctx.globalAlpha = 1;
@@ -1140,11 +1277,25 @@ function drawForeground(t) {
   }
 }
 
-function renderFrame(t) {
-  ctx.drawImage(SKY_C, 0, 0);
+function renderFrame(t, sky) {
+  if (sky) SKY = sky;
+  const sunP = bodyProject(SKY.sun);
+  const moonP = bodyProject(SKY.moon);
+  ctx.drawImage(skySheet(SKY), 0, 0);
   drawStars(t);
-  ctx.drawImage(MOON_C, MOON.x - 7, MOON.y - 7);
-  drawHalo(ctx, HALO_MOON, MOON.x, MOON.y, 1);
+  if (SKY.sun.alt > -3) {
+    const a = clamp((SKY.sun.alt + 3) / 8, 0, 1);
+    drawHalo(ctx, HALO_SUN, sunP.x, sunP.y, a);
+    ctx.globalAlpha = a;
+    ctx.drawImage(SUN_C, Math.round(sunP.x) - 8, Math.round(sunP.y) - 8);
+    ctx.globalAlpha = 1;
+  }
+  if (SKY.moon.alt > -2 && SKY.night > 0.12) {
+    ctx.globalAlpha = clamp(SKY.night + 0.2, 0, 1);
+    ctx.drawImage(MOON_C, Math.round(moonP.x) - 7, Math.round(moonP.y) - 7);
+    drawHalo(ctx, HALO_MOON, moonP.x, moonP.y, SKY.night);
+    ctx.globalAlpha = 1;
+  }
   drawClouds(t);
   drawHills(t);
   drawWater(t);
@@ -1157,34 +1308,53 @@ function renderFrame(t) {
   ctx.drawImage(SPIT_C, 0, 0);
   ctx.drawImage(LIGHT_C, 0, 0);
   ctx.drawImage(VILLAGE_C, 0, 0);
+  if (SKY.day > 0.04) {
+    ctx.globalAlpha = SKY.day;
+    ctx.drawImage(SPIT_DAY, 0, 0);
+    ctx.drawImage(LIGHT_DAY, 0, 0);
+    ctx.drawImage(VILLAGE_DAY, 0, 0);
+    ctx.globalAlpha = 1;
+  }
   drawQuayLamp(t);
   drawSmoke(t);
   drawFlag(t);
   ctx.drawImage(DOCK_C, 0, 0);
+  if (SKY.day > 0.04) {
+    ctx.globalAlpha = SKY.day;
+    ctx.drawImage(DOCK_DAY, 0, 0);
+    ctx.globalAlpha = 1;
+  }
   drawStringLights(t);
   drawBoats(t);
-  reflect(ctx, t, { top: HOR, rows: 54, squash: 1.6, alpha: 0.56, k1: 41, k2: 97, amp: 0.66, grow: 0.045 });
-  streak(ctx, t, LIGHT.cx, 3.6, "#f0d878", 0.52, 1.1, HOR, HOR + 52);
-  streak(ctx, t, 20, 1.8, "#f0c060", 0.36, 2.2, HOR, HOR + 34);
-  streak(ctx, t, 42, 1.6, "#e8b868", 0.3, 2.6, HOR, HOR + 32);
-  streak(ctx, t, 72, 2.0, "#f0c060", 0.34, 2.8, HOR, HOR + 36);
-  streak(ctx, t, 92, 1.8, "#e8b868", 0.3, 3.0, HOR, HOR + 34);
-  streak(ctx, t, 134, 1.6, "#e0b060", 0.28, 3.6, HOR, HOR + 30);
-  streak(ctx, t, 158, 1.4, "#e0b060", 0.26, 4.2, HOR, HOR + 28);
-  streak(ctx, t, LAMP.x - 5, 2.2, "#f4d078", 0.38, 2.0, HOR, HOR + 38);
-  streak(ctx, t, 310, 1.6, "#e8b868", 0.28, 3.4, HOR, HOR + 30);
-  streak(ctx, t, 400, 1.5, "#e8b868", 0.28, 3.2, HOR, HOR + 32);
-  streak(ctx, t, 358, 1.2, "#e05040", 0.18, 4.0, HOR, HOR + 24);
-  for (let x = 82; x < 318; x += 18) {
-    streak(ctx, t, x, 0.9, "#f2d078", 0.18, 5.0 + (x % 7), HOR, HOR + 22);
+  reflect(ctx, t, { top: HOR, rows: 54, squash: 1.6, alpha: 0.42 + 0.14 * SKY.night, k1: 41, k2: 97, amp: 0.66, grow: 0.045 });
+  const glow = 0.2 + 0.8 * SKY.night;
+  if (glow > 0.25) {
+    streak(ctx, t, LIGHT.cx, 3.6, "#f0d878", 0.52 * glow, 1.1, HOR, HOR + 52);
+    streak(ctx, t, 20, 1.8, "#f0c060", 0.36 * glow, 2.2, HOR, HOR + 34);
+    streak(ctx, t, 42, 1.6, "#e8b868", 0.3 * glow, 2.6, HOR, HOR + 32);
+    streak(ctx, t, 72, 2.0, "#f0c060", 0.34 * glow, 2.8, HOR, HOR + 36);
+    streak(ctx, t, 92, 1.8, "#e8b868", 0.3 * glow, 3.0, HOR, HOR + 34);
+    streak(ctx, t, 134, 1.6, "#e0b060", 0.28 * glow, 3.6, HOR, HOR + 30);
+    streak(ctx, t, 158, 1.4, "#e0b060", 0.26 * glow, 4.2, HOR, HOR + 28);
+    streak(ctx, t, LAMP.x - 5, 2.2, "#f4d078", 0.38 * glow, 2.0, HOR, HOR + 38);
+    streak(ctx, t, 310, 1.6, "#e8b868", 0.28 * glow, 3.4, HOR, HOR + 30);
+    streak(ctx, t, 400, 1.5, "#e8b868", 0.28 * glow, 3.2, HOR, HOR + 32);
+    streak(ctx, t, 358, 1.2, "#e05040", 0.18 * glow, 4.0, HOR, HOR + 24);
+    for (let x = 82; x < 318; x += 18) {
+      streak(ctx, t, x, 0.9, "#f2d078", 0.18 * glow, 5.0 + (x % 7), HOR, HOR + 22);
+    }
+  } else if (SKY.sun.alt > 0) {
+    streak(ctx, t, sunP.x, 4.2, "#f0e0a0", 0.28, 1.4, HOR, HOR + 48);
   }
   drawWindows(t);
   drawGulls(t);
   drawWalker(t);
   drawMist(t);
-  drawRain(t);
+  if (SKY.night > 0.15 || SKY.twilight > 0.4) drawRain(t);
   drawForeground(t);
+  ctx.globalAlpha = 0.3 + 0.7 * SKY.night;
   ctx.drawImage(VIG_C, 0, 0);
+  ctx.globalAlpha = 1;
 }
 
 const GULL_T = [18, 64, 112, 168, 214];
