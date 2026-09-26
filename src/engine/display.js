@@ -2,7 +2,7 @@ import { W, H, clamp } from "./core.js";
 
 /**
  * Present a 480×270 buffer on the full-window screen canvas.
- * Tall / portrait: fill height, crop sides (lighthouse default; touch-drag to pan).
+ * Tall / portrait: fill height, crop sides (lighthouse default; drag/swipe to pan).
  * Landscape: integer-preferring nearest-neighbor contain, dimmed bars.
  */
 export function createDisplay(canvas) {
@@ -119,6 +119,8 @@ export function createDisplay(canvas) {
       sctx.fillRect(0, 0, cw, ch);
     }
     sctx.drawImage(buf, L.sx, L.sy, L.sw, L.sh, L.dx, L.dy, L.dw, L.dh);
+    canvas.dataset.sx = String(L.sx);
+    canvas.dataset.cover = L.cover ? "1" : "0";
   }
 
   function bindPan(el) {
@@ -128,11 +130,53 @@ export function createDisplay(canvas) {
     let lastMoveT = 0;
     let axis = null;
 
+    const moveOpts = { passive: false, capture: true };
+
+    const onMove = (e) => {
+      if (pid == null || e.pointerId !== pid) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      if (axis == null) {
+        if (Math.hypot(dx, dy) < 8) return;
+        axis = Math.abs(dx) >= Math.abs(dy) * 1.15 ? "x" : "none";
+      }
+      if (axis !== "x") return;
+      e.preventDefault();
+      const now = performance.now();
+      const dt = Math.max(8, now - lastMoveT);
+      const { cssH } = viewSize();
+      const dScene = dx * (H / cssH);
+      const m = coverMetrics(lastFocus);
+      camX = clamp((camX ?? m.def) - dScene, 0, m.maxSx);
+      vx = dScene / dt;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      lastMoveT = now;
+    };
+
+    const onEnd = (e) => {
+      if (pid == null || e.pointerId !== pid) return;
+      pid = null;
+      dragging = false;
+      lastTick = performance.now();
+      if (axis !== "x") vx = 0;
+      else if (camX != null) camX = Math.round(clamp(camX, 0, coverMetrics(lastFocus).maxSx));
+      axis = null;
+      window.removeEventListener("pointermove", onMove, moveOpts);
+      window.removeEventListener("pointerup", onEnd, true);
+      window.removeEventListener("pointercancel", onEnd, true);
+      try {
+        if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId);
+      } catch {
+        /* already released */
+      }
+    };
+
     el.addEventListener("pointerdown", (e) => {
-      if (e.isPrimary === false) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
       const m = coverMetrics(lastFocus);
       if (!m.cover || m.maxSx <= 0) return;
+      if (pid != null) return;
       pid = e.pointerId;
       lastX = e.clientX;
       lastY = e.clientY;
@@ -141,52 +185,23 @@ export function createDisplay(canvas) {
       vx = 0;
       dragging = true;
       if (camX == null) camX = m.def;
+      window.addEventListener("pointermove", onMove, moveOpts);
+      window.addEventListener("pointerup", onEnd, true);
+      window.addEventListener("pointercancel", onEnd, true);
       try {
-        el.setPointerCapture(pid);
+        el.setPointerCapture(e.pointerId);
       } catch {
-        /* capture optional */
+        /* synthetic events have no active pointer */
       }
     });
 
     el.addEventListener(
-      "pointermove",
+      "touchmove",
       (e) => {
-        if (pid !== e.pointerId) return;
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        if (axis == null) {
-          if (Math.hypot(dx, dy) < 8) return;
-          axis = Math.abs(dx) >= Math.abs(dy) * 1.15 ? "x" : "none";
-          if (axis !== "x") return;
-        }
-        if (axis !== "x") return;
-        e.preventDefault();
-        const now = performance.now();
-        const dt = Math.max(8, now - lastMoveT);
-        const { cssH } = viewSize();
-        const dScene = dx * (H / cssH);
-        const m = coverMetrics(lastFocus);
-        camX = clamp((camX ?? m.def) - dScene, 0, m.maxSx);
-        vx = dScene / dt;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        lastMoveT = now;
+        if (dragging && axis === "x") e.preventDefault();
       },
       { passive: false },
     );
-
-    const end = (e) => {
-      if (pid !== e.pointerId) return;
-      pid = null;
-      dragging = false;
-      lastTick = performance.now();
-      if (axis !== "x") vx = 0;
-      else if (camX != null) camX = clamp(camX, 0, coverMetrics(lastFocus).maxSx);
-      axis = null;
-    };
-    el.addEventListener("pointerup", end);
-    el.addEventListener("pointercancel", end);
-    el.addEventListener("lostpointercapture", end);
   }
 
   return { resize, present, layout, bindPan };
