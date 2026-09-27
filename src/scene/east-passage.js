@@ -1,8 +1,7 @@
 /**
- * East Passage — a quiet New England fishing village after dark.
- * Fog over the harbor, a working wharf, lobster traps, a granite light on the spit.
- *
- * Original Canvas2D painter for downeast.dev. Deterministic 240 s loop.
+ * East Passage — a quiet New England harbor after Warren, Rhode Island.
+ * East Bay waterfront massing (Main Street civic row, working wharf, granite light)
+ * as original 480×270 pixel art. Deterministic 240 s loop.
  */
 import {
   W, H, LOOP, TAU, frac, clamp, lerp, smooth, wave, step, cycle, scroll,
@@ -315,14 +314,25 @@ function renderHills() {
       p.set(i, y, col);
     }
   }
-  for (let n = 0; n < 112; n++) {
-    const x = 4 + Math.floor(r() * 400);
-    const y = Math.round(ridge[x]) - 8 - Math.floor(r() * 6);
-    const h = 9 + Math.floor(r() * 8);
-    for (let k = 0; k < h; k++) {
-      const w = Math.max(1, Math.round((1 - k / h) * (2 + (n % 4))));
-      p.rect(x - w, y + k, w * 2 + 1, 1, k < 2 ? "#1e261a" : k < 5 ? "#161c14" : "#12160e");
+  const farLeaf = ["#1a2216", "#151c12", "#10160e"];
+  for (let n = 0; n < 26; n++) {
+    const x = 8 + Math.floor(r() * 332);
+    const y = Math.round(ridge[x]) - 5 - Math.floor(r() * 4);
+    const s = 6 + Math.floor(r() * 5);
+    for (let k = 0; k < s; k++) {
+      const u = k / s;
+      const w = Math.max(2, Math.round((1 - u * u) * (2.4 + s * 0.26)));
+      p.rect(x - w, y + k, w * 2 + 1, 1, u < 0.22 ? farLeaf[0] : u < 0.55 ? farLeaf[1] : farLeaf[2]);
     }
+  }
+  for (const [cx, s] of [[30, 11], [68, 9], [108, 12], [152, 10], [198, 9], [244, 11], [286, 8], [324, 9]]) {
+    const cy = HOR - 11 - (s - 8);
+    for (let k = 0; k < s; k++) {
+      const u = k / s;
+      const w = Math.max(3, Math.round((1 - u * u * 0.82) * (3.2 + s * 0.2)));
+      p.rect(cx - w, cy + k, w * 2 + 1, 1, u < 0.18 ? "#1c2618" : u < 0.5 ? "#161e14" : "#12180f");
+    }
+    p.rect(cx, cy + s - 1, 2, Math.max(1, HOR - (cy + s) + 1), "#1a1610");
   }
   const hamlet = [
     [8, 2, 10, 6, true],
@@ -358,9 +368,10 @@ function renderHills() {
   }
   const steepleX = 248;
   const steepleY = Math.round(ridge[steepleX]) - 2;
-  p.rect(steepleX, steepleY, 5, 14, "#1c1814");
-  p.rect(steepleX + 1, steepleY - 8, 3, 8, "#2a2218");
-  p.set(steepleX + 2, steepleY - 10, "#3a2c20");
+  p.rect(steepleX, steepleY, 5, 12, "#2a241c");
+  p.rect(steepleX + 1, steepleY - 7, 3, 7, "#c8c0b4");
+  p.set(steepleX + 2, steepleY - 10, "#d8d0c4");
+  p.set(steepleX + 2, steepleY - 12, "#e8e0d4");
   lights.push({ x: steepleX + 2, y: steepleY + 4, ph: 0.4, k: 6 });
 
   for (const px of [108, 132, 158, 186, 222, 266, 304]) {
@@ -496,171 +507,275 @@ function windowPane(p, x, y, lit) {
   p.rect(x, y + 3, 7, 1, "#2a2418");
 }
 
+function clapboard(p, x0, y0, w, h, dark, mid, lite) {
+  for (let y = y0; y < y0 + h; y++) {
+    const stripe = ((y - y0) & 1) === 0;
+    for (let i = x0; i < x0 + w; i++) {
+      p.set(i, y, hash(i, y, 5) > 0.94 ? dark : stripe ? mid : lite);
+    }
+  }
+  p.rect(x0, y0, 1, h, lite);
+  p.rect(x0 + w - 1, y0, 1, h, dark);
+}
+
+function brickBond(p, x0, y0, w, h, dark, mid, lite) {
+  for (let y = y0; y < y0 + h; y++) {
+    const row = Math.floor((y - y0) / 2);
+    const odd = row & 1;
+    for (let i = x0; i < x0 + w; i++) {
+      const mortar = ((y - y0) & 1) === 0 || ((i + odd * 2) % 4 === 0);
+      p.set(i, y, mortar ? dark : ((i + odd + row) & 2 ? mid : lite));
+    }
+  }
+}
+
+function ashlar(p, x0, y0, w, h, dark, mid, lite) {
+  for (let y = y0; y < y0 + h; y++) {
+    for (let i = x0; i < x0 + w; i++) {
+      const mortar = ((i - x0) % 5 === 0) || ((y - y0) % 3 === 0);
+      const block = Math.floor((i - x0) / 5) + Math.floor((y - y0) / 3);
+      p.set(i, y, mortar ? dark : (block & 1 ? mid : lite));
+    }
+  }
+}
+
+function cornice(p, x, y, w) {
+  p.rect(x - 1, y, w + 2, 1, "#c8b89a");
+  p.rect(x, y + 1, w, 1, "#3a3228");
+}
+
+function gable(p, x0, x1, eavesY, peakH, leftCol, rightCol, ridgeCol) {
+  const mid = (x0 + x1) / 2;
+  const hw = Math.max(1, (x1 - x0) / 2);
+  for (let i = x0; i < x1; i++) {
+    const y = eavesY - Math.round((1 - Math.abs((i - mid) / hw)) * peakH);
+    p.line(i, y, i, eavesY, i < mid ? leftCol : rightCol);
+    p.set(i, y, ridgeCol);
+  }
+}
+
+function chimney(p, x, y, h, brick) {
+  p.rect(x, y, 5, h, brick ? "#6a3a32" : "#4a4438");
+  p.rect(x - 1, y, 7, 2, brick ? "#5a3028" : "#3a342c");
+  p.set(x + 1, y - 1, "#2a241c");
+}
+
+function sash(p, x, y, lit, w = 5, h = 7) {
+  p.rect(x, y, w, h, "#1a1610");
+  p.rect(x + 1, y + 1, w - 2, h - 2, lit ? "#ffe8a8" : "#141820");
+  p.rect(x + (w >> 1), y, 1, h, "#2a2418");
+  p.rect(x, y + (h >> 1), w, 1, "#2a2418");
+}
+
+function storefront(p, x, y, w, h) {
+  p.rect(x, y, w, h, "#1a1610");
+  p.rect(x + 1, y + 1, w - 2, h - 2, "#141820");
+  p.rect(x + (w >> 1), y, 1, h, "#2a2418");
+  p.rect(x, y + 3, w, 1, "#2a2418");
+  p.rect(x - 1, y - 2, w + 2, 2, "#3a3228");
+}
+
+function stoop(p, x, y, w) {
+  p.rect(x, y, w, 2, "#6a6458");
+  p.rect(x + 1, y + 2, w - 2, 2, "#5a5448");
+}
+
+function column(p, x, y, h) {
+  p.rect(x, y, 2, h, "#ece4d8");
+  p.rect(x - 1, y, 4, 2, "#f4ece0");
+  p.rect(x - 1, y + h - 2, 4, 2, "#d8d0c4");
+}
+
+function palings(p, x0, x1, y) {
+  p.rect(x0, y, x1 - x0, 1, "#3a3830");
+  for (let x = x0; x < x1; x += 3) p.rect(x, y, 1, 5, "#2a2824");
+}
+
+function streetTree(p, cx, base, h) {
+  p.rect(cx, base - Math.floor(h * 0.42), 2, Math.floor(h * 0.42), "#2a2218");
+  const top = base - h;
+  const s = Math.floor(h * 0.6);
+  for (let k = 0; k < s; k++) {
+    const u = k / s;
+    const w = Math.max(2, Math.round((1 - u * u) * (h * 0.2)));
+    p.rect(cx - w + 1, top + k, w * 2, 1, u < 0.2 ? "#24301c" : u < 0.55 ? "#1c2818" : "#162012");
+  }
+}
+
+function paintMaxwell(p) {
+  brickBond(p, 8, 168, 28, 36, "#4a2c26", "#6a3a32", "#7a4840");
+  gable(p, 7, 37, 168, 18, "#5a3028", "#4a2820", "#3a2018");
+  chimney(p, 19, 146, 14, true);
+  cornice(p, 8, 167, 28);
+  sash(p, 11, 174, false);
+  sash(p, 24, 174, false);
+  sash(p, 11, 188, false);
+  sash(p, 24, 188, false);
+  p.rect(18, 190, 7, 14, "#1c1610");
+  p.rect(19, 191, 5, 4, "#141820");
+  stoop(p, 16, 202, 11);
+}
+
+function paintTownHall(p) {
+  brickBond(p, 38, 108, 14, 96, "#4a2824", "#6a3830", "#7a443c");
+  cornice(p, 38, 122, 14);
+  cornice(p, 38, 154, 14);
+  p.rect(40, 104, 10, 5, "#2a5848");
+  for (let i = 40; i < 50; i++) {
+    const y = 96 - Math.round((1 - Math.abs((i - 45) / 5)) * 8);
+    p.line(i, y, i, 104, i < 45 ? "#3a6a58" : "#2a5848");
+    p.set(i, y, "#4a8a70");
+  }
+  p.rect(44, 88, 2, 8, "#2a4038");
+  p.set(44, 86, "#4a8a70");
+  sash(p, 42, 128, false, 6, 8);
+  sash(p, 42, 160, false, 6, 8);
+  sash(p, 42, 184, false, 6, 8);
+  brickBond(p, 50, 148, 24, 56, "#4a2824", "#6a3830", "#7a443c");
+  p.rect(50, 142, 24, 6, "#3a4038");
+  gable(p, 50, 74, 142, 6, "#4a5048", "#3a4038", "#2a3028");
+  cornice(p, 50, 147, 24);
+  chimney(p, 66, 134, 12, true);
+  sash(p, 54, 156, false);
+  sash(p, 64, 156, false);
+  sash(p, 54, 170, false);
+  sash(p, 64, 170, false);
+  sash(p, 54, 184, false);
+  sash(p, 64, 184, false);
+  p.rect(58, 190, 7, 14, "#1c1610");
+  p.rect(59, 191, 5, 3, "#141820");
+  stoop(p, 56, 202, 11);
+}
+
+function paintMethodist(p) {
+  clapboard(p, 74, 158, 40, 46, "#8a8278", "#c8c0b4", "#dcd4c8");
+  cornice(p, 74, 157, 40);
+  gable(p, 74, 114, 158, 14, "#e8e0d4", "#d0c8bc", "#f0e8dc");
+  p.rect(79, 168, 30, 32, "#b0a898");
+  p.rect(78, 200, 32, 4, "#d8d0c4");
+  column(p, 80, 168, 34);
+  column(p, 88, 168, 34);
+  column(p, 96, 168, 34);
+  column(p, 104, 168, 34);
+  p.rect(92, 184, 8, 18, "#2a241c");
+  p.rect(94, 186, 4, 6, "#141820");
+  p.set(98, 196, "#c89040");
+  stoop(p, 90, 202, 12);
+  palings(p, 74, 80, 198);
+  palings(p, 114, 118, 198);
+  sash(p, 76, 170, false);
+  sash(p, 76, 184, false);
+  sash(p, 108, 170, false);
+  sash(p, 108, 184, false);
+  const sx = 89;
+  p.rect(sx, 128, 12, 30, "#e0d8cc");
+  p.rect(sx + 1, 132, 3, 5, "#1a1610");
+  p.rect(sx + 7, 132, 3, 5, "#1a1610");
+  cornice(p, sx, 127, 12);
+  p.rect(sx + 1, 114, 10, 14, "#ece4d8");
+  p.rect(sx + 3, 118, 3, 6, "#1a1610");
+  p.rect(sx + 7, 118, 3, 6, "#1a1610");
+  cornice(p, sx + 1, 113, 10);
+  p.rect(sx + 2, 102, 8, 12, "#e8e0d4");
+  p.rect(sx + 4, 106, 4, 5, "#1a1610");
+  for (let i = sx + 2; i < sx + 10; i++) {
+    const y = 62 - Math.round((1 - Math.abs((i - (sx + 6)) / 4)) * 40);
+    p.line(i, y, i, 102, i < sx + 6 ? "#f0e8dc" : "#d8d0c4");
+    p.set(i, y, "#fff8f0");
+  }
+  p.rect(sx + 5, 54, 2, 8, "#d8d0c4");
+  p.set(sx + 5, 52, "#fff8f0");
+}
+
+function paintLibrary(p) {
+  ashlar(p, 116, 164, 24, 40, "#3a3830", "#5a5850", "#6a6860");
+  cornice(p, 116, 163, 24);
+  gable(p, 116, 140, 164, 10, "#4a4840", "#3a3830", "#7a7870");
+  ashlar(p, 138, 128, 10, 76, "#3a3830", "#5a5850", "#6a6860");
+  for (let i = 138; i < 148; i++) {
+    const y = 108 - Math.round((1 - Math.abs((i - 143) / 5)) * 20);
+    p.line(i, y, i, 128, i < 143 ? "#6a6860" : "#4a4840");
+    p.set(i, y, "#8a8878");
+  }
+  p.set(142, 104, "#7a7870");
+  sash(p, 120, 172, false);
+  sash(p, 130, 172, false);
+  sash(p, 120, 186, false);
+  p.rect(128, 190, 7, 14, "#1c1610");
+  stoop(p, 126, 202, 11);
+  palings(p, 116, 126, 198);
+  p.rect(141, 140, 4, 10, "#1a1610");
+  p.set(142, 138, "#1a1610");
+}
+
+function paintShops(p) {
+  clapboard(p, 146, 154, 22, 50, "#6a5040", "#8a6a50", "#9a7a5c");
+  cornice(p, 146, 153, 22);
+  gable(p, 146, 168, 154, 8, "#5a4430", "#4a3828", "#6a5440");
+  chimney(p, 160, 144, 12, true);
+  sash(p, 150, 160, false);
+  sash(p, 160, 160, false);
+  sash(p, 150, 174, false);
+  sash(p, 160, 174, false);
+  storefront(p, 148, 188, 18, 14);
+  p.rect(154, 192, 6, 12, "#1c1610");
+  stoop(p, 152, 202, 10);
+
+  clapboard(p, 166, 166, 20, 38, "#5a5448", "#8a8478", "#9a9488");
+  cornice(p, 166, 165, 20);
+  gable(p, 166, 186, 166, 7, "#4a4438", "#3a342c", "#5a5448");
+  sash(p, 170, 172, false);
+  sash(p, 178, 172, false);
+  storefront(p, 168, 188, 16, 14);
+  p.rect(172, 192, 6, 12, "#1c1610");
+  chimney(p, 180, 156, 10, false);
+}
+
+function paintShed(p) {
+  ashlar(p, 186, 178, 22, 26, "#2a2820", "#3a3830", "#4a4840");
+  gable(p, 186, 208, 178, 8, "#4a4034", "#3a3428", "#5a5040");
+  p.rect(194, 188, 8, 16, "#1a1410");
+  sash(p, 188, 184, false, 5, 5);
+  p.rect(186, 202, 22, 2, "#3a3428");
+  p.rect(208, 198, 6, 6, "#2a2824");
+}
+
 function renderVillage() {
   const p = painter(W, H);
-  for (let i = 0; i < 176; i++) {
+  for (let i = 0; i < 212; i++) {
     const top = QUAY - 4 - Math.round(2 * Math.sin(i * 0.2));
     for (let y = top; y < H; y++) {
       const col = y > QUAY + 8 ? "#1a1612" : ((i + y) & 2 ? "#2c241c" : "#32281e");
       p.set(i, y, col);
     }
   }
+  p.rect(0, 204, 210, 1, "#5a5448");
+  streetTree(p, 4, 204, 42);
+  streetTree(p, 156, 204, 36);
+  paintMaxwell(p);
+  paintTownHall(p);
+  paintMethodist(p);
+  paintLibrary(p);
+  paintShops(p);
+  paintShed(p);
 
-  p.rect(8, 168, 52, 40, "#2a2218");
-  shakeWall(p, 8, 176, 52, 32, "#241c14", "#2e241a", "#3a2c20");
-  for (let i = 6; i < 62; i++) {
-    const y = 168 - Math.round((1 - Math.abs((i - 34) / 28)) * 10);
-    p.line(i, y, i, 176, i < 34 ? "#4a3828" : "#3a2c20");
-    p.set(i, y, "#5a4834");
+  p.rect(4, 210, 10, 3, "#8a2820");
+  p.rect(5, 207, 8, 3, "#c44030");
+  p.rect(198, 206, 8, 3, "#7a2018");
+  p.rect(199, 203, 6, 3, "#c44030");
+  p.rect(202, 208, 8, 8, "#4a3a28");
+  p.rect(203, 209, 6, 6, "#2a2018");
+  for (let k = 0; k < 6; k++) {
+    p.rect(188 + k * 4, 208, 4, 5, "#3a3226");
+    p.set(189 + k * 4, 209, "#4a4030");
   }
-  p.rect(6, 175, 56, 2, "#2a2018");
-  windowPane(p, 16, 184, false);
-  windowPane(p, 38, 184, false);
-  windowPane(p, 16, 196, false);
-  p.rect(28, 196, 8, 12, "#1c1610");
-  p.set(34, 202, "#c89040");
-
-  p.rect(58, 154, 64, 54, "#262018");
-  shakeWall(p, 58, 164, 64, 44, "#201a14", "#2a2218", "#382c20");
-  for (let i = 54; i < 126; i++) {
-    const y = 152 - Math.round((1 - Math.abs((i - 90) / 36)) * 14);
-    p.line(i, y, i, 164, i < 90 ? "#4e3c28" : "#3e3022");
-    p.set(i, y, "#5c4a32");
-  }
-  p.rect(54, 163, 72, 2, "#2a2018");
-  p.rect(108, 140, 6, 16, "#3a3024");
-  p.rect(107, 138, 8, 3, "#2a2418");
-  p.rect(42, 160, 5, 10, "#3a3024");
-  p.rect(41, 158, 7, 3, "#2a2418");
-  windowPane(p, 68, 176, false);
-  windowPane(p, 88, 176, false);
-  windowPane(p, 108, 176, false);
-  windowPane(p, 78, 164, false);
-  windowPane(p, 98, 164, false);
-  windowPane(p, 68, 192, false);
-  windowPane(p, 88, 192, false);
-  p.rect(74, 170, 9, 5, "#c8a068");
-  p.rect(76, 171, 5, 3, "#5a4030");
-  p.set(78, 172, "#3a2c20");
-  p.set(80, 173, "#c8b090");
-  p.rect(100, 196, 10, 12, "#1a1410");
-  p.set(108, 202, "#a07038");
-
-  p.rect(122, 178, 28, 28, "#2c241c");
-  shakeWall(p, 122, 184, 28, 22, "#241c16", "#32281e", "#3c3024");
-  for (let i = 120; i < 152; i++) {
-    const y = 176 - Math.round((1 - Math.abs((i - 136) / 16)) * 7);
-    p.line(i, y, i, 184, "#3a2e22");
-    p.set(i, y, "#4a3c2c");
-  }
-  windowPane(p, 130, 190, false);
-
-  p.rect(148, 186, 26, 22, "#2a221a");
-  shakeWall(p, 148, 190, 26, 18, "#221a14", "#30261c", "#3a2c22");
-  for (let i = 146; i < 176; i++) {
-    const y = 184 - Math.round((1 - Math.abs((i - 161) / 15)) * 6);
-    p.line(i, y, i, 190, "#3a2e22");
-    p.set(i, y, "#4a3c2c");
-  }
-  windowPane(p, 154, 194, false);
-  p.rect(166, 198, 6, 10, "#1a1410");
-
-  p.rect(0, 186, 10, 22, "#241c16");
-  shakeWall(p, 0, 190, 10, 18, "#1c1610", "#2a2218", "#32281e");
-  windowPane(p, 1, 194, false);
-
-  for (let n = 0; n < 14; n++) {
-    p.line(12 + n * 2, 196, 22 + n * 4, 218, n & 1 ? "#4a4034" : "#2e281e");
-  }
-  p.rect(18, 216, 22, 4, "#4a4030");
-  p.rect(20, 213, 16, 3, "#5a4c38");
-  p.rect(24, 210, 8, 3, "#6a5a44");
-  for (let n = 0; n < 6; n++) {
-    p.line(132 + n, 186, 138 + n * 2, 206, n & 1 ? "#3a3428" : "#2a241c");
-  }
-
-  for (let k = 0; k < 12; k++) {
-    const x = 68 + (k % 4) * 5;
-    const y = 206 + Math.floor(k / 4) * 4;
-    p.rect(x, y, 5, 4, k & 1 ? "#3a3228" : "#2e281e");
-    p.rect(x + 1, y + 1, 3, 2, "#241c16");
-  }
-  for (let k = 0; k < 7; k++) {
-    p.rect(124 + k * 5, 206, 4, 5, "#3a3226");
-    p.set(125 + k * 5, 207, "#4a4030");
-  }
-  p.rect(52, 200, 8, 8, "#4a3a28");
-  p.rect(53, 201, 6, 6, "#2a2018");
-  p.rect(54, 203, 4, 4, "#5a4830");
-
-  p.rect(4, 204, 10, 3, "#8a2820");
-  p.rect(5, 201, 8, 3, "#c44030");
-  p.set(8, 200, "#e8e0d0");
-  p.rect(44, 206, 8, 3, "#a07820");
-  p.rect(45, 203, 6, 3, "#d4a020");
-  p.set(48, 202, "#e8e0d0");
-  p.rect(112, 208, 8, 3, "#7a2018");
-  p.rect(113, 205, 6, 3, "#c44030");
-
-  p.line(40, 176, 60, 170, "#3a3228");
-  p.set(44, 174, "#c8b090");
-  p.set(50, 172, "#8a2820");
-  p.set(56, 171, "#e8e0d0");
-  p.rect(110, 132, 1, 8, "#3a3428");
-  p.rect(108, 131, 6, 1, "#4a4034");
-  p.set(114, 131, "#c8b090");
-  for (let x = 84; x <= 108; x += 4) p.rect(x, 210, 1, 10, "#3a3228");
-  p.rect(84, 210, 26, 1, "#4a4034");
-  p.rect(86, 212, 4, 2, "#c8a070");
-  p.rect(94, 213, 5, 2, "#a89068");
-  p.rect(102, 212, 4, 2, "#c8a070");
-  p.rect(156, 214, 14, 5, "#5a4830");
-  p.rect(157, 213, 12, 1, "#6a5840");
-  p.rect(160, 216, 6, 3, "#3a2e20");
-
-  p.rect(178, 176, 22, 30, "#2a2218");
-  shakeWall(p, 178, 182, 22, 24, "#221a14", "#30261c", "#3a2c22");
-  for (let i = 176; i < 202; i++) {
-    const y = 174 - Math.round((1 - Math.abs((i - 189) / 13)) * 6);
-    p.line(i, y, i, 182, i < 189 ? "#4a3c28" : "#3a2e22");
-    p.set(i, y, "#5a4a32");
-  }
-  windowPane(p, 184, 186, false);
-  p.rect(192, 198, 6, 8, "#1a1410");
-  p.rect(180, 168, 4, 8, "#3a3024");
-  p.rect(179, 166, 6, 3, "#2a2418");
-  for (let i = 176; i < 202; i++) {
-    for (let y = QUAY - 2; y < QUAY + 8; y++) {
-      p.set(i, y, (i + y) & 2 ? "#2c241c" : "#32281e");
-    }
-  }
-
-  p.line(62, 168, 118, 164, "#3a3228");
-  p.set(70, 167, "#c8b090");
-  p.set(82, 166, "#8a2820");
-  p.set(94, 165, "#e8e0d0");
-  p.set(106, 165, "#c8b090");
-
-  p.rect(12, 188, 1, 14, "#3a3228");
-  p.rect(34, 188, 1, 14, "#3a3228");
-  for (let y = 190; y < 200; y += 3) {
-    p.line(12, y, 34, y + 1, "#4a4034");
-    p.line(12, y + 1, 34, y, "#2e281e");
-  }
-
-  p.rect(142, 198, 4, 10, "#3a2e22");
-  p.rect(141, 197, 6, 2, "#4a3c2c");
-  p.rect(143, 200, 2, 6, "#5a4830");
-  p.rect(6, 214, 16, 6, "#4a3a28");
-  p.rect(8, 212, 12, 2, "#5a4830");
-  p.rect(10, 216, 8, 3, "#3a2e20");
 
   const sheet = p.done();
   const sx = sheet.getContext("2d");
   sx.imageSmoothingEnabled = false;
-  text(sx, "BAIT", 64, 158, "#c8b090");
-  text(sx, "ICE", 150, 186, "#a09078");
-  text(sx, "NETS", 180, 178, "#a09078");
+  text(sx, "BAIT", 148, 156, "#c8b090");
+  text(sx, "ICE", 168, 168, "#a09078");
+  text(sx, "COAL", 188, 180, "#a09078");
   return sheet;
 }
 
@@ -948,114 +1063,47 @@ function renderFerry() {
 }
 
 function renderGullFly(frame, flip = false) {
-  const ink = {
-    w: "#f8f4ec",
-    h: "#fff8f0",
-    e: "#1a1410",
-    y: "#f0a828",
-    b: "#ece4d8",
-    t: "#c8c0b4",
-    s: "#d8d0c4",
-  };
+  const ink = { w: "#ece8e0", t: "#c8c4bc" };
   const rows = [
     [
-      "..w.........w..",
-      ".www...h...www.",
-      "w.w...heys..w.w",
-      "w....sbbbbb...w",
-      ".....bbbbbbb...",
-      "......sbbbs....",
-      ".......tt......",
+      ".w.....w.",
+      "w..www..w",
+      "...www...",
+      "....t....",
     ],
     [
-      "...............",
-      ".wwww.h.wwww...",
-      "ww...heys...ww.",
-      "w...sbbbbb...w.",
-      "....bbbbbbb....",
-      ".....sbbbs.....",
-      ".......tt......",
+      ".........",
+      "ww.www.ww",
+      "...www...",
+      "....t....",
     ],
     [
-      "...............",
-      "...............",
-      "wwwww.heys.wwwww",
-      ".....sbbbbb....",
-      "....bbbbbbb....",
-      ".....sbbbs.....",
-      ".......tt......",
-    ],
-    [
-      "...............",
-      "......heys.....",
-      ".....sbbbbb....",
-      ".w...bbbbbbb.w.",
-      "..w...sbbbs.w..",
-      "...w...tt..w...",
-      "....w.....w....",
-      ".....w...w.....",
-    ],
-    [
-      "...............",
-      "......heys.....",
-      ".....sbbbbb....",
-      ".....bbbbbbb...",
-      ".w....sbbbs..w.",
-      "..w....tt...w..",
-      "...ww......ww..",
-      "....w......w...",
-    ],
-    [
-      ".w...........w.",
-      "..ww...h...ww..",
-      "...w..heys.w...",
-      "w...sbbbbb....w",
-      "....bbbbbbb....",
-      ".....sbbbs.....",
-      ".......tt......",
+      ".........",
+      "...www...",
+      ".w..t..w.",
+      "..w...w..",
     ],
   ][frame];
   return sprite(rows, ink, flip);
 }
 
-function renderGullPerch(frame) {
-  const rows = [
+function renderGullPerch() {
+  return sprite(
     [
-      "...heys.",
-      "..sbbbbb",
-      "..bbbbb.",
-      "...bb.t.",
-      "...l.l..",
+      ".www.",
+      ".www.",
+      "..t..",
     ],
-    [
-      "w..heys.w",
-      ".wsbbbbb.",
-      "..wbbbb..",
-      "...bb.t..",
-      "...l.l...",
-    ],
-  ][frame];
-  return sprite(rows, {
-    w: "#f8f4ec",
-    h: "#fff8f0",
-    e: "#1a1410",
-    y: "#f0a828",
-    s: "#d8d0c4",
-    b: "#ece4d8",
-    t: "#c8c0b4",
-    l: "#c8c0b4",
-  });
+    { w: "#ece8e0", t: "#c8c4bc" },
+  );
 }
 
 function flapFrame(t, ph, rate) {
   const u = frac((t * rate) / LOOP + ph);
-  if (u < 0.12) return 0;
-  if (u < 0.24) return 1;
-  if (u < 0.40) return 2;
-  if (u < 0.54) return 3;
-  if (u < 0.70) return 4;
-  if (u < 0.84) return 3;
-  return 5;
+  if (u < 0.28) return 0;
+  if (u < 0.52) return 1;
+  if (u < 0.76) return 2;
+  return 1;
 }
 
 function renderWalker(frame, flip) {
@@ -1155,7 +1203,7 @@ let MOON_C, SUN_C, HILLS, SPIT_C, LIGHT_C, VILLAGE_C, DOCK_C, TRAPS_C, CRATE_C, 
 let LOBSTER_C, LOBSTER_L, LOBSTER_S, LOBSTER_SL, SKIFF_C, FERRY_C, BUOY_C, CAT_C, NET_C, VIG_C;
 let SAIL_R, SAIL_L, CATBOAT_R, CATBOAT_L;
 let HILLS_DAY, SPIT_DAY, LIGHT_DAY, VILLAGE_DAY, DOCK_DAY;
-let GULL_R, GULL_L, GULL_SIT, GULL_STRETCH, WALK_R, WALK_L;
+let GULL_R, GULL_L, GULL_SIT, WALK_R, WALK_L;
 let HALO_MOON, HALO_SUN, HALO_WIN, HALO_LAMP, HALO_BEAM, HALO_BUOY, HALO_WARM;
 
 function prerender() {
@@ -1190,10 +1238,9 @@ function prerender() {
   CAT_C = renderCat();
   NET_C = renderNet();
   VIG_C = renderVignette();
-  GULL_R = [0, 1, 2, 3, 4, 5].map((f) => renderGullFly(f, false));
-  GULL_L = [0, 1, 2, 3, 4, 5].map((f) => renderGullFly(f, true));
-  GULL_SIT = renderGullPerch(0);
-  GULL_STRETCH = renderGullPerch(1);
+  GULL_R = [0, 1, 2].map((f) => renderGullFly(f, false));
+  GULL_L = [0, 1, 2].map((f) => renderGullFly(f, true));
+  GULL_SIT = renderGullPerch();
   WALK_R = [0, 1, 2, 3].map((f) => renderWalker(f, false));
   WALK_L = [0, 1, 2, 3].map((f) => renderWalker(f, true));
   HALO_MOON = makeHalo(26, "#f0ece0", 0.32, 1.6, 6);
@@ -1341,9 +1388,9 @@ function drawBeam(t) {
 
 function drawSmoke(t) {
   const stacks = [
-    { x0: 44, y0: 156 },
-    { x0: 111, y0: 136 },
-    { x0: 182, y0: 164 },
+    { x0: 21, y0: 145 },
+    { x0: 68, y0: 133 },
+    { x0: 162, y0: 143 },
     { x0: 406, y0: 164 },
   ];
   ctx.fillStyle = "#8a8884";
@@ -1360,9 +1407,9 @@ function drawSmoke(t) {
 }
 
 function drawFlag(t) {
-  const x = 150;
-  const y = 168;
-  pline(x, y, x, DECK, "#3a3228");
+  const x = 36;
+  const y = 96;
+  pline(x, y, x, 204, "#3a3228");
   const g = gust(t);
   const flap = wave(t, 19, 0.3) * (0.4 + g);
   ctx.fillStyle = "#c44030";
@@ -1454,16 +1501,11 @@ function drawBoats(t) {
 
 function drawGulls(t) {
   const flyers = [
-    { k: 3, ph: 0.02, y: 42, amp: 9, dir: 1, rate: 288 },
-    { k: 4, ph: 0.41, y: 58, amp: 7, dir: -1, rate: 336 },
-    { k: 2, ph: 0.70, y: 36, amp: 12, dir: 1, rate: 240 },
-    { k: 5, ph: 0.18, y: 78, amp: 6, dir: 1, rate: 312 },
-    { k: 3, ph: 0.55, y: 50, amp: 8, dir: -1, rate: 264 },
-    { k: 6, ph: 0.88, y: 68, amp: 5, dir: 1, rate: 360 },
-    { k: 2, ph: 0.33, y: 88, amp: 7, dir: -1, rate: 216 },
-    { k: 4, ph: 0.61, y: 30, amp: 10, dir: 1, rate: 384 },
-    { k: 5, ph: 0.09, y: 46, amp: 8, dir: -1, rate: 300 },
-    { k: 3, ph: 0.77, y: 72, amp: 6, dir: 1, rate: 252 },
+    { k: 3, ph: 0.02, y: 44, amp: 7, dir: 1, rate: 168 },
+    { k: 4, ph: 0.41, y: 62, amp: 5, dir: -1, rate: 192 },
+    { k: 2, ph: 0.70, y: 38, amp: 8, dir: 1, rate: 156 },
+    { k: 5, ph: 0.18, y: 80, amp: 4, dir: 1, rate: 180 },
+    { k: 3, ph: 0.55, y: 54, amp: 6, dir: -1, rate: 204 },
   ];
   for (const b of flyers) {
     const span = W + 40;
@@ -1477,17 +1519,11 @@ function drawGulls(t) {
   }
 
   const perches = [
-    { x: 94, y: DECK - 12, ph: 0.12 },
-    { x: 214, y: DECK - 12, ph: 0.47 },
-    { x: 308, y: DECK - 28, ph: 0.71 },
-    { x: LIGHT.cx + 6, y: LIGHT.lantern + 8, ph: 0.29 },
-    { x: 176, y: DECK - 14, ph: 0.83 },
+    { x: 214, y: DECK - 10 },
+    { x: 308, y: DECK - 26 },
+    { x: LIGHT.cx + 6, y: LIGHT.lantern + 8 },
   ];
-  for (const p of perches) {
-    const { cyc, u } = cycle(t, 5, p.ph);
-    const stretch = cyc === 2 && u > 0.18 && u < 0.62;
-    ctx.drawImage(stretch ? GULL_STRETCH : GULL_SIT, p.x, p.y);
-  }
+  for (const p of perches) ctx.drawImage(GULL_SIT, p.x, p.y);
 }
 
 function drawWalker(t) {
@@ -1532,17 +1568,34 @@ function drawStringLights(t) {
 
 function drawWindows(t) {
   const spots = [
-    { x: 19, y: 187 },
-    { x: 41, y: 187 },
-    { x: 71, y: 179 },
-    { x: 91, y: 179 },
-    { x: 111, y: 179 },
-    { x: 81, y: 167 },
-    { x: 91, y: 195 },
-    { x: 133, y: 193 },
-    { x: 157, y: 197 },
-    { x: 1, y: 197 },
-    { x: 184, y: 186 },
+    { x: 11, y: 174 },
+    { x: 24, y: 174 },
+    { x: 11, y: 188 },
+    { x: 24, y: 188 },
+    { x: 42, y: 128 },
+    { x: 42, y: 160 },
+    { x: 42, y: 184 },
+    { x: 54, y: 156 },
+    { x: 64, y: 156 },
+    { x: 54, y: 170 },
+    { x: 64, y: 170 },
+    { x: 54, y: 184 },
+    { x: 64, y: 184 },
+    { x: 76, y: 170 },
+    { x: 76, y: 184 },
+    { x: 108, y: 170 },
+    { x: 108, y: 184 },
+    { x: 120, y: 172 },
+    { x: 130, y: 172 },
+    { x: 120, y: 186 },
+    { x: 141, y: 140 },
+    { x: 150, y: 160 },
+    { x: 160, y: 160 },
+    { x: 150, y: 174 },
+    { x: 160, y: 174 },
+    { x: 170, y: 172 },
+    { x: 178, y: 172 },
+    { x: 188, y: 184 },
     { x: 235, y: DECK - 12 },
     { x: 309, y: DECK - 11 },
     { x: 397, y: 187 },
@@ -1556,21 +1609,19 @@ function drawWindows(t) {
     if (n > 0.2) {
       ctx.globalAlpha = n;
       ctx.fillStyle = "#1a1610";
-      ctx.fillRect(s.x, s.y, 7, 8);
+      ctx.fillRect(s.x, s.y, 5, 7);
       ctx.fillStyle = "#ffe8a8";
-      ctx.fillRect(s.x + 1, s.y + 1, 2, 2);
+      ctx.fillRect(s.x + 1, s.y + 1, 1, 2);
       ctx.fillStyle = "#f4d078";
-      ctx.fillRect(s.x + 4, s.y + 1, 2, 2);
+      ctx.fillRect(s.x + 3, s.y + 1, 1, 2);
       ctx.fillStyle = "#e8b050";
-      ctx.fillRect(s.x + 1, s.y + 4, 2, 3);
+      ctx.fillRect(s.x + 1, s.y + 4, 1, 2);
       ctx.fillStyle = "#d49838";
-      ctx.fillRect(s.x + 4, s.y + 4, 2, 3);
-      ctx.fillStyle = "#fff6d0";
-      ctx.fillRect(s.x + 2, s.y + 2, 1, 1);
+      ctx.fillRect(s.x + 3, s.y + 4, 1, 2);
       ctx.globalAlpha = 1;
       const flicker = n * (0.8 + 0.2 * wave(t, 13 + (s.x & 7), s.x * 0.01));
-      drawHalo(ctx, HALO_WIN, s.x + 3, s.y + 3, flicker);
-      drawHalo(ctx, HALO_WARM, s.x + 3, s.y + 9, 0.35 * flicker);
+      drawHalo(ctx, HALO_WIN, s.x + 2, s.y + 3, flicker);
+      drawHalo(ctx, HALO_WARM, s.x + 2, s.y + 8, 0.35 * flicker);
     }
   }
   if (n > 0.25) {
@@ -1584,6 +1635,7 @@ function drawWindows(t) {
 function drawQuayLamp(t) {
   const posts = [
     { x: LAMP.x, top: LAMP.top },
+    { x: 172, top: 124 },
     { x: 292, top: 128 },
   ];
   for (const post of posts) {
@@ -1632,30 +1684,23 @@ function drawRain(t) {
 }
 
 function drawForeground(t) {
-  ctx.drawImage(TRAPS_C, 4, QUAY - 10);
-  ctx.drawImage(TRAPS_C, 28, QUAY - 4);
-  ctx.drawImage(TRAPS_C, 52, QUAY - 8);
+  ctx.drawImage(TRAPS_C, 188, QUAY - 8);
   ctx.drawImage(TRAPS_C, 168, DECK - 8);
   ctx.drawImage(TRAPS_C, 270, DECK - 8);
   ctx.drawImage(TRAPS_C, 292, DECK - 6);
   ctx.drawImage(TRAPS_C, 204, DECK - 8);
   ctx.drawImage(CRATE_C, 248, DECK - 6);
   ctx.drawImage(CRATE_C, 258, DECK - 6);
-  ctx.drawImage(CRATE_C, 118, DECK - 6);
-  ctx.drawImage(CRATE_C, 108, DECK - 6);
   ctx.drawImage(CRATE_C, 188, DECK - 6);
   ctx.drawImage(CRATE_C, 176, DECK - 6);
-  ctx.drawImage(CRATE_C, 154, DECK - 6);
-  ctx.drawImage(COIL_C, 140, DECK - 6);
   ctx.drawImage(COIL_C, 228, DECK - 6);
   ctx.drawImage(COIL_C, 280, DECK - 6);
-  ctx.drawImage(COIL_C, 98, DECK - 6);
+  ctx.drawImage(COIL_C, 198, DECK - 6);
   ctx.drawImage(COIL_C, 312, DECK - 6);
-  ctx.drawImage(BARREL_C, 82, DECK - 7);
   ctx.drawImage(BARREL_C, 200, DECK - 7);
   ctx.drawImage(BARREL_C, 160, DECK - 7);
   ctx.drawImage(BARREL_C, 266, DECK - 7);
-  ctx.drawImage(NET_C, 14, QUAY - 18);
+  ctx.drawImage(NET_C, 198, QUAY - 18);
   ctx.drawImage(NET_C, 128, DECK - 14);
   ctx.drawImage(NET_C, 302, DECK - 14);
   ctx.drawImage(CAT_C, 236, DECK - 10 + Math.round(0.4 * (wave(t, 2, 0.9) > 0.7)));
@@ -1721,10 +1766,9 @@ function renderFrame(t, sky) {
   if (glow > 0.25) {
     streak(ctx, t, LIGHT.cx, 3.6, "#f0d878", 0.52 * glow, 1.1, HOR, HOR + 52);
     streak(ctx, t, 20, 1.8, "#f0c060", 0.36 * glow, 2.2, HOR, HOR + 34);
-    streak(ctx, t, 42, 1.6, "#e8b868", 0.3 * glow, 2.6, HOR, HOR + 32);
-    streak(ctx, t, 72, 2.0, "#f0c060", 0.34 * glow, 2.8, HOR, HOR + 36);
-    streak(ctx, t, 92, 1.8, "#e8b868", 0.3 * glow, 3.0, HOR, HOR + 34);
-    streak(ctx, t, 134, 1.6, "#e0b060", 0.28 * glow, 3.6, HOR, HOR + 30);
+    streak(ctx, t, 44, 2.2, "#e8b868", 0.34 * glow, 2.4, HOR, HOR + 36);
+    streak(ctx, t, 94, 1.8, "#e8e0d4", 0.22 * glow, 2.8, HOR, HOR + 32);
+    streak(ctx, t, 142, 1.6, "#e0b060", 0.28 * glow, 3.2, HOR, HOR + 30);
     streak(ctx, t, 158, 1.4, "#e0b060", 0.26 * glow, 4.2, HOR, HOR + 28);
     streak(ctx, t, LAMP.x - 5, 2.2, "#f4d078", 0.38 * glow, 2.0, HOR, HOR + 38);
     streak(ctx, t, 286, 2.0, "#f4d078", 0.32 * glow, 2.4, HOR, HOR + 34);
